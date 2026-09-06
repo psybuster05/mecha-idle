@@ -1,0 +1,134 @@
+/**
+ * Serialising, validating and migrating saves.
+ *
+ * Rule for this file: an existing save must never be broken by an update. Every
+ * shape change gets a migration, and anything unrecognised is repaired with defaults
+ * rather than thrown away. Idle players do not forgive lost progress.
+ */
+
+import { newGame, SAVE_VERSION, type GameState } from './state'
+
+export type LoadResult =
+  | { ok: true; state: GameState; migratedFrom: number | null }
+  | { ok: false; error: string }
+
+/**
+ * A migration rewrites a save from version N to N+1.
+ *
+ * There are none yet - version 1 is the first shape - but the mechanism ships now,
+ * tested, because the first time it is needed it will be needed urgently.
+ */
+export type Migration = (raw: Record<string, unknown>) => Record<string, unknown>
+
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  // 1: (raw) => ({ ...raw, version: 2, /* ...changes... */ }),
+}
+
+/**
+ * Fill in anything a save is missing from a fresh game.
+ *
+ * This covers purely additive changes - a new skill, a new state field - without
+ * needing a migration for each one. Migrations are for changes that *reshape* or
+ * reinterpret existing data.
+ */
+function withDefaults(raw: Record<string, unknown>): GameState {
+  const base = newGame()
+  const merged = { ...base, ...raw } as GameState
+
+  merged.skills = { ...base.skills, ...(raw['skills'] as object | undefined) }
+  merged.actors = { ...base.actors, ...(raw['actors'] as object | undefined) }
+  merged.combat = { ...base.combat, ...(raw['combat'] as object | undefined) }
+  merged.bank = { ...(raw['bank'] as object | undefined) }
+  merged.equipment = { ...(raw['equipment'] as object | undefined) }
+
+  // Guard against a hand-edited or corrupted save producing NaN, which would
+  // silently poison every number downstream of it.
+  if (!Number.isFinite(merged.elapsed)) merged.elapsed = 0
+  if (!Number.isFinite(merged.rngSeed)) merged.rngSeed = base.rngSeed
+  if (!Number.isFinite(merged.savedAt)) merged.savedAt = 0
+
+  return merged
+}
+
+/** Serialise, stamping the wall-clock time so offline progress can be worked out. */
+export function serialize(state: GameState, nowMs: number): string {
+  return JSON.stringify({ ...state, version: SAVE_VERSION, savedAt: nowMs })
+}
+
+/** Parse, migrate and validate. Never throws. */
+export function deserialize(
+  json: string,
+  migrations: Readonly<Record<number, Migration>> = MIGRATIONS,
+): LoadResult {
+  let raw: unknown
+  try {
+    raw = JSON.parse(json)
+  } catch {
+    return { ok: false, error: 'Save file is not valid JSON.' }
+  }
+
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return { ok: false, error: 'Save file is not a game state.' }
+  }
+
+  const working = raw as Record<string, unknown>
+  const startVersion = working['version']
+  if (typeof startVersion !== 'number' || !Number.isInteger(startVersion) || startVersion < 1) {
+    return { ok: false, error: 'Save file has no usable version number.' }
+  }
+
+  if (startVersion > SAVE_VERSION) {
+    // Almost always a save from a newer build. Refuse rather than mangle it.
+    return {
+      ok: false,
+      error: `Save is from a newer version of the game (v, this build reads v).`,
+    }
+  }
+
+  const migrated = runMigrations(working, SAVE_VERSION, migrations)
+  if (!migrated.ok) return { ok: false, error: migrated.error }
+
+  const state = withDefaults(migrated.raw)
+  state.version = SAVE_VERSION
+  return { ok: true, state, migratedFrom: startVersion === SAVE_VERSION ? null : startVersion }
+}
+
+export type MigrationResult =
+  | { ok: true; raw: Record<string, unknown> }
+  | { ok: false; error: string }
+
+/**
+ * Walk a save forward from its own version to `target`, one migration at a time.
+ *
+ * Split out from `deserialize` so the chain can be exercised directly. There are no
+ * real migrations yet, and without this seam the mechanism could not be tested at all
+ * until the day it was first needed - which is the worst possible day to discover a
+ * bug in it.
+ */
+export function runMigrations(
+  raw: Record<string, unknown>,
+  target: number,
+  migrations: Readonly<Record<number, Migration>> = MIGRATIONS,
+): MigrationResult {
+  let working = raw
+  const initialVersion = working['version']
+  if (typeof initialVersion !== 'number') {
+    return { ok: false, error: 'Save file has no usable version number.' }
+  }
+  let version: number = initialVersion
+
+  while (version < target) {
+    const migration = migrations[version]
+    if (!migration) {
+      return { ok: false, error: `No migration from save version ${version}.` }
+    }
+    working = migration(working)
+    const next = working['version']
+    if (typeof next !== 'number' || next <= version) {
+      return { ok: false, error: `Migration from version ${version} did not advance the version.` }
+    }
+    version = next
+  }
+
+  return { ok: true, raw: working }
+}
