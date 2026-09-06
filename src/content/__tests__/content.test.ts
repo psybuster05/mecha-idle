@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SKILLS, getItem } from '../index'
+import { SKILLS, getItem, ENEMIES, getEnemy, ZONES } from '../index'
 import { ITEMS } from '../items'
 import { EQUIP_SLOTS } from '../../sim/state'
 
@@ -94,6 +94,33 @@ describe('content integrity', () => {
     for (const slot of EQUIP_SLOTS) {
       const filled = ITEMS.some((i) => i.slot === slot && craftable.has(i.id))
       expect(filled, `no craftable part for slot "${slot}"`).toBe(true)
+    }
+  })
+
+  it('only lets enemies drop items that exist, with sane stats', () => {
+    for (const enemy of ENEMIES) {
+      for (const stack of [...(enemy.guaranteed ?? []), ...(enemy.drops ?? [])]) {
+        expect(getItem(stack.item), `${enemy.id} drops unknown item "${stack.item}"`).toBeDefined()
+        expect(stack.qty).toBeGreaterThan(0)
+      }
+      for (const drop of enemy.drops ?? []) {
+        expect(drop.chance).toBeGreaterThan(0)
+        expect(drop.chance).toBeLessThanOrEqual(1)
+      }
+      expect(enemy.maxHp, `${enemy.id} hp`).toBeGreaterThan(0)
+      expect(enemy.attackInterval, `${enemy.id} attack interval`).toBeGreaterThan(0)
+      expect(enemy.xp, `${enemy.id} xp`).toBeGreaterThan(0)
+      // The hit formula divides by (accuracy + evasion).
+      expect(enemy.accuracy + enemy.evasion, `${enemy.id} would divide by zero`).toBeGreaterThan(0)
+    }
+  })
+
+  it('only lets zones reference enemies that exist', () => {
+    for (const zone of ZONES) {
+      expect(zone.enemies.length, `${zone.id} has no enemies`).toBeGreaterThan(0)
+      for (const id of zone.enemies) {
+        expect(getEnemy(id), `zone ${zone.id} references unknown enemy "${id}"`).toBeDefined()
+      }
     }
   })
 })

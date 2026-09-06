@@ -6,6 +6,7 @@
  * mutates a clone.
  */
 
+import { advanceCombatActivity } from './combat'
 import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
 
@@ -31,7 +32,7 @@ export function advance(state: GameState, dt: number): void {
         advanceSkillActivity(state, actorId, dt)
         break
       case 'combat':
-        // Wired up in the combat step.
+        advanceCombatActivity(state, actorId, dt)
         break
     }
   }

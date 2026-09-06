@@ -30,3 +30,8 @@ export function getAction(skill: GatheringSkillId, action: ActionId): SkillActio
 
 export { ITEMS, getItem, itemName } from './items'
 export type { ItemDef, SkillAction, SkillDef, ItemStack, DropChance } from './types'
+
+export { ENEMIES, getEnemy } from './enemies'
+export type { EnemyDef } from './enemies'
+export { ZONES, getZone } from './zones'
+export type { ZoneDef } from './zones'
