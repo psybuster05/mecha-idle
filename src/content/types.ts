@@ -6,7 +6,14 @@
  * what lets this game grow to Melvor-like breadth without the sim getting bigger.
  */
 
-import type { ActionId, EquipSlot, GatheringSkillId, ItemId } from '../sim/state'
+import type {
+  ActionId,
+  DamageType,
+  EquipSlot,
+  GatheringSkillId,
+  ItemId,
+  Resistances,
+} from '../sim/state'
 
 export interface ItemStack {
   item: ItemId
@@ -38,6 +45,10 @@ export interface EquipStats {
   skillSpeed?: number
   /** Map units per second added to movement. Thrusters, tracks, better legs. */
   moveSpeed?: number
+  /** What this weapon deals. Only meaningful on the weapon slot. */
+  damageType?: DamageType
+  /** Incoming damage multipliers this part grants. Armour pieces carry these. */
+  resist?: Resistances
   /** Seconds shaved off our attack interval. Negative values would slow us down. */
   attackSpeed?: number
 }

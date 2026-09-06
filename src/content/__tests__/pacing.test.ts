@@ -99,16 +99,32 @@ describe('content keeps arriving', () => {
     })
 
     it(`${skill.name} has no dead tiers`, () => {
-      // Every action must beat the one before it, or it is a trap with no upside.
-      const byLevel = [...skill.actions].sort((a, b) => a.levelRequired - b.levelRequired)
-      for (let i = 1; i < byLevel.length; i++) {
-        const prev = byLevel[i - 1]!
-        const next = byLevel[i]!
+      // Every level threshold must raise the best rate available. Several actions may
+      // share a threshold - those are sidegrades, like weapons of different damage
+      // types - so the check is per threshold, not per action.
+      const thresholds = [...new Set(skill.actions.map((a) => a.levelRequired))].sort(
+        (a, b) => a - b,
+      )
+      for (let i = 1; i < thresholds.length; i++) {
+        const level = thresholds[i]!
+        const previous = thresholds[i - 1]!
         expect(
-          next.xp / next.duration,
-          `${skill.id}: ${next.id} is no better than ${prev.id}`,
-        ).toBeGreaterThan(prev.xp / prev.duration)
-        expect(next.levelRequired).toBeGreaterThan(prev.levelRequired)
+          bestRate(skill, level),
+          `${skill.id}: level ${level} is no better than level ${previous}`,
+        ).toBeGreaterThan(bestRate(skill, previous))
+      }
+    })
+
+    it(`${skill.name} has no strictly worse action at any threshold`, () => {
+      // A sidegrade is fine; a pure downgrade at the same level is a trap. Anything
+      // sharing a threshold must at least match the best rate there.
+      for (const action of skill.actions) {
+        const best = bestRate(skill, action.levelRequired)
+        const rate = action.xp / action.duration
+        expect(
+          rate / best,
+          `${skill.id}: ${action.id} is much worse than its level-mates`,
+        ).toBeGreaterThan(0.75)
       }
     })
   }

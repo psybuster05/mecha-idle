@@ -39,6 +39,27 @@ export const ALL_SKILLS: readonly SkillId[] = [...GATHERING_SKILLS, ...COMBAT_SK
 
 export type ItemId = string
 export type NodeId = string
+
+/**
+ * How damage is delivered.
+ *
+ * Three axes, because a boss phase that can only raise a number is just a bigger
+ * enemy. With types, a phase can invert which weapon is correct mid-fight, which is
+ * what makes preparation the actual gameplay.
+ *
+ * - kinetic: mass and impact. Shrugged off by heavy plate.
+ * - energy:  beams and heat. Melts armour, defeated by ablative coatings.
+ * - emp:     electrical disruption. Ruins fine electronics, poor against hardened units.
+ */
+export type DamageType = 'kinetic' | 'energy' | 'emp'
+
+export const DAMAGE_TYPES: readonly DamageType[] = ['kinetic', 'energy', 'emp']
+
+/** Multiplier on incoming damage per type. 1 is neutral, below 1 resists, above 1 hurts. */
+export type Resistances = Partial<Record<DamageType, number>>
+
+/** Bare fists, when nothing is fitted. */
+export const DEFAULT_DAMAGE_TYPE: DamageType = 'kinetic'
 export type ActionId = string
 export type ZoneId = string
 
@@ -59,7 +80,12 @@ export const EQUIP_SLOTS: readonly EquipSlot[] = [
 /** What an actor is currently doing. `null` means idle. */
 export type Activity =
   | { kind: 'skill'; skill: GatheringSkillId; action: ActionId }
-  | { kind: 'combat'; zone: ZoneId }
+  | {
+      kind: 'combat'
+      zone: ZoneId
+      /** A specific target. Omitted means take whatever the zone spawns. */
+      enemy?: string
+    }
 
 /** Why an activity stopped on its own, so the UI can say so rather than silently idling. */
 export type StopReason =

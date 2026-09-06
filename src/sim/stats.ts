@@ -8,7 +8,14 @@
 
 import { getItem } from '../content'
 import type { EquipStats } from '../content/types'
-import { EQUIP_SLOTS, type GameState } from './state'
+import {
+  DAMAGE_TYPES,
+  DEFAULT_DAMAGE_TYPE,
+  EQUIP_SLOTS,
+  type DamageType,
+  type GameState,
+  type Resistances,
+} from './state'
 import { levelFromXp } from './xp'
 
 /** Seconds between our swings with no reactor fitted. */
@@ -33,15 +40,49 @@ export interface DerivedStats {
   moveSpeed: number
   /** Multiplier on non-combat action duration. Below 1 means faster. */
   skillDurationScale: number
+  /** What our attacks deal, from the fitted weapon. */
+  damageType: DamageType
+  /** Incoming multipliers by type, from fitted armour. */
+  resistances: Required<Resistances>
 }
 
+/**
+ * The additive, numeric equipment stats. Excludes damageType and resist, which are
+ * not summed - one is picked from the weapon, the other multiplies.
+ */
+type NumericEquipStat = {
+  [K in keyof EquipStats]-?: NonNullable<EquipStats[K]> extends number ? K : never
+}[keyof EquipStats]
+
 /** Sum of one stat across everything currently equipped. */
-function equippedTotal(state: GameState, stat: keyof EquipStats): number {
+function equippedTotal(state: GameState, stat: NumericEquipStat): number {
   let total = 0
   for (const slot of EQUIP_SLOTS) {
     const itemId = state.equipment[slot]
     if (!itemId) continue
     total += getItem(itemId)?.stats?.[stat] ?? 0
+  }
+  return total
+}
+
+/** The fitted weapon decides what we deal. Bare-handed is kinetic. */
+function equippedDamageType(state: GameState): DamageType {
+  const weapon = state.equipment.weapon
+  return (weapon && getItem(weapon)?.stats?.damageType) || DEFAULT_DAMAGE_TYPE
+}
+
+/**
+ * Resistances stack multiplicatively, so two 0.8 pieces give 0.64 rather than 0.6.
+ * Additive stacking would let a handful of parts reach total immunity.
+ */
+function equippedResistances(state: GameState): Required<Resistances> {
+  const total: Required<Resistances> = { kinetic: 1, energy: 1, emp: 1 }
+  for (const slot of EQUIP_SLOTS) {
+    const itemId = state.equipment[slot]
+    if (!itemId) continue
+    const resist = getItem(itemId)?.stats?.resist
+    if (!resist) continue
+    for (const type of DAMAGE_TYPES) total[type] *= resist[type] ?? 1
   }
   return total
 }
@@ -67,6 +108,8 @@ export function derivedStats(state: GameState): DerivedStats {
     // Expressed as a duration multiplier rather than a speed bonus so stacking is
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
     skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),
+    damageType: equippedDamageType(state),
+    resistances: equippedResistances(state),
   }
 }
 

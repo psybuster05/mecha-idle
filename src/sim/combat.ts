@@ -9,7 +9,8 @@
  */
 
 import { getEnemy, getZone } from '../content'
-import type { EnemyDef } from '../content/enemies'
+import { activePhase, effectiveResistances, type EnemyDef } from '../content/enemies'
+import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
 import { Rng } from './rng'
 import { haltActivity, type ActorId, type GameState } from './state'
@@ -17,6 +18,17 @@ import { combatLevel, derivedStats, HEAL_ON_KILL, RESPAWN_DELAY, type DerivedSta
 
 /** Float slack when comparing accumulated progress against an interval. */
 const EPS = 1e-9
+/**
+ * Governs how quickly armour reaches diminishing returns: reduction is
+ * armour / (armour + this). Higher means armour matters less.
+ *
+ * Armour used to subtract flatly, which does not scale. Defence 60 gave 48 armour
+ * against enemies hitting for 18-34, so a mid-level mech was outright immune and the
+ * whole late game became free. A ratio can approach total mitigation but never reach
+ * it - the same reason accuracy is opposed against evasion rather than subtracted.
+ */
+export const ARMOUR_SCALE = 60
+
 /** Backstop against a pathological content table producing a zero-length event loop. */
 const MAX_EVENTS_PER_CALL = 5_000_000
 
@@ -31,21 +43,44 @@ function swing(
   rng: Rng,
   accuracy: number,
   damage: number,
+  type: DamageType,
   evasion: number,
   armour: number,
+  resistances: Resistances,
 ): number {
   const hitChance = accuracy / (accuracy + evasion)
   if (!rng.chance(hitChance)) return 0
   const roll = 0.8 + rng.next() * 0.4
-  // A landed hit always does at least 1, so armour can never make a fight unwinnable
-  // outright - only slow enough that you notice and go build something better.
-  return Math.max(1, Math.round(damage * roll - armour))
+
+  // Resistance scales the raw damage, then armour mitigates a share of what is left.
+  // Both are multiplicative, so a good matchup and heavy plate compound rather than
+  // one washing the other out.
+  const typed = damage * roll * (resistances[type] ?? 1)
+  const mitigation = 1 - armour / (armour + ARMOUR_SCALE)
+
+  // A landed hit always does at least 1, so a bad matchup can never make a fight
+  // literally unwinnable - only slow enough that you notice and go build an answer.
+  return Math.max(1, Math.round(typed * mitigation))
 }
 
 /** Mutates. Rolls the next enemy in the zone and puts it on the field. */
-function spawnEnemy(state: GameState, enemyIds: readonly string[], rng: Rng): void {
+function spawnEnemy(
+  state: GameState,
+  enemyIds: readonly string[],
+  rng: Rng,
+  target?: string,
+): void {
   const combat = state.combat
-  const picked = enemyIds[rng.int(0, enemyIds.length - 1)]
+  // A named target is fought exclusively - that is how bosses are reached, since
+  // bosses are excluded from random spawns entirely.
+  let picked: string | undefined
+  if (target && enemyIds.includes(target)) {
+    picked = target
+  } else {
+    const spawnable = enemyIds.filter((id) => !getEnemy(id)?.isBoss)
+    const pool = spawnable.length > 0 ? spawnable : enemyIds
+    picked = pool[rng.int(0, pool.length - 1)]
+  }
   const enemy = picked ? getEnemy(picked) : undefined
   if (!enemy) {
     combat.enemyId = null
@@ -116,7 +151,9 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
       const step = Math.min(remaining, untilSpawn)
       combat.respawnProgress += step
       remaining -= step
-      if (combat.respawnProgress >= RESPAWN_DELAY - EPS) spawnEnemy(state, zone.enemies, rng)
+      if (combat.respawnProgress >= RESPAWN_DELAY - EPS) {
+        spawnEnemy(state, zone.enemies, rng, activity.enemy)
+      }
       continue
     }
 
@@ -127,8 +164,15 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     }
 
     // --- Advance to the next swing, whoever's it is ------------------------
+    // Boss phases are derived from current HP, so they take effect the instant the
+    // threshold is crossed - no stored phase to fall out of step with the health bar.
+    const phase = activePhase(enemy, combat.enemyHp)
+    const enemyInterval = enemy.attackInterval * (phase?.attackIntervalMultiplier ?? 1)
+    const enemyDamage = enemy.damage * (phase?.damageMultiplier ?? 1)
+    const enemyType = phase?.damageType ?? enemy.damageType
+
     const untilOurs = Math.max(0, stats.attackInterval - combat.attackProgress)
-    const untilTheirs = Math.max(0, enemy.attackInterval - combat.enemyAttackProgress)
+    const untilTheirs = Math.max(0, enemyInterval - combat.enemyAttackProgress)
     const step = Math.min(remaining, untilOurs, untilTheirs)
 
     combat.attackProgress += step
@@ -138,7 +182,15 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     // Ours resolves first on a tie. A deliberate sliver of player advantage.
     if (combat.attackProgress >= stats.attackInterval - EPS) {
       combat.attackProgress = 0
-      combat.enemyHp -= swing(rng, stats.accuracy, stats.damage, enemy.evasion, enemy.armour)
+      combat.enemyHp -= swing(
+        rng,
+        stats.accuracy,
+        stats.damage,
+        stats.damageType,
+        enemy.evasion,
+        enemy.armour,
+        effectiveResistances(enemy, combat.enemyHp),
+      )
       if (combat.enemyHp <= 0) {
         onKill(state, enemy, stats, rng)
         stats = derivedStats(state)
@@ -146,9 +198,17 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
       }
     }
 
-    if (combat.enemyAttackProgress >= enemy.attackInterval - EPS) {
+    if (combat.enemyAttackProgress >= enemyInterval - EPS) {
       combat.enemyAttackProgress = 0
-      combat.hp -= swing(rng, enemy.accuracy, enemy.damage, stats.evasion, stats.armour)
+      combat.hp -= swing(
+        rng,
+        enemy.accuracy,
+        enemyDamage,
+        enemyType,
+        stats.evasion,
+        stats.armour,
+        stats.resistances,
+      )
       if (combat.hp <= 0) {
         // Destroyed. Idling stops so the player finds out, and we patch back up so
         // redeploying does not immediately fail again.

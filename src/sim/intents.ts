@@ -36,10 +36,11 @@ export function startSkillAction(
 export function startCombat(
   state: GameState,
   zone: ZoneId,
+  enemy?: string,
   actor: ActorId = 'mech',
 ): GameState {
   const next = cloneState(state)
-  if (!setActivity(next, actor, { kind: 'combat', zone })) return state
+  if (!setActivity(next, actor, { kind: 'combat', zone, enemy })) return state
 
   const where = nodesForZone(zone).map((n) => n.id)
   if (routeTo(next, actor, where) === null) {

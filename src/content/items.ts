@@ -125,7 +125,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Not the chassis you were built with. It holds.',
     category: 'part',
     slot: 'frame',
-    stats: { hp: 25, armour: 2 },
+    stats: { hp: 25, armour: 2, resist: { kinetic: 0.9 } },
   },
   {
     id: 'arms_servo',
@@ -149,7 +149,23 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'A construction tool. It was never meant for this, and neither were you.',
     category: 'part',
     slot: 'weapon',
-    stats: { damage: 5, accuracy: 3 },
+    stats: { damage: 5, accuracy: 3, damageType: 'kinetic' },
+  },
+  {
+    id: 'weapon_arc',
+    name: 'Arc Projector',
+    description: 'Cuts rather than strikes. Plate that laughs at impacts runs like wax.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { damage: 14, accuracy: 8, damageType: 'energy' },
+  },
+  {
+    id: 'weapon_pulse',
+    name: 'Pulse Emitter',
+    description: 'No hole, no scorch. Whatever was thinking in there simply stops.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { damage: 12, accuracy: 14, damageType: 'emp' },
   },
   {
     id: 'reactor_cell',
@@ -157,7 +173,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Steady output at last. The tremor in your servos stops.',
     category: 'part',
     slot: 'reactor',
-    stats: { attackSpeed: 0.4, hp: 5 },
+    stats: { attackSpeed: 0.4, hp: 5, resist: { energy: 0.85 } },
   },
   {
     id: 'frame_titanium',
@@ -165,7 +181,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'You stop flinching at things that used to dent you.',
     category: 'part',
     slot: 'frame',
-    stats: { hp: 90, armour: 8 },
+    stats: { hp: 90, armour: 8, resist: { kinetic: 0.75, energy: 0.9 } },
   },
   {
     id: 'arms_precision',
@@ -181,7 +197,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'You do not so much walk as decide to be somewhere else.',
     category: 'part',
     slot: 'legs',
-    stats: { armour: 9, hp: 30, moveSpeed: 45 },
+    stats: { armour: 9, hp: 30, moveSpeed: 45, resist: { emp: 0.7 } },
   },
 ] as const
 

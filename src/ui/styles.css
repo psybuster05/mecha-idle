@@ -214,3 +214,43 @@ img.sprite { image-rendering: pixelated; }
   padding: 8px 12px; background: var(--panel); border: 1px solid var(--line);
 }
 .here-list li.active { border-color: var(--accent); background: var(--panel-2); }
+
+/* --- damage types and matchups ------------------------------------------ */
+
+.loadout {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; background: var(--panel); border: 1px solid var(--line);
+}
+.my-type { color: var(--accent); font-weight: 700; letter-spacing: 0.08em; }
+
+.resists { display: flex; gap: 6px; flex-wrap: wrap; }
+.resist {
+  display: flex; align-items: baseline; gap: 5px; font-size: 11px;
+  padding: 1px 7px; border: 1px solid var(--line); background: #0f1418;
+}
+.resist-type { letter-spacing: 0.1em; color: var(--dim); }
+.resist.strong .resist-value { color: var(--good); }   /* they take less */
+.resist.weak .resist-value { color: var(--bad); }      /* they take more */
+.resist.mine { border-color: var(--accent); }
+.resist.mine .resist-type { color: var(--accent); }
+
+.phase-banner {
+  padding: 6px 10px; border-left: 3px solid var(--accent);
+  background: rgba(255, 182, 72, 0.08); font-size: 12px;
+}
+
+.zone { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.zone.locked { opacity: 0.5; }
+.enemy-rows { display: flex; flex-direction: column; gap: 8px; }
+.enemy-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 12px; background: var(--panel); border: 1px solid var(--line);
+}
+.enemy-row.active { border-color: var(--accent); background: var(--panel-2); }
+.enemy-row.boss { border-left: 3px solid var(--enemy); }
+.enemy-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.enemy-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.boss-tag {
+  font-size: 10px; letter-spacing: 0.16em; color: var(--enemy);
+  border: 1px solid var(--enemy); padding: 0 5px;
+}
