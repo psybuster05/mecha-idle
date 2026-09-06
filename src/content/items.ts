@@ -39,6 +39,30 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Empty, but the casing is sound. That is the hard part.',
     category: 'component',
   },
+  {
+    id: 'sealed_bearing',
+    name: 'Sealed Bearing',
+    description: 'Packed in grease that never broke down. It still spins true.',
+    category: 'component',
+  },
+  {
+    id: 'optic_lens',
+    name: 'Optic Lens',
+    description: 'Ground glass, unclouded. Someone made this by hand.',
+    category: 'component',
+  },
+  {
+    id: 'carbon_weave',
+    name: 'Carbon Weave',
+    description: 'Lighter than the steel it outperforms. The old world knew things.',
+    category: 'material',
+  },
+  {
+    id: 'fused_core',
+    name: 'Fused Core',
+    description: 'Slagged into one mass by whatever ended everything. Still holds a charge.',
+    category: 'component',
+  },
 
   // --- Refined stock (Refining) -------------------------------------------
   {
@@ -65,7 +89,36 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Warm to the touch. You remember warmth.',
     category: 'component',
   },
+  {
+    id: 'bearing_assembly',
+    name: 'Bearing Assembly',
+    description: 'Trued and seated. Nothing you build with this will grind.',
+    category: 'material',
+  },
+  {
+    id: 'lens_array',
+    name: 'Lens Array',
+    description: 'Stacked and aligned. You can see the horizon properly for the first time.',
+    category: 'material',
+  },
+  {
+    id: 'weave_sheet',
+    name: 'Weave Sheet',
+    description: 'Pressed flat under heat. Takes a hit like plate at a third the mass.',
+    category: 'material',
+  },
+  {
+    id: 'core_matrix',
+    name: 'Core Matrix',
+    description: 'Rebuilt from slag into something that hums again.',
+    category: 'component',
+  },
+
   // --- Equippable parts (Fabrication) --------------------------------------
+  //
+  // Arms carry skillSpeed and legs carry moveSpeed. That is the whole "unlockable
+  // speed-up" axis: your arms do the work, your legs do the walking, and upgrading
+  // them is how you buy back time.
   {
     id: 'frame_steel',
     name: 'Welded Steel Frame',
@@ -80,7 +133,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Salvaged actuators, re-tensioned. They answer faster than you expect.',
     category: 'part',
     slot: 'arms',
-    stats: { accuracy: 5, damage: 2 },
+    stats: { accuracy: 5, damage: 2, skillSpeed: 0.08 },
   },
   {
     id: 'legs_tracked',
@@ -88,7 +141,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Slower than the originals. Far harder to knock down.',
     category: 'part',
     slot: 'legs',
-    stats: { armour: 3, hp: 10 },
+    stats: { armour: 3, hp: 10, moveSpeed: 12 },
   },
   {
     id: 'weapon_rivet',
@@ -105,6 +158,30 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'part',
     slot: 'reactor',
     stats: { attackSpeed: 0.4, hp: 5 },
+  },
+  {
+    id: 'frame_titanium',
+    name: 'Titanium Exoframe',
+    description: 'You stop flinching at things that used to dent you.',
+    category: 'part',
+    slot: 'frame',
+    stats: { hp: 90, armour: 8 },
+  },
+  {
+    id: 'arms_precision',
+    name: 'Precision Manipulators',
+    description: 'Fine enough to strip a board without looking. Work goes faster now.',
+    category: 'part',
+    slot: 'arms',
+    stats: { accuracy: 18, damage: 9, skillSpeed: 0.25 },
+  },
+  {
+    id: 'legs_thruster',
+    name: 'Thruster Legs',
+    description: 'You do not so much walk as decide to be somewhere else.',
+    category: 'part',
+    slot: 'legs',
+    stats: { armour: 9, hp: 30, moveSpeed: 45 },
   },
 ] as const
 

@@ -3,6 +3,12 @@ import { tick } from '../tick'
 import { newGame, setActivity, type GameState } from '../state'
 import { count } from '../bank'
 import { xpForLevel } from '../xp'
+import { getAction } from '../../content'
+
+// Read the balance out of the content tables rather than hardcoding it, so a
+// deliberate rebalance does not read as a broken engine.
+const ROADSIDE = getAction('scavenging', 'roadside_wrecks')!
+const SMELT = getAction('refining', 'smelt_steel')!
 
 function scavenging(action = 'roadside_wrecks', seed = 42): GameState {
   const state = newGame(seed)
@@ -19,29 +25,29 @@ function tickBy(state: GameState, total: number, step: number): GameState {
 
 describe('skill engine - completion timing', () => {
   it('produces nothing before the action duration elapses', () => {
-    const state = tick(scavenging(), 2.9) // duration is 3
+    const state = tick(scavenging(), ROADSIDE.duration - 0.1)
     expect(count(state, 'scrap_steel')).toBe(0)
     expect(state.skills.scavenging).toBe(0)
-    expect(state.actors.mech.progress).toBeCloseTo(2.9, 6)
+    expect(state.actors.mech.progress).toBeCloseTo(ROADSIDE.duration - 0.1, 6)
   })
 
   it('completes exactly once at the duration boundary', () => {
-    const state = tick(scavenging(), 3)
+    const state = tick(scavenging(), ROADSIDE.duration)
     expect(count(state, 'scrap_steel')).toBe(1)
-    expect(state.skills.scavenging).toBe(5)
+    expect(state.skills.scavenging).toBe(ROADSIDE.xp)
     expect(state.actors.mech.progress).toBeCloseTo(0, 6)
   })
 
   it('carries leftover progress into the next action', () => {
-    const state = tick(scavenging(), 4)
+    const state = tick(scavenging(), ROADSIDE.duration + 1)
     expect(count(state, 'scrap_steel')).toBe(1)
     expect(state.actors.mech.progress).toBeCloseTo(1, 6)
   })
 
   it('applies many completions in a single large step', () => {
-    const state = tick(scavenging(), 30)
+    const state = tick(scavenging(), ROADSIDE.duration * 10)
     expect(count(state, 'scrap_steel')).toBe(10)
-    expect(state.skills.scavenging).toBe(50)
+    expect(state.skills.scavenging).toBe(ROADSIDE.xp * 10)
   })
 
   it('does nothing for zero, negative or non-finite dt', () => {
@@ -105,11 +111,11 @@ describe('skill engine - halting', () => {
     state.bank['scrap_steel'] = 3 // smelting costs 2, so exactly one is affordable
     setActivity(state, 'mech', { kind: 'skill', skill: 'refining', action: 'smelt_steel' })
 
-    const after = tick(state, 12) // room for three completions
+    const after = tick(state, SMELT.duration * 3) // room for three completions
 
     expect(count(after, 'steel_ingot')).toBe(1)
     expect(count(after, 'scrap_steel')).toBe(1)
-    expect(after.skills.refining).toBe(8)
+    expect(after.skills.refining).toBe(SMELT.xp)
     expect(after.actors.mech.activity).toBeNull()
     expect(after.actors.mech.stoppedReason).toBe('missing-inputs')
   })

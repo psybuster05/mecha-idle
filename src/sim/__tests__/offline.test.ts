@@ -4,6 +4,9 @@ import { newGame, setActivity, type GameState } from '../state'
 import { tick } from '../tick'
 import { count } from '../bank'
 import { xpForLevel } from '../xp'
+import { getAction } from '../../content'
+
+const ROADSIDE = getAction('scavenging', 'roadside_wrecks')!
 
 const NOW = 1_700_000_000_000
 
@@ -82,10 +85,10 @@ describe('offline - the report', () => {
 
     expect(report.seconds).toBe(3600)
     expect(report.awaySeconds).toBeNull()
-    // roadside_wrecks: 3s per completion, 1 scrap and 5 xp each.
-    expect(report.items['scrap_steel']).toBe(1200)
-    expect(report.skillXp.scavenging).toBe(6000)
-    expect(count(state, 'scrap_steel')).toBe(1200)
+    const completions = 3600 / ROADSIDE.duration
+    expect(report.items['scrap_steel']).toBe(completions)
+    expect(report.skillXp.scavenging).toBe(completions * ROADSIDE.xp)
+    expect(count(state, 'scrap_steel')).toBe(completions)
     expect(report.stopped).toBeNull()
   })
 
@@ -131,7 +134,6 @@ describe('offline - the cap', () => {
 
   it('credits exactly the capped amount of work', () => {
     const { report } = applyOffline(scavengingFor(100 * 3600), NOW)
-    // 12h cap / 3s per completion
-    expect(report?.items['scrap_steel']).toBe(MAX_OFFLINE_SECONDS / 3)
+    expect(report?.items['scrap_steel']).toBe(MAX_OFFLINE_SECONDS / ROADSIDE.duration)
   })
 })

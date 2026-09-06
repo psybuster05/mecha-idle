@@ -11,19 +11,22 @@ import type { SkillAction } from '../content/types'
 import { addItem, grantAll, maxCraftable, payCost } from './bank'
 import { Rng } from './rng'
 import { haltActivity, type ActorId, type GameState } from './state'
+import { derivedStats } from './stats'
 import { levelFromXp } from './xp'
 
 /**
  * Seconds per completion after modifiers.
  *
- * IMPORTANT: this currently ignores state, and `advanceSkillActivity` relies on that
- * to apply many completions in one step (which is what makes offline catch-up instant).
- * If duration ever becomes level- or equipment-dependent, the bulk path must be capped
- * at the next level-up boundary and recomputed, or a long offline stretch will be
- * simulated at a stale speed.
+ * Equipment may scale this, and that is safe for the bulk-completion path: equipment
+ * cannot change part-way through a tick, only between ticks via an intent.
+ *
+ * IMPORTANT: it must never become *level*-dependent. Levels do change mid-tick, so a
+ * long offline stretch would be simulated entirely at the stale starting speed. If that
+ * is ever wanted, cap the bulk path at the next level-up boundary and recompute - which
+ * is exactly what combat has to do after every kill.
  */
-export function actionDuration(_state: GameState, action: SkillAction): number {
-  return action.duration
+export function actionDuration(state: GameState, action: SkillAction): number {
+  return action.duration * derivedStats(state).skillDurationScale
 }
 
 /**

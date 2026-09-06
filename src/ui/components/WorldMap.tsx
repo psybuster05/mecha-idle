@@ -17,7 +17,12 @@ import type { GameState, NodeId } from '../../sim/state'
 /** Logical canvas size. Node coordinates are authored in this space. */
 const MAP_WIDTH = 740
 const MAP_HEIGHT = 540
-const PADDING = 40
+/**
+ * Labels sit under nodes and extend well past them, so the horizontal inset has to
+ * clear half a place name - not just the node square - or the outermost labels clip.
+ */
+const PADDING_X = 80
+const PADDING_Y = 34
 
 const COLOURS = {
   edge: '#263038',
@@ -51,12 +56,15 @@ function makeProjection() {
   const spanX = Math.max(1, maxX - minX)
   const spanY = Math.max(1, maxY - minY)
   const scale = Math.min(
-    (MAP_WIDTH - PADDING * 2) / spanX,
-    (MAP_HEIGHT - PADDING * 2) / spanY,
+    (MAP_WIDTH - PADDING_X * 2) / spanX,
+    (MAP_HEIGHT - PADDING_Y * 2) / spanY,
   )
+  // Centre whatever slack the tighter axis leaves over.
+  const offsetX = (MAP_WIDTH - spanX * scale) / 2
+  const offsetY = (MAP_HEIGHT - spanY * scale) / 2
   return (x: number, y: number) => ({
-    x: PADDING + (x - minX) * scale,
-    y: PADDING + (y - minY) * scale,
+    x: offsetX + (x - minX) * scale,
+    y: offsetY + (y - minY) * scale,
   })
 }
 

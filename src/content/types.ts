@@ -31,6 +31,11 @@ export interface EquipStats {
   armour?: number
   /** Added to maximum HP. */
   hp?: number
+  /**
+   * Fraction faster that non-combat actions complete. 0.25 means 25% quicker.
+   * Lives on Arms: your hands do the work, so better hands do it sooner.
+   */
+  skillSpeed?: number
   /** Map units per second added to movement. Thrusters, tracks, better legs. */
   moveSpeed?: number
   /** Seconds shaved off our attack interval. Negative values would slow us down. */

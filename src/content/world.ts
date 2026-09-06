@@ -101,6 +101,41 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     y: 300,
     combat: 'rustbelt',
   },
+
+  // Later tiers sit progressively further out, so walking speed matters more the
+  // deeper you get - which is what makes Thruster Legs feel like a reward.
+  {
+    id: 'freight_yard',
+    name: 'Sunken Freight Yard',
+    description: 'Containers stacked six high, half of them underwater. Sealed things keep well down there.',
+    x: 760,
+    y: 480,
+    actions: [{ skill: 'scavenging', action: 'freight_yard' }],
+  },
+  {
+    id: 'plant_ruins',
+    name: 'Fabrication Plant',
+    description: 'A factory that built machines like you. The line is still halfway through an order.',
+    x: 820,
+    y: 200,
+    actions: [{ skill: 'scavenging', action: 'plant_ruins' }],
+  },
+  {
+    id: 'debris_field',
+    name: 'Orbital Debris Field',
+    description: 'Everything in the sky came down eventually. This is where most of it landed.',
+    x: 700,
+    y: 60,
+    actions: [{ skill: 'scavenging', action: 'debris_field' }],
+  },
+  {
+    id: 'vitrified_zone',
+    name: 'The Vitrified Zone',
+    description: 'The ground here turned to glass and stayed that way. Nothing has moved in it since.',
+    x: 980,
+    y: 330,
+    actions: [{ skill: 'scavenging', action: 'vitrified_zone' }],
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -111,6 +146,14 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'checkpoint', b: 'graveyard' },
   { a: 'checkpoint', b: 'slag_fields', difficulty: 1.4 },
   { a: 'overpass', b: 'slag_fields', difficulty: 1.6 },
+
+  // The far reaches. Rougher ground as well as longer distances.
+  { a: 'slag_fields', b: 'freight_yard', difficulty: 1.3 },
+  { a: 'graveyard', b: 'plant_ruins', difficulty: 1.4 },
+  { a: 'freight_yard', b: 'plant_ruins', difficulty: 1.5 },
+  { a: 'plant_ruins', b: 'debris_field', difficulty: 1.6 },
+  { a: 'plant_ruins', b: 'vitrified_zone', difficulty: 1.8 },
+  { a: 'debris_field', b: 'vitrified_zone', difficulty: 1.8 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

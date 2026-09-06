@@ -29,8 +29,10 @@ export interface DerivedStats {
   damage: number
   armour: number
   attackInterval: number
-  /** Map units per second. Thrusters and similar Back-slot parts raise this. */
+  /** Map units per second. Better legs raise this. */
   moveSpeed: number
+  /** Multiplier on non-combat action duration. Below 1 means faster. */
+  skillDurationScale: number
 }
 
 /** Sum of one stat across everything currently equipped. */
@@ -62,6 +64,9 @@ export function derivedStats(state: GameState): DerivedStats {
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),
     ),
     moveSpeed: BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed'),
+    // Expressed as a duration multiplier rather than a speed bonus so stacking is
+    // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
+    skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),
   }
 }
 
