@@ -14,8 +14,14 @@ import { tick } from './tick'
 import type { ActorId, GameState, ItemId, SkillId, StopReason } from './state'
 import { ACTOR_IDS, ALL_SKILLS } from './state'
 
-/** Longest stretch that will ever be credited. */
-export const MAX_OFFLINE_SECONDS = 12 * 3600
+/**
+ * Longest stretch that will ever be credited.
+ *
+ * At 24h a once-a-day player loses nothing to the cap, which suits a game meant to
+ * sit on a second screen. It also means the ~503h to max a skill lands at about
+ * three weeks for a daily player rather than six.
+ */
+export const MAX_OFFLINE_SECONDS = 24 * 3600
 /** Below this, a return is a page refresh rather than an absence. Report nothing. */
 export const MIN_OFFLINE_SECONDS = 60
 
