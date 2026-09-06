@@ -1,10 +1,22 @@
+/*
+ * Placeholder visual pass: a dark cockpit-terminal look built entirely from CSS.
+ * No image assets yet by design - pixel art lands once the loop is proven fun.
+ * When it does, see the integer-scaling rule in CLAUDE.md.
+ */
+
 :root {
-  --bg: #0d1114;
-  --panel: #161c21;
-  --line: #2a343c;
-  --text: #c8d4dc;
-  --dim: #6c7f8c;
+  --bg: #0b0e11;
+  --panel: #141a1f;
+  --panel-2: #1a2229;
+  --line: #263038;
+  --line-bright: #35424c;
+  --text: #c9d6de;
+  --dim: #6b7d8a;
   --accent: #ffb648;
+  --accent-dim: #7a5a26;
+  --good: #6fcf80;
+  --bad: #e2705f;
+  --enemy: #c8624f;
   color-scheme: dark;
 }
 
@@ -14,15 +26,173 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font: 13px/1.5 ui-monospace, "Cascadia Mono", "Consolas", monospace;
 }
 
-.app { padding: 24px; }
-h1 { font-size: 20px; letter-spacing: 0.18em; margin: 0 0 4px; }
-.dim { color: var(--dim); margin: 0; }
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line-bright);
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+button:hover { border-color: var(--accent-dim); color: #fff; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #1a1206; font-weight: 700; }
+button.primary:hover { background: #ffc76e; }
 
-/* Pixel art: integer scaling only. See CLAUDE.md. */
-img.sprite {
-  image-rendering: pixelated;
-  -ms-interpolation-mode: nearest-neighbor;
+h1 { font-size: 15px; letter-spacing: 0.22em; margin: 0; }
+h2 { font-size: 16px; margin: 0 0 2px; letter-spacing: 0.06em; }
+h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--dim); margin: 20px 0 8px; }
+p { margin: 0; }
+ul { list-style: none; margin: 0; padding: 0; }
+
+.dim { color: var(--dim); }
+.flavour { font-style: italic; max-width: 62ch; }
+.warn { color: var(--accent); }
+.gain { color: var(--good); }
+.loss { color: var(--bad); }
+.banner { padding: 8px 20px; border-bottom: 1px solid var(--line); }
+
+/* --- shell ------------------------------------------------------------- */
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.app.booting { padding: 40px; gap: 4px; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+.brand { display: flex; align-items: baseline; gap: 14px; }
+.topbar-stats { flex: 0 1 320px; min-width: 180px; }
+
+.layout { display: flex; flex: 1; align-items: flex-start; }
+
+.rail {
+  width: 240px; flex: none; padding: 16px 12px; border-right: 1px solid var(--line);
+  background: var(--panel); align-self: stretch; display: flex; flex-direction: column; gap: 22px;
+}
+.rail-group { display: flex; flex-direction: column; gap: 4px; }
+.rail-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; padding: 0 6px 4px; }
+.rail-item {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;
+  background: none; border: 1px solid transparent; text-align: left; padding: 7px 8px;
+}
+.rail-item:hover { background: var(--panel-2); border-color: var(--line); }
+.rail-item.selected { background: var(--panel-2); border-color: var(--accent-dim); }
+.rail-item .bar-wrap { grid-column: 1 / -1; }
+.rail-name { display: flex; align-items: center; gap: 6px; }
+.rail-level { color: var(--accent); font-weight: 700; }
+.rail-hint { padding: 0 6px; font-size: 12px; }
+
+.running-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+.content { flex: 1; padding: 20px 24px; min-width: 0; }
+.panel { max-width: 900px; display: flex; flex-direction: column; gap: 10px; }
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.level-block { text-align: center; flex: none; }
+.level-number { font-size: 26px; color: var(--accent); font-weight: 700; line-height: 1; }
+
+/* --- bars -------------------------------------------------------------- */
+
+.bar-wrap { display: flex; flex-direction: column; gap: 3px; width: 100%; }
+.bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.bar { height: 6px; background: #0a0d10; border: 1px solid var(--line); overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); transition: width 90ms linear; }
+.bar-xp .bar-fill { background: var(--accent-dim); }
+.bar-integrity .bar-fill { background: var(--good); }
+.bar-enemy .bar-fill { background: var(--enemy); }
+
+/* --- action lists ------------------------------------------------------ */
+
+.actions { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.action {
+  display: flex; gap: 16px; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--panel); border: 1px solid var(--line);
+}
+.action.active { border-color: var(--accent); background: var(--panel-2); }
+.action.locked { opacity: 0.45; }
+.action-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.action-side { flex: none; }
+.action-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.action-name { font-weight: 700; letter-spacing: 0.04em; }
+.xp-tag { color: var(--accent-dim); }
+.lock { color: var(--dim); white-space: nowrap; }
+
+.recipe { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+.stacks { display: flex; gap: 10px; flex-wrap: wrap; }
+.stacks li { display: flex; align-items: baseline; gap: 5px; }
+.stacks .qty { color: var(--accent); font-weight: 700; }
+.stacks li.short, .stacks li.short .qty { color: var(--bad); }
+.stacks .held { font-size: 11px; }
+.arrow { color: var(--dim); }
+.drop-tag { color: var(--dim); border: 1px dashed var(--line-bright); padding: 0 6px; }
+
+/* --- combat ------------------------------------------------------------ */
+
+.engagement {
+  display: flex; align-items: stretch; gap: 20px;
+  padding: 16px; background: var(--panel); border: 1px solid var(--line-bright);
+}
+.combatant { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.combatant-name { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.versus { align-self: center; color: var(--dim); }
+.scanning { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.enemy-list { display: flex; flex-direction: column; gap: 3px; font-size: 12px; margin-top: 4px; }
+.enemy-list li { display: flex; gap: 10px; flex-wrap: wrap; }
+.enemy-name { min-width: 160px; }
+.drops { font-style: italic; }
+
+/* --- chassis ----------------------------------------------------------- */
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  background: var(--line); border: 1px solid var(--line);
+}
+.stat { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; background: var(--panel); }
+.stat-value { color: var(--accent); font-weight: 700; }
+
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.slot { padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 5px; }
+.slot.filled { border-color: var(--line-bright); }
+.slot-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; }
+.slot-item { font-weight: 700; }
+.slot-stats { font-size: 12px; }
+
+.parts { display: flex; flex-direction: column; gap: 8px; }
+.part { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); }
+
+/* --- hold -------------------------------------------------------------- */
+
+.bank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.bank-item { padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
+.bank-qty { color: var(--accent); font-weight: 700; }
+
+/* --- modal ------------------------------------------------------------- */
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(4, 6, 8, 0.82);
+  display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 10;
+}
+.modal {
+  background: var(--panel); border: 1px solid var(--line-bright); padding: 24px;
+  width: min(520px, 100%); max-height: 84vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.tally { display: flex; flex-direction: column; gap: 3px; }
+.tally li { display: flex; justify-content: space-between; gap: 16px; }
+.modal button.primary { align-self: flex-start; margin-top: 6px; }
+
+/* Pixel art, when it arrives: integer scaling only. See CLAUDE.md. */
+img.sprite { image-rendering: pixelated; }
+
+@media (max-width: 720px) {
+  .layout { flex-direction: column; }
+  .rail { width: 100%; border-right: none; border-bottom: 1px solid var(--line); }
+  .engagement { flex-direction: column; }
 }

@@ -1,8 +1,147 @@
+import { useMemo, useState } from 'react'
+import { LocalStorageAdapter } from '../platform/SaveAdapter'
+import { SKILLS, getSkill } from '../content'
+import { GATHERING_SKILLS, type GatheringSkillId, type GameState } from '../sim/state'
+import { combatLevel, derivedStats } from '../sim/stats'
+import { levelFromXp, levelProgress } from '../sim/xp'
+import { formatNumber } from './format'
+import { useGame } from './useGame'
+import { Bar } from './components/Bar'
+import { BankPanel } from './components/BankPanel'
+import { CombatPanel } from './components/CombatPanel'
+import { MechPanel } from './components/MechPanel'
+import { OfflineDialog } from './components/OfflineDialog'
+import { SkillPanel } from './components/SkillPanel'
+
+type Tab = GatheringSkillId | 'combat' | 'mech' | 'bank'
+
+/** One-line summary of what the mech is doing, for the header. */
+function activitySummary(state: GameState): string {
+  const activity = state.actors.mech.activity
+  if (!activity) return 'Standby'
+  if (activity.kind === 'combat') return 'Deployed'
+  const skill = getSkill(activity.skill)
+  const action = skill?.actions.find((a) => a.id === activity.action)
+  return action ? action.name : skill?.name ?? 'Working'
+}
+
 export function App() {
+  // One adapter for the life of the app; swapping this line is the whole desktop port.
+  const adapter = useMemo(() => new LocalStorageAdapter(), [])
+  const { state, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
+  const [tab, setTab] = useState<Tab>('scavenging')
+
+  if (!ready) {
+    return (
+      <main className="app booting">
+        <h1>MECHA IDLE</h1>
+        <p className="dim">Reactor spinning up...</p>
+      </main>
+    )
+  }
+
+  const stats = derivedStats(state)
+  const activity = state.actors.mech.activity
+  const busy = activity !== null
+
   return (
-    <main className="app">
-      <h1>MECHA IDLE</h1>
-      <p className="dim">Reactor online. Subroutines dark.</p>
-    </main>
+    <div className="app">
+      <header className="topbar">
+        <div className="brand">
+          <h1>MECHA IDLE</h1>
+          <span className="dim">{activitySummary(state)}</span>
+        </div>
+        <div className="topbar-stats">
+          <div className="integrity">
+            <Bar
+              value={state.combat.hp > 0 ? state.combat.hp / stats.maxHp : 1}
+              tone="integrity"
+              label="Integrity"
+              detail={`${formatNumber(state.combat.hp > 0 ? state.combat.hp : stats.maxHp)} / ${formatNumber(stats.maxHp)}`}
+            />
+          </div>
+        </div>
+      </header>
+
+      {loadError && (
+        <p className="warn banner">
+          {loadError} Your previous save has been left untouched.
+        </p>
+      )}
+
+      <div className="layout">
+        <nav className="rail">
+          <div className="rail-group">
+            <div className="rail-heading dim">Subroutines</div>
+            {GATHERING_SKILLS.map((id) => {
+              const skill = SKILLS.find((s) => s.id === id)
+              const xp = state.skills[id]
+              const running = activity?.kind === 'skill' && activity.skill === id
+              return (
+                <button
+                  key={id}
+                  className={`rail-item ${tab === id ? 'selected' : ''}`}
+                  onClick={() => setTab(id)}
+                >
+                  <span className="rail-name">
+                    {running && <span className="running-dot" aria-label="running" />}
+                    {skill?.name ?? id}
+                  </span>
+                  <span className="rail-level">{levelFromXp(xp)}</span>
+                  <Bar value={levelProgress(xp)} tone="xp" />
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="rail-group">
+            <div className="rail-heading dim">Systems</div>
+            <button
+              className={`rail-item ${tab === 'combat' ? 'selected' : ''}`}
+              onClick={() => setTab('combat')}
+            >
+              <span className="rail-name">
+                {activity?.kind === 'combat' && <span className="running-dot" aria-label="running" />}
+                Sorties
+              </span>
+              <span className="rail-level">{combatLevel(state)}</span>
+            </button>
+            <button
+              className={`rail-item ${tab === 'mech' ? 'selected' : ''}`}
+              onClick={() => setTab('mech')}
+            >
+              <span className="rail-name">Chassis</span>
+            </button>
+            <button
+              className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
+              onClick={() => setTab('bank')}
+            >
+              <span className="rail-name">Hold</span>
+              <span className="rail-level">{Object.keys(state.bank).length}</span>
+            </button>
+          </div>
+
+          {!busy && (
+            <p className="rail-hint dim">
+              Nothing is running. Pick an action - you only have attention for one.
+            </p>
+          )}
+        </nav>
+
+        <main className="content">
+          {tab === 'combat' ? (
+            <CombatPanel state={state} dispatch={dispatch} />
+          ) : tab === 'mech' ? (
+            <MechPanel state={state} dispatch={dispatch} />
+          ) : tab === 'bank' ? (
+            <BankPanel state={state} />
+          ) : (
+            <SkillPanel state={state} skillId={tab} dispatch={dispatch} />
+          )}
+        </main>
+      </div>
+
+      {offlineReport && <OfflineDialog report={offlineReport} onDismiss={dismissOffline} />}
+    </div>
   )
 }
