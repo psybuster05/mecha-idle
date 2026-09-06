@@ -1,4 +1,6 @@
-import { getSkill, itemName } from '../../content'
+import { getEnemy, getSkill, itemName } from '../../content'
+import { nodesForAction } from '../../content/world'
+import { isNodeOpen } from '../../sim/world'
 import type { SkillAction } from '../../content/types'
 import { count } from '../../sim/bank'
 import { startSkillAction, stopActivity } from '../../sim/intents'
@@ -66,10 +68,23 @@ export function SkillPanel({ state, skillId, dispatch }: Props) {
       {stopped === 'missing-inputs' && (
         <p className="warn">Materials ran out. Restock, then start again.</p>
       )}
+      {stopped === 'unreachable' && (
+        <p className="warn">There is nowhere you can reach that does that yet.</p>
+      )}
 
       <ul className="actions">
         {skill.actions.map((action) => {
-          const locked = level < action.levelRequired
+          const belowLevel = level < action.levelRequired
+
+          // An action whose every location sits behind a lock cannot be started. Say so
+          // in the list rather than offering a button that silently does nothing - that
+          // dead click is exactly how this was found.
+          const places = nodesForAction(skillId, action.id)
+          const sealed = places.length > 0 && !places.some((node) => isNodeOpen(state, node.id))
+          const sealedBy = sealed ? places[0]?.unlockedBy : undefined
+          const gate = sealedBy ? (getEnemy(sealedBy)?.name ?? sealedBy) : null
+
+          const locked = belowLevel || sealed
           const active = isActive(action)
           const progress = active ? state.actors.mech.progress / action.duration : 0
 
@@ -98,7 +113,9 @@ export function SkillPanel({ state, skillId, dispatch }: Props) {
               </div>
 
               <div className="action-side">
-                {locked ? (
+                {sealed ? (
+                  <span className="lock">Sealed &middot; {gate}</span>
+                ) : belowLevel ? (
                   <span className="lock">Level {action.levelRequired}</span>
                 ) : active ? (
                   <button onClick={() => dispatch((s) => stopActivity(s))}>Stop</button>

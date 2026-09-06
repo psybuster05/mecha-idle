@@ -116,5 +116,54 @@ export const SCAVENGING: SkillDef = {
       drops: [{ item: 'optic_lens', qty: 2, chance: 0.3 }],
       xp: 63,
     },
+
+    // --- Ship Graveyard. Same levels and rates as the Rustbelt tiers above; the
+    // difference is what comes out, not how fast. ---
+    {
+      id: 'beached_hulls',
+      name: 'Beached Hulls',
+      description: 'Driven up the mud when the water went. They have been settling ever since.',
+      levelRequired: 30,
+      duration: 5,
+      outputs: [{ item: 'hull_plate', qty: 2 }],
+      drops: [{ item: 'scrap_steel', qty: 3, chance: 0.4 }],
+      xp: 12,
+    },
+    {
+      id: 'tanker_holds',
+      name: 'Tanker Holds',
+      description: 'Cargo nobody came back for, in a hold nobody has opened.',
+      levelRequired: 45,
+      duration: 5,
+      outputs: [{ item: 'hull_plate', qty: 3 }],
+      drops: [{ item: 'hydraulic_ram', qty: 1, chance: 0.18 }],
+      xp: 16,
+    },
+    {
+      id: 'the_drydock',
+      name: 'The Drydock',
+      description: 'A ship half-repaired, propped on blocks. The work order is still pinned up.',
+      levelRequired: 60,
+      duration: 6,
+      outputs: [
+        { item: 'hydraulic_ram', qty: 1 },
+        { item: 'hull_plate', qty: 2 },
+      ],
+      drops: [{ item: 'sonar_array', qty: 1, chance: 0.22 }],
+      xp: 27,
+    },
+    {
+      id: 'deep_berths',
+      name: 'Deep Berths',
+      description: 'The water never fully left here. Things below the waterline kept better for it.',
+      levelRequired: 75,
+      duration: 6,
+      outputs: [
+        { item: 'sonar_array', qty: 1 },
+        { item: 'hull_plate', qty: 3 },
+      ],
+      drops: [{ item: 'hydraulic_ram', qty: 2, chance: 0.3 }],
+      xp: 38,
+    },
   ],
 }

@@ -64,6 +64,36 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- Ship Graveyard salvage ----------------------------------------------
+  //
+  // A deliberately separate material line. The Graveyard is lateral content: these
+  // feed a different *build*, not a better one, so nothing here is required to max a
+  // skill. See the gating rule in CLAUDE.md.
+  {
+    id: 'hull_plate',
+    name: 'Corroded Hull Plate',
+    description: 'Thirty years of salt did what the war could not. Underneath, it is still good.',
+    category: 'material',
+  },
+  {
+    id: 'hydraulic_ram',
+    name: 'Hydraulic Ram',
+    description: 'Built to move a cargo door against the sea. It does not know the sea is gone.',
+    category: 'component',
+  },
+  {
+    id: 'sonar_array',
+    name: 'Sonar Array',
+    description: 'Still listening. Whatever it hears down there, it has stopped reporting.',
+    category: 'component',
+  },
+  {
+    id: 'pressure_hull',
+    name: 'Pressure Hull Section',
+    description: 'Cut from the Quartermaster itself. Rated for depths nothing here will ever see again.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
@@ -105,6 +135,18 @@ export const ITEMS: readonly ItemDef[] = [
     id: 'weave_sheet',
     name: 'Weave Sheet',
     description: 'Pressed flat under heat. Takes a hit like plate at a third the mass.',
+    category: 'material',
+  },
+  {
+    id: 'marine_alloy',
+    name: 'Marine Alloy',
+    description: 'Brine-hardened. Shrugs off heat in a way steel never manages.',
+    category: 'material',
+  },
+  {
+    id: 'pressure_seal',
+    name: 'Pressure Seal',
+    description: 'Keeps the inside in and the outside out. You have come to value that.',
     category: 'material',
   },
   {
@@ -198,6 +240,24 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'part',
     slot: 'legs',
     stats: { armour: 9, hp: 30, moveSpeed: 45, resist: { emp: 0.7 } },
+  },
+  // Graveyard parts are sidegrades, not upgrades. The Marine Exoframe trades raw
+  // defence for genuine energy protection; the Harpoon trades cadence for weight.
+  {
+    id: 'frame_marine',
+    name: 'Marine Exoframe',
+    description: 'Sealed against a sea that is not there any more. Heat runs off it like water.',
+    category: 'part',
+    slot: 'frame',
+    stats: { hp: 70, armour: 6, resist: { energy: 0.6, emp: 0.85, kinetic: 1.05 } },
+  },
+  {
+    id: 'weapon_harpoon',
+    name: 'Harpoon Launcher',
+    description: 'One shot, and a long wait. Everything it hits stays hit.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { damage: 34, accuracy: 6, damageType: 'kinetic', attackSpeed: -1.1 },
   },
 ] as const
 

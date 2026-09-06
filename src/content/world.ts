@@ -29,10 +29,11 @@ export interface WorldNodeDef {
   /**
    * Boss that must be defeated before this place can be entered.
    *
-   * Unused for now, and deliberately declared early so the rule below has something
-   * to check. **A node carrying gathering actions must never set this.** Non-combat
-   * skills reach 99 on time alone; combat widens what you can do, it does not unblock
-   * the ladder you are already on. A test enforces it.
+   * Locked regions **may** hold gathering content - the Ship Graveyard does. What they
+   * must never be is *required*: a complete 1-99 ladder has to remain available outside
+   * every lock, and locked actions must never beat what is already open at their level.
+   * Both are measured by tests in content/__tests__/pacing.test.ts, which recompute the
+   * whole curve using unlocked actions only.
    */
   unlockedBy?: string
 }
@@ -70,6 +71,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'grind_lenses' },
       { skill: 'refining', action: 'press_weave' },
       { skill: 'refining', action: 'reforge_core' },
+      { skill: 'refining', action: 'temper_marine' },
+      { skill: 'refining', action: 'seat_seal' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
@@ -80,6 +83,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'fabrication', action: 'fab_frame_titanium' },
       { skill: 'fabrication', action: 'fab_arms_precision' },
       { skill: 'fabrication', action: 'fab_legs_thruster' },
+      { skill: 'fabrication', action: 'fab_weapon_harpoon' },
+      { skill: 'fabrication', action: 'fab_frame_marine' },
     ],
   },
   {
@@ -158,6 +163,52 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     y: 330,
     actions: [{ skill: 'scavenging', action: 'vitrified_zone' }],
   },
+
+  // --- The Ship Graveyard, south along the old coast -----------------------
+  //
+  // The whole region is locked behind the Overseer. That is allowed because the
+  // Rustbelt already carries a complete 1-99 ladder for every skill: locked content
+  // may exist, it just may never be *required* to max anything. A pacing test checks
+  // that the open-world ladder still reaches 99 on its own.
+  {
+    id: 'shallows',
+    name: 'The Shallows',
+    description: 'Mudflats where the water pulled back. Hulls stand in it like a row of teeth.',
+    x: 300,
+    y: 640,
+    unlockedBy: 'overseer',
+    actions: [{ skill: 'scavenging', action: 'beached_hulls' }],
+  },
+  {
+    id: 'tanker_rows',
+    name: 'Tanker Rows',
+    description: 'Moored in ranks, still tied to bollards nobody untied. Something moves between them.',
+    x: 500,
+    y: 720,
+    unlockedBy: 'overseer',
+    actions: [{ skill: 'scavenging', action: 'tanker_holds' }],
+    combat: 'ship_graveyard',
+  },
+  {
+    id: 'drydock',
+    name: 'The Drydock',
+    description: 'A ship propped on blocks, half repaired. The work order is still pinned to the gantry.',
+    x: 690,
+    y: 620,
+    unlockedBy: 'overseer',
+    actions: [{ skill: 'scavenging', action: 'the_drydock' }],
+    combat: 'ship_graveyard',
+  },
+  {
+    id: 'deep_berths',
+    name: 'Deep Berths',
+    description: 'The water never fully left. Whatever kept the manifest is still down here keeping it.',
+    x: 760,
+    y: 790,
+    unlockedBy: 'overseer',
+    actions: [{ skill: 'scavenging', action: 'deep_berths' }],
+    combat: 'ship_graveyard',
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -176,6 +227,14 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'plant_ruins', b: 'debris_field', difficulty: 1.6 },
   { a: 'plant_ruins', b: 'vitrified_zone', difficulty: 1.8 },
   { a: 'debris_field', b: 'vitrified_zone', difficulty: 1.8 },
+
+  // Down to the coast. Two ways in, so losing one route does not strand the region.
+  { a: 'overpass', b: 'shallows', difficulty: 1.5 },
+  { a: 'freight_yard', b: 'drydock', difficulty: 1.4 },
+  { a: 'shallows', b: 'tanker_rows', difficulty: 1.2 },
+  { a: 'tanker_rows', b: 'drydock', difficulty: 1.2 },
+  { a: 'tanker_rows', b: 'deep_berths', difficulty: 1.4 },
+  { a: 'drydock', b: 'deep_berths', difficulty: 1.3 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

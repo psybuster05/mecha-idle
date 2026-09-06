@@ -231,13 +231,20 @@ describe('non-combat skills are never gated behind combat', () => {
     }
   })
 
-  it('no place offering a gathering action is locked behind a boss', () => {
-    for (const { skill, action } of gatheringActions) {
-      const open = nodesForAction(skill, action).filter((node) => !node.unlockedBy)
+  it('leaves a full 1-99 ladder outside every lock', () => {
+    // The contract is not "gathering is never locked" - locked regions may hold
+    // gathering content, and the Ship Graveyard does. What they may never be is
+    // *required*. This checks the shape of that here; the pacing suite proves the
+    // open-world ladder actually still reaches 99 at the target rate.
+    for (const skill of SKILLS) {
+      const open = skill.actions.filter((action) =>
+        nodesForAction(skill.id, action.id).some((node) => !node.unlockedBy),
+      )
+      expect(open.length, `${skill.id} has no unlocked actions at all`).toBeGreaterThan(0)
       expect(
-        open.length,
-        `${skill}:${action} is only available at boss-locked places`,
-      ).toBeGreaterThan(0)
+        Math.max(...open.map((a) => a.levelRequired)),
+        `${skill.id}'s unlocked actions stop too early to carry a player to 99`,
+      ).toBeGreaterThanOrEqual(90)
     }
   })
 

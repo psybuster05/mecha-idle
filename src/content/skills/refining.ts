@@ -113,5 +113,33 @@ export const REFINING: SkillDef = {
       outputs: [{ item: 'core_matrix', qty: 1 }],
       xp: 72,
     },
+
+    // --- Ship Graveyard line, at the same thresholds and rates as above. ---
+    {
+      id: 'temper_marine',
+      name: 'Temper Marine Alloy',
+      description: 'Quench it in brine, as they did. It comes out meaner than steel.',
+      levelRequired: 45,
+      duration: 6,
+      inputs: [
+        { item: 'hull_plate', qty: 3 },
+        { item: 'steel_ingot', qty: 1 },
+      ],
+      outputs: [{ item: 'marine_alloy', qty: 1 }],
+      xp: 19,
+    },
+    {
+      id: 'seat_seal',
+      name: 'Seat Pressure Seal',
+      description: 'Fine work. A seal that almost holds is a seal that does not.',
+      levelRequired: 60,
+      duration: 7,
+      inputs: [
+        { item: 'hydraulic_ram', qty: 2 },
+        { item: 'wire_spool', qty: 3 },
+      ],
+      outputs: [{ item: 'pressure_seal', qty: 1 }],
+      xp: 32,
+    },
   ],
 }

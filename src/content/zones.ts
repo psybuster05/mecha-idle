@@ -19,6 +19,14 @@ export const ZONES: readonly ZoneDef[] = [
     enemies: ['scrap_crawler', 'sentry_drone', 'reclaimer', 'overseer'],
     levelRequired: 1,
   },
+  {
+    id: 'ship_graveyard',
+    name: 'The Ship Graveyard',
+    description:
+      'Where the coast used to be. The fleet came in when the power went and never went out again, and something aboard has been organising the wrecks.',
+    enemies: ['scuttler', 'deck_gunner', 'boarding_rig', 'quartermaster'],
+    levelRequired: 25,
+  },
 ] as const
 
 const byId = new Map(ZONES.map((z) => [z.id, z]))

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { SKILLS } from '../index'
+import { nodesForAction } from '../world'
 import type { SkillDef } from '../types'
 import { MAX_LEVEL, xpForLevel } from '../../sim/xp'
 import { newGame } from '../../sim/state'
@@ -173,4 +174,50 @@ describe('unlockable speed-ups', () => {
     expect(baseline - improved).toBeGreaterThan(60)
     expect(improved).toBeGreaterThan(300)
   })
+})
+
+/**
+ * The gating contract, measured rather than asserted by shape.
+ *
+ * Locked regions may hold gathering content - the Ship Graveyard does. What they may
+ * never do is be *required* to max a skill. So: recompute the whole 1-99 curve using
+ * only actions available somewhere unlocked, and check it still lands in the target
+ * window. If a future zone ever quietly becomes the fast route to 99, this fails.
+ */
+describe('a complete ladder exists outside every lock', () => {
+  for (const skill of SKILLS) {
+    it(`${skill.name} reaches 99 at target pace without entering a locked region`, () => {
+      const openOnly: typeof skill = {
+        ...skill,
+        actions: skill.actions.filter((action) =>
+          nodesForAction(skill.id, action.id).some((node) => !node.unlockedBy),
+        ),
+      }
+      const hours = hoursTo99(openOnly)
+      expect(hours, `${skill.name} unlocked-only takes ${hours.toFixed(0)}h`).toBeGreaterThan(MIN_HOURS)
+      expect(hours, `${skill.name} unlocked-only takes ${hours.toFixed(0)}h`).toBeLessThan(MAX_HOURS)
+    })
+
+    it(`${skill.name}'s locked content is lateral, not a shortcut`, () => {
+      // Locked actions must not beat what is already available at their level, or the
+      // fastest route to 99 ends up behind a boss after all.
+      for (const action of skill.actions) {
+        const locked = nodesForAction(skill.id, action.id).every((node) => node.unlockedBy)
+        if (!locked) continue
+        const openBest = Math.max(
+          ...skill.actions
+            .filter(
+              (a) =>
+                a.levelRequired <= action.levelRequired &&
+                nodesForAction(skill.id, a.id).some((n) => !n.unlockedBy),
+            )
+            .map((a) => a.xp / a.duration),
+        )
+        expect(
+          action.xp / action.duration,
+          `${skill.id}:${action.id} is faster than anything unlocked at its level`,
+        ).toBeLessThanOrEqual(openBest)
+      }
+    })
+  }
 })

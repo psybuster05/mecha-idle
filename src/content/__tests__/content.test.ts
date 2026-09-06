@@ -68,12 +68,14 @@ describe('content integrity', () => {
     }
   })
 
-  it('unlocks actions in ascending level order within each skill', () => {
-    // Not strictly required by the engine, but a skill list that jumps around is a
-    // content mistake far more often than it is intentional.
+  it('starts every skill with something doable at level 1', () => {
+    // File ordering used to be asserted here, but skills now carry more than one
+    // content line - Rustbelt and Ship Graveyard actions deliberately share level
+    // thresholds - so authoring order is style rather than correctness. What still
+    // matters is that no skill opens with nothing to do.
     for (const skill of SKILLS) {
-      const levels = skill.actions.map((a) => a.levelRequired)
-      expect(levels, `${skill.id} actions are out of order`).toEqual([...levels].sort((a, b) => a - b))
+      const lowest = Math.min(...skill.actions.map((a) => a.levelRequired))
+      expect(lowest, `${skill.id} has nothing available at level 1`).toBe(1)
     }
   })
 

@@ -138,6 +138,66 @@ export const ENEMIES: readonly EnemyDef[] = [
     ],
   },
 
+  // --- Ship Graveyard ------------------------------------------------------
+  //
+  // Everything down here was built to sit in salt water, so it is uniformly hard to
+  // disrupt electrically. EMP - the answer to the Rustbelt - is the *wrong* tool
+  // here, which is the point: each region should retire the last one's easy answer.
+  {
+    id: 'scuttler',
+    name: 'Scuttler',
+    description: 'A hull-cleaning drone that decided the hulls were better off stripped.',
+    maxHp: 60,
+    accuracy: 26,
+    evasion: 24,
+    damage: 9,
+    armour: 1,
+    attackInterval: 2.2,
+    damageType: 'kinetic',
+    resistances: { emp: 0.6, kinetic: 1.2, energy: 1 },
+    xp: 40,
+    guaranteed: [{ item: 'hull_plate', qty: 2 }],
+    drops: [{ item: 'scrap_steel', qty: 4, chance: 0.5 }],
+  },
+  {
+    id: 'deck_gunner',
+    name: 'Deck Gunner',
+    description: 'Point defence that never received a stand-down order, welded to a rail it can still traverse.',
+    maxHp: 110,
+    accuracy: 34,
+    evasion: 20,
+    damage: 16,
+    armour: 4,
+    attackInterval: 2.4,
+    damageType: 'energy',
+    resistances: { emp: 0.7, energy: 0.7, kinetic: 1.15 },
+    xp: 70,
+    guaranteed: [{ item: 'hull_plate', qty: 3 }],
+    drops: [
+      { item: 'sonar_array', qty: 1, chance: 0.12 },
+      { item: 'copper_wiring', qty: 4, chance: 0.4 },
+    ],
+  },
+  {
+    id: 'boarding_rig',
+    name: 'Boarding Rig',
+    description: 'Cargo-handling gear repurposed for taking things off ships that objected.',
+    maxHp: 220,
+    accuracy: 44,
+    evasion: 16,
+    damage: 27,
+    armour: 9,
+    attackInterval: 3,
+    damageType: 'kinetic',
+    resistances: { emp: 0.65, kinetic: 0.7, energy: 1.25 },
+    xp: 130,
+    guaranteed: [
+      { item: 'hull_plate', qty: 4 },
+      { item: 'hydraulic_ram', qty: 1 },
+    ],
+    drops: [{ item: 'sonar_array', qty: 1, chance: 0.25 }],
+  },
+
   // --- Bosses --------------------------------------------------------------
   {
     id: 'overseer',
@@ -189,6 +249,60 @@ export const ENEMIES: readonly EnemyDef[] = [
         damageType: 'energy',
         damageMultiplier: 1.9,
         attackIntervalMultiplier: 0.6,
+      },
+    ],
+  },
+  {
+    id: 'quartermaster',
+    name: 'The Quartermaster',
+    description:
+      'It kept the manifest. When the crew stopped coming back it went on keeping it, and started adding to it by force.',
+    maxHp: 2600,
+    accuracy: 78,
+    evasion: 40,
+    damage: 34,
+    armour: 14,
+    attackInterval: 2.4,
+    damageType: 'emp',
+    // Sealed and drenched: EMP barely registers. Whatever beat the Overseer will not
+    // work twice.
+    resistances: { kinetic: 1, energy: 1.1, emp: 0.35 },
+    xp: 3200,
+    isBoss: true,
+    perk: {
+      id: 'salvage_rights',
+      name: 'Salvage Rights',
+      description:
+        'The manifest is yours. You know what is worth taking before you open it, and what it was worth to whoever wrote it down.',
+      xpBonus: 0.06,
+      gatheringYield: 0.05,
+    },
+    guaranteed: [
+      { item: 'pressure_hull', qty: 1 },
+      { item: 'hydraulic_ram', qty: 6 },
+      { item: 'hull_plate', qty: 20 },
+    ],
+    drops: [
+      { item: 'sonar_array', qty: 3, chance: 0.7 },
+      { item: 'pressure_hull', qty: 1, chance: 0.25 },
+    ],
+    phases: [
+      {
+        below: 0.55,
+        name: 'Ballast',
+        message: 'It floods its own compartments. Heat goes into the water and stops mattering.',
+        // Energy dies here, so the opening answer has to be abandoned mid-fight.
+        resistances: { kinetic: 1.3, energy: 0.35, emp: 0.4 },
+        attackIntervalMultiplier: 0.9,
+      },
+      {
+        below: 0.2,
+        name: 'Scuttle',
+        message: 'It blows the seals and vents everything at once. Nothing left to protect.',
+        resistances: { kinetic: 1.25, energy: 1.25, emp: 1.1 },
+        damageType: 'kinetic',
+        damageMultiplier: 2.1,
+        attackIntervalMultiplier: 0.55,
       },
     ],
   },

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { WORLD_EDGES, WORLD_NODES, getNode } from '../../content/world'
-import { actorPosition } from '../../sim/world'
+import { actorPosition, isNodeOpen } from '../../sim/world'
 import type { GameState, NodeId } from '../../sim/state'
 
 /**
@@ -34,6 +34,9 @@ const COLOURS = {
   here: '#ffb648',
   destination: '#ffb648',
   label: '#8b9aa6',
+  locked: '#1a2026',
+  lockedStroke: '#2b343b',
+  lockedLabel: '#4a5760',
   labelHere: '#c9d6de',
   mech: '#ffb648',
   mechDark: '#8a5f1f',
@@ -104,11 +107,15 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
     const pb = project(b.x, b.y)
 
     const isActive = activeHop === `${edge.a}:${edge.b}` || activeHop === `${edge.b}:${edge.a}`
-    ctx.strokeStyle = isActive ? COLOURS.edgeActive : COLOURS.edge
+    const sealed = !isNodeOpen(state, edge.a) || !isNodeOpen(state, edge.b)
+
+    ctx.setLineDash(sealed ? [3, 4] : [])
+    ctx.strokeStyle = isActive ? COLOURS.edgeActive : sealed ? COLOURS.lockedStroke : COLOURS.edge
     ctx.beginPath()
     ctx.moveTo(pa.x, pa.y)
     ctx.lineTo(pb.x, pb.y)
     ctx.stroke()
+    ctx.setLineDash([])
   }
 
   // --- nodes ---
@@ -120,12 +127,28 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
     const isDestination = travellingTo === node.id
     const size = node.isCamp ? 22 : 16
 
-    ctx.fillStyle = node.isCamp ? COLOURS.camp : node.combat ? COLOURS.combat : COLOURS.node
+    const open = isNodeOpen(state, node.id)
+
+    ctx.fillStyle = !open
+      ? COLOURS.locked
+      : node.isCamp
+        ? COLOURS.camp
+        : node.combat
+          ? COLOURS.combat
+          : COLOURS.node
     ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size)
 
     ctx.lineWidth = here || isDestination ? 2 : 1
-    ctx.strokeStyle = here ? COLOURS.here : isDestination ? COLOURS.destination : COLOURS.nodeStroke
+    ctx.setLineDash(open ? [] : [2, 3])
+    ctx.strokeStyle = here
+      ? COLOURS.here
+      : isDestination
+        ? COLOURS.destination
+        : open
+          ? COLOURS.nodeStroke
+          : COLOURS.lockedStroke
     ctx.strokeRect(p.x - size / 2, p.y - size / 2, size, size)
+    ctx.setLineDash([])
 
     if (isDestination) {
       // A pulsing ring on where we are headed.
@@ -136,7 +159,7 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
       ctx.globalAlpha = 1
     }
 
-    ctx.fillStyle = here ? COLOURS.labelHere : COLOURS.label
+    ctx.fillStyle = here ? COLOURS.labelHere : open ? COLOURS.label : COLOURS.lockedLabel
     ctx.fillText(node.name, p.x, p.y + size / 2 + 14)
   }
 

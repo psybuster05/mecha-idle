@@ -148,5 +148,35 @@ export const FABRICATION: SkillDef = {
       outputs: [{ item: 'legs_thruster', qty: 1 }],
       xp: 108,
     },
+
+    // --- Ship Graveyard sidegrades. The Exoframe needs a boss drop, which is how
+    // combat pays out without gating any skill ladder. ---
+    {
+      id: 'fab_weapon_harpoon',
+      name: 'Harpoon Launcher',
+      description: 'Slow, heavy, and final. Best against things that do not shrug off a hit.',
+      levelRequired: 45,
+      duration: 8,
+      inputs: [
+        { item: 'hydraulic_ram', qty: 2 },
+        { item: 'marine_alloy', qty: 3 },
+      ],
+      outputs: [{ item: 'weapon_harpoon', qty: 1 }],
+      xp: 26,
+    },
+    {
+      id: 'fab_frame_marine',
+      name: 'Marine Exoframe',
+      description: 'Sealed the way the old hulls were. Heat stops being your problem.',
+      levelRequired: 60,
+      duration: 9,
+      inputs: [
+        { item: 'marine_alloy', qty: 5 },
+        { item: 'pressure_seal', qty: 2 },
+        { item: 'pressure_hull', qty: 1 },
+      ],
+      outputs: [{ item: 'frame_marine', qty: 1 }],
+      xp: 40,
+    },
   ],
 }

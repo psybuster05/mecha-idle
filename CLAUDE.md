@@ -106,11 +106,17 @@ story beats, and permanent perks. A player who never fights still has a complete
 game; they just cannot reach the best equipment, see the whole world, or finish the story.
 
 Practical rules:
-- `WorldNodeDef.unlockedBy` gates a place behind a boss. **Never set it on a node that
-  carries gathering actions.** Enforced by a test.
+- `WorldNodeDef.unlockedBy` gates a place behind a boss. Locked regions **may** hold
+  gathering content; what they may never be is *required*. A complete 1-99 ladder must
+  remain available outside every lock, and a locked action must never beat what is
+  already open at its level. Both are measured - not assumed - by recomputing the whole
+  1-99 curve from unlocked actions only.
 - Later zones give *different* gathering at comparable rates, not strictly better. Making
   them better re-gates the ladder through the back door, since the fastest route to 99
-  would end up behind a boss.
+  would end up behind a boss. Ship Graveyard actions deliberately sit at the *same*
+  levels and rates as their Rustbelt counterparts; only the outputs differ.
+- Each region should retire the previous one's easy answer. EMP wins the Rustbelt; the
+  Ship Graveyard is sealed against it. That is what stops one weapon solving the game.
 - Every skill action must be listed on some world node. An action with nowhere to be
   performed halts instantly as `unreachable` - also enforced by a test, which is how nine
   stranded recipes were found.
