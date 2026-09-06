@@ -1,5 +1,6 @@
 import { getEnemy, itemName, ZONES } from '../../content'
 import { activePhase, effectiveResistances, type EnemyDef } from '../../content/enemies'
+import { hasDefeated } from '../../sim/state'
 import { startCombat, stopActivity } from '../../sim/intents'
 import { DAMAGE_TYPES, type DamageType, type GameState } from '../../sim/state'
 import { combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
@@ -66,6 +67,11 @@ function EnemyRow({
         <div className="enemy-title">
           <strong>{enemy.name}</strong>
           {enemy.isBoss && <span className="boss-tag">BOSS</span>}
+          {enemy.isBoss && hasDefeated(state, enemy.id) && (
+            <span className="beaten-tag">
+              BEATEN &times;{state.defeated[enemy.id]}
+            </span>
+          )}
           <span className="dim">
             {formatNumber(enemy.maxHp)} hp &middot; {enemy.damage} {TYPE_LABEL[enemy.damageType]} &middot;
             +{enemy.xp} xp
@@ -73,6 +79,12 @@ function EnemyRow({
         </div>
         <p className="dim flavour">{enemy.description}</p>
         <Resistances resistances={enemy.resistances ?? {}} mine={mine} />
+        {enemy.perk && (
+          <div className={`perk-note ${hasDefeated(state, enemy.id) ? 'earned' : ''}`}>
+            <strong>{enemy.perk.name}</strong>
+            <span className="dim"> — {enemy.perk.description}</span>
+          </div>
+        )}
         <div className="dim drops">
           {[...(enemy.guaranteed ?? []), ...(enemy.drops ?? [])]
             .map((d) => itemName(d.item))

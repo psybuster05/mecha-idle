@@ -25,6 +25,24 @@ export interface BossPhase {
   damageType?: DamageType
 }
 
+/**
+ * A permanent reward for beating a boss, active forever afterwards.
+ *
+ * This is how combat pays a player who mostly idles: it widens what you can do without
+ * ever standing between them and a level. See the gating rule in CLAUDE.md.
+ */
+export interface BossPerk {
+  id: string
+  name: string
+  description: string
+  /** Chance per gathering completion of a bonus haul. 0.08 = 8%. */
+  gatheringYield?: number
+  /** Flat map units per second added to travel. */
+  moveSpeed?: number
+  /** Fractional bonus to all xp earned. 0.05 = +5%. */
+  xpBonus?: number
+}
+
 export interface EnemyDef {
   id: string
   name: string
@@ -54,6 +72,8 @@ export interface EnemyDef {
   phases?: BossPhase[]
   /** Bosses are chosen deliberately and never appear in a random spawn. */
   isBoss?: boolean
+  /** Granted permanently the first time this boss falls. */
+  perk?: BossPerk
 }
 
 export const ENEMIES: readonly EnemyDef[] = [
@@ -135,6 +155,14 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1, energy: 1, emp: 1 },
     xp: 900,
     isBoss: true,
+    perk: {
+      id: 'district_override',
+      name: 'District Override',
+      description:
+        'Its authority codes are yours now. The district answers when you ask, and it is quicker to cross.',
+      gatheringYield: 0.08,
+      moveSpeed: 10,
+    },
     guaranteed: [
       { item: 'titanium_shard', qty: 12 },
       { item: 'fused_core', qty: 1 },
@@ -191,4 +219,17 @@ export function activePhase(enemy: EnemyDef, hp: number): BossPhase | null {
 /** An enemy's resistances right now, accounting for the phase it is in. */
 export function effectiveResistances(enemy: EnemyDef, hp: number): Resistances {
   return activePhase(enemy, hp)?.resistances ?? enemy.resistances ?? {}
+}
+
+/** Every perk currently earned, from the bosses recorded as defeated. */
+export function earnedPerks(defeated: Partial<Record<string, number>>): BossPerk[] {
+  return ENEMIES.filter((e) => e.perk && (defeated[e.id] ?? 0) > 0).map((e) => e.perk!)
+}
+
+/** Sum of one numeric perk field across everything earned. */
+export function perkTotal(
+  defeated: Partial<Record<string, number>>,
+  field: 'gatheringYield' | 'moveSpeed' | 'xpBonus',
+): number {
+  return earnedPerks(defeated).reduce((sum, perk) => sum + (perk[field] ?? 0), 0)
 }

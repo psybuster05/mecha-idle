@@ -7,6 +7,7 @@
  */
 
 import { getItem } from '../content'
+import { perkTotal } from '../content/enemies'
 import type { EquipStats } from '../content/types'
 import {
   DAMAGE_TYPES,
@@ -104,7 +105,8 @@ export function derivedStats(state: GameState): DerivedStats {
       MIN_ATTACK_INTERVAL,
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),
     ),
-    moveSpeed: BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed'),
+    moveSpeed:
+      BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed') + perkTotal(state.defeated, 'moveSpeed'),
     // Expressed as a duration multiplier rather than a speed bonus so stacking is
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
     skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),

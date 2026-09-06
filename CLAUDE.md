@@ -114,3 +114,25 @@ Practical rules:
 - Every skill action must be listed on some world node. An action with nowhere to be
   performed halts instantly as `unreachable` - also enforced by a test, which is how nine
   stranded recipes were found.
+
+## Defeated bosses
+
+`state.defeated` maps boss id to kill count. The count rather than a flag, because it
+distinguishes the *first* kill - what story beats and one-off rewards key off - from
+repeat farming, at no extra cost. Only bosses are recorded; logging every trash kill
+would grow without bound and serve nothing.
+
+It is the first persistent progress that is neither a level nor an item. Region unlocks
+(`WorldNodeDef.unlockedBy`), perks, story and eventually NG+ all read from it.
+
+**Perks must not break the offline guarantee.** Two rules learned the hard way:
+
+- Yield bonuses are a **chance of a bonus haul rolled per completion**, never a
+  multiplier on the total. `floor(qty × 100 × 1.08)` and `floor(qty × 1.08) × 100` are
+  different numbers, so a multiplier would silently make one big step disagree with many
+  small ones.
+- Perked xp is left **unrounded** for the same reason. Rounding per step and rounding
+  once diverge.
+
+A perk is recorded *before* the kill's own xp is awarded, so the fight that earns a perk
+is not itself boosted by it. That keeps the first kill reproducible.

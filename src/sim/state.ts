@@ -169,6 +169,18 @@ export interface GameState {
   bank: Partial<Record<ItemId, number>>
   equipment: Partial<Record<EquipSlot, ItemId>>
   combat: CombatState
+  /**
+   * Bosses beaten, and how many times.
+   *
+   * The count rather than a bare flag, because it costs nothing and distinguishes the
+   * *first* kill - which is what story beats and one-off rewards key off - from repeat
+   * farming. Only bosses are recorded; a log of every trash kill would grow without
+   * bound and serve nothing.
+   *
+   * This is the first persistent progress that is neither a level nor an item, and
+   * region unlocks, perks, story and NG+ all read from it.
+   */
+  defeated: Partial<Record<string, number>>
 }
 
 /**
@@ -205,6 +217,7 @@ export function newGame(seed: number = 1): GameState {
     skills,
     bank: {},
     equipment: {},
+    defeated: {},
     combat: {
       enemyId: null,
       enemyHp: 0,
@@ -251,6 +264,18 @@ export function canStartActivity(state: GameState, actor: ActorId): boolean {
 }
 
 export const ACTOR_IDS: readonly ActorId[] = ['mech', 'crawler']
+
+/** Whether a boss has ever been beaten. */
+export function hasDefeated(state: GameState, bossId: string): boolean {
+  return (state.defeated[bossId] ?? 0) > 0
+}
+
+/** Mutates. Records a kill and reports whether it was the first. */
+export function recordDefeat(state: GameState, bossId: string): boolean {
+  const previous = state.defeated[bossId] ?? 0
+  state.defeated[bossId] = previous + 1
+  return previous === 0
+}
 
 /**
  * Point an actor at a new activity. Mutates.

@@ -84,6 +84,7 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.combat = { ...base.combat, ...(raw['combat'] as object | undefined) }
   merged.bank = { ...(raw['bank'] as object | undefined) }
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
+  merged.defeated = { ...(raw['defeated'] as object | undefined) }
 
   // Guard against a hand-edited or corrupted save producing NaN, which would
   // silently poison every number downstream of it.

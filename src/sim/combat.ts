@@ -9,11 +9,11 @@
  */
 
 import { getEnemy, getZone } from '../content'
-import { activePhase, effectiveResistances, type EnemyDef } from '../content/enemies'
+import { activePhase, effectiveResistances, perkTotal, type EnemyDef } from '../content/enemies'
 import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
 import { Rng } from './rng'
-import { haltActivity, type ActorId, type GameState } from './state'
+import { haltActivity, recordDefeat, type ActorId, type GameState } from './state'
 import { combatLevel, derivedStats, HEAL_ON_KILL, RESPAWN_DELAY, type DerivedStats } from './stats'
 
 /** Float slack when comparing accumulated progress against an interval. */
@@ -94,10 +94,16 @@ function spawnEnemy(
 
 /** Mutates. Awards xp and loot, heals, and clears the field. */
 function onKill(state: GameState, enemy: EnemyDef, stats: DerivedStats, rng: Rng): void {
-  state.skills.attack += enemy.xp
-  state.skills.strength += enemy.xp
-  state.skills.defence += enemy.xp
-  state.skills.hitpoints += Math.round(enemy.xp * 0.4)
+  // Bosses are recorded before xp so the very kill that earns a perk is not itself
+  // boosted by it - the reward starts from the next action, which is easier to reason
+  // about and keeps the first kill reproducible.
+  if (enemy.isBoss) recordDefeat(state, enemy.id)
+
+  const xp = enemy.xp * (1 + perkTotal(state.defeated, 'xpBonus'))
+  state.skills.attack += xp
+  state.skills.strength += xp
+  state.skills.defence += xp
+  state.skills.hitpoints += Math.round(xp * 0.4)
 
   if (enemy.guaranteed) grantAll(state, enemy.guaranteed, 1)
   for (const drop of enemy.drops ?? []) {

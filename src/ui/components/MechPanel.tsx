@@ -1,4 +1,5 @@
 import { getItem, itemName } from '../../content'
+import { earnedPerks } from '../../content/enemies'
 import { equip, unequip } from '../../sim/intents'
 import { EQUIP_SLOTS, type EquipSlot, type GameState } from '../../sim/state'
 import { derivedStats } from '../../sim/stats'
@@ -54,6 +55,34 @@ export function MechPanel({ state, dispatch }: Props) {
         <StatLine label="Evasion" value={formatNumber(stats.evasion)} />
         <StatLine label="Attack Speed" value={formatSeconds(stats.attackInterval)} />
       </section>
+
+      {(() => {
+        const perks = earnedPerks(state.defeated)
+        if (perks.length === 0) return null
+        return (
+          <>
+            <h3>Permanent</h3>
+            <ul className="perks">
+              {perks.map((perk) => (
+                <li key={perk.id} className="perk">
+                  <div className="slot-item">{perk.name}</div>
+                  <div className="dim flavour">{perk.description}</div>
+                  <div className="perk-effects">
+                    {[
+                      perk.gatheringYield &&
+                        `+${Math.round(perk.gatheringYield * 100)}% bonus haul chance`,
+                      perk.moveSpeed && `+${perk.moveSpeed} travel speed`,
+                      perk.xpBonus && `+${Math.round(perk.xpBonus * 100)}% xp`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      })()}
 
       <h3>Equipped</h3>
       <ul className="slots">

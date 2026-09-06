@@ -7,7 +7,7 @@
  */
 
 import { ADJACENCY, getNode, nodeDistance } from '../content/world'
-import type { ActorId, GameState, NodeId, TravelState } from './state'
+import { hasDefeated, type ActorId, type GameState, type NodeId, type TravelState } from './state'
 import { derivedStats } from './stats'
 
 export { BASE_MOVE_SPEED } from './stats'
@@ -18,11 +18,19 @@ export { BASE_MOVE_SPEED } from './stats'
  * Dijkstra rather than plain BFS because edges carry a difficulty multiplier, so the
  * route with the fewest hops is not always the quickest one.
  *
+ * `isOpen` filters out places that are still locked. It never excludes `from` -
+ * standing somewhere that has since closed should not strand you there.
+ *
  * Returns `[]` when already there, or `null` when unreachable.
  */
-export function findPath(from: NodeId, to: NodeId): NodeId[] | null {
+export function findPath(
+  from: NodeId,
+  to: NodeId,
+  isOpen: (id: NodeId) => boolean = () => true,
+): NodeId[] | null {
   if (from === to) return []
   if (!getNode(from) || !getNode(to)) return null
+  if (!isOpen(to)) return null
 
   const dist = new Map<NodeId, number>([[from, 0]])
   const prev = new Map<NodeId, NodeId>()
@@ -44,6 +52,7 @@ export function findPath(from: NodeId, to: NodeId): NodeId[] | null {
 
     settled.add(current)
     for (const edge of ADJACENCY.get(current) ?? []) {
+      if (!isOpen(edge.to)) continue
       const candidate = best + edge.length
       if (candidate < (dist.get(edge.to) ?? Infinity)) {
         dist.set(edge.to, candidate)
@@ -151,11 +160,12 @@ export function actorPosition(state: GameState, actorId: ActorId): { x: number; 
 export function findNearest(
   from: NodeId,
   candidates: readonly NodeId[],
+  isOpen: (id: NodeId) => boolean = () => true,
 ): { node: NodeId; path: NodeId[]; length: number } | null {
   let best: { node: NodeId; path: NodeId[]; length: number } | null = null
 
   for (const candidate of candidates) {
-    const path = findPath(from, candidate)
+    const path = findPath(from, candidate, isOpen)
     if (!path) continue
 
     let length = 0
@@ -188,9 +198,22 @@ export function routeTo(
     return true
   }
 
-  const route = findNearest(actor.at, candidates)
+  const route = findNearest(actor.at, candidates, (id) => isNodeOpen(state, id))
   if (!route) return null
 
   actor.travel = beginTravel(actor.at, route.path, derivedStats(state).moveSpeed)
   return actor.travel === null
+}
+
+/**
+ * Whether a place can currently be entered.
+ *
+ * Locked places are gated on a boss. Note the rule this deliberately does not break:
+ * nowhere carrying a gathering action may be locked, so no skill ladder is ever behind
+ * a fight. See CLAUDE.md, and the test that enforces it.
+ */
+export function isNodeOpen(state: GameState, id: NodeId): boolean {
+  const node = getNode(id)
+  if (!node) return false
+  return !node.unlockedBy || hasDefeated(state, node.unlockedBy)
 }

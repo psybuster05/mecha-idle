@@ -254,3 +254,21 @@ img.sprite { image-rendering: pixelated; }
   font-size: 10px; letter-spacing: 0.16em; color: var(--enemy);
   border: 1px solid var(--enemy); padding: 0 5px;
 }
+
+/* --- boss rewards ------------------------------------------------------- */
+
+.beaten-tag {
+  font-size: 10px; letter-spacing: 0.14em; color: var(--good);
+  border: 1px solid var(--good); padding: 0 5px;
+}
+.perk-note { font-size: 12px; opacity: 0.55; }
+.perk-note.earned { opacity: 1; color: var(--good); }
+.perk-note.earned .dim { color: var(--dim); }
+
+.perks { display: flex; flex-direction: column; gap: 8px; }
+.perk {
+  padding: 10px 12px; background: var(--panel);
+  border: 1px solid var(--line); border-left: 3px solid var(--good);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.perk-effects { font-size: 12px; color: var(--accent); }

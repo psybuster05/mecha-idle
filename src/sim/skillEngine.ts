@@ -7,6 +7,7 @@
  */
 
 import { getAction } from '../content'
+import { perkTotal } from '../content/enemies'
 import type { SkillAction } from '../content/types'
 import { addItem, grantAll, maxCraftable, payCost } from './bank'
 import { Rng } from './rng'
@@ -79,8 +80,23 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
   if (applied > 0) {
     payCost(state, action.inputs, applied)
     grantAll(state, action.outputs, applied)
+
+    // Yield perks are a chance of a bonus haul per completion, rolled one at a time,
+    // rather than a multiplier on the total. A multiplier would round differently for
+    // one big step than for many small ones and break the offline guarantee.
+    const bonusChance = perkTotal(state.defeated, 'gatheringYield')
+    if (bonusChance > 0) {
+      const rng = new Rng(state.rngSeed)
+      let bonus = 0
+      for (let i = 0; i < applied; i++) if (rng.chance(bonusChance)) bonus++
+      state.rngSeed = rng.seed
+      if (bonus > 0) grantAll(state, action.outputs, bonus)
+    }
+
     rollDrops(state, action, applied)
-    state.skills[activity.skill] += action.xp * applied
+    // Left unrounded on purpose: rounding here would also differ between one large
+    // step and many small ones.
+    state.skills[activity.skill] += action.xp * applied * (1 + perkTotal(state.defeated, 'xpBonus'))
   }
 
   if (applied < wanted) {
