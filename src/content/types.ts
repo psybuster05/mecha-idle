@@ -32,10 +32,24 @@ export type ItemCategory = 'material' | 'component' | 'part'
 export interface EquipStats {
   /** Improves the chance our attacks land. */
   accuracy?: number
-  /** Added to damage per hit. */
+  /** Added to damage per hit. Flat, so it fades as levels grow - use it for trim. */
   damage?: number
+  /**
+   * Multiplies total damage. **This is the main weapon lever, not `damage`.**
+   *
+   * Flat weapon damage is swamped by level scaling: +34 is +45% at level 60 and +28%
+   * at 99, while attackSpeed is a share of a fixed 3s base and never decays. That made
+   * cadence the only stat that mattered and turned every slow heavy weapon into a trap.
+   * A multiplier holds its value at every level, so archetypes stay archetypes.
+   */
+  damageMultiplier?: number
   /** Reduces incoming damage. */
   armour?: number
+  /**
+   * Makes attacks miss. Opposed against attacker accuracy, so it scales rather than
+   * saturating - light frames dodge what heavy plate has to absorb.
+   */
+  evasion?: number
   /** Added to maximum HP. */
   hp?: number
   /**

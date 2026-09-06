@@ -141,5 +141,33 @@ export const REFINING: SkillDef = {
       outputs: [{ item: 'pressure_seal', qty: 1 }],
       xp: 32,
     },
+
+    // --- Abandoned Airfield line ---
+    {
+      id: 'roll_alumide',
+      name: 'Roll Alumide Sheet',
+      description: 'Pass it through cold, again and again. Rushing it puts a grain in that never comes out.',
+      levelRequired: 60,
+      duration: 7,
+      inputs: [
+        { item: 'airframe_spar', qty: 4 },
+        { item: 'titanium_plate', qty: 1 },
+      ],
+      outputs: [{ item: 'alumide_sheet', qty: 1 }],
+      xp: 32,
+    },
+    {
+      id: 'sync_guidance',
+      name: 'Synchronise Guidance Module',
+      description: 'Three boards that disagree, argued into consensus. It is the closest thing to a conversation you have had.',
+      levelRequired: 75,
+      duration: 7,
+      inputs: [
+        { item: 'avionics_board', qty: 3 },
+        { item: 'wire_spool', qty: 4 },
+      ],
+      outputs: [{ item: 'guidance_module', qty: 1 }],
+      xp: 44,
+    },
   ],
 }

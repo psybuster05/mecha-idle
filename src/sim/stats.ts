@@ -55,6 +55,17 @@ type NumericEquipStat = {
   [K in keyof EquipStats]-?: NonNullable<EquipStats[K]> extends number ? K : never
 }[keyof EquipStats]
 
+/** Product of one multiplier stat across everything equipped. Absent means 1. */
+function equippedProduct(state: GameState, stat: 'damageMultiplier'): number {
+  let total = 1
+  for (const slot of EQUIP_SLOTS) {
+    const itemId = state.equipment[slot]
+    if (!itemId) continue
+    total *= getItem(itemId)?.stats?.[stat] ?? 1
+  }
+  return total
+}
+
 /** Sum of one stat across everything currently equipped. */
 function equippedTotal(state: GameState, stat: NumericEquipStat): number {
   let total = 0
@@ -98,8 +109,10 @@ export function derivedStats(state: GameState): DerivedStats {
     maxHp: 50 + hitpoints * 8 + equippedTotal(state, 'hp'),
     accuracy: 10 + attack * 2 + equippedTotal(state, 'accuracy'),
     // Evasion rides on Defence too: heavier armour makes you harder to meaningfully hit.
-    evasion: 8 + defence * 1.5,
-    damage: 3 + strength * 1.2 + equippedTotal(state, 'damage'),
+    evasion: 8 + defence * 1.5 + equippedTotal(state, 'evasion'),
+    damage:
+      (3 + strength * 1.2 + equippedTotal(state, 'damage')) *
+      equippedProduct(state, 'damageMultiplier'),
     armour: defence * 0.8 + equippedTotal(state, 'armour'),
     attackInterval: Math.max(
       MIN_ATTACK_INTERVAL,

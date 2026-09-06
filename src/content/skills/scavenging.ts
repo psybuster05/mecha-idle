@@ -165,5 +165,57 @@ export const SCAVENGING: SkillDef = {
       drops: [{ item: 'hydraulic_ram', qty: 2, chance: 0.3 }],
       xp: 38,
     },
+
+    // --- Abandoned Airfield. Levels 45/60/75/90, matching the Rustbelt rates at each,
+    // so this is a fourth material line rather than a faster route. ---
+    {
+      id: 'long_runway',
+      name: 'The Long Runway',
+      description: 'Two miles of concrete with three aircraft on it, all facing the same way, none of them going.',
+      levelRequired: 45,
+      duration: 5,
+      outputs: [{ item: 'airframe_spar', qty: 2 }],
+      drops: [{ item: 'avionics_board', qty: 1, chance: 0.16 }],
+      xp: 16,
+    },
+    {
+      id: 'terminal_c',
+      name: 'Terminal C',
+      description: 'The carousel is still turning. There are still bags on it. Someone keeps putting them back.',
+      levelRequired: 60,
+      duration: 6,
+      outputs: [
+        { item: 'airframe_spar', qty: 2 },
+        { item: 'avionics_board', qty: 1 },
+      ],
+      drops: [{ item: 'copper_wiring', qty: 5, chance: 0.4 }],
+      xp: 27,
+    },
+    {
+      id: 'maintenance_hangars',
+      name: 'Maintenance Hangars',
+      description: 'Engines opened up on stands, tools laid out beside them in the order they would be needed.',
+      levelRequired: 75,
+      duration: 6,
+      outputs: [
+        { item: 'turbine_blade', qty: 1 },
+        { item: 'airframe_spar', qty: 3 },
+      ],
+      drops: [{ item: 'avionics_board', qty: 2, chance: 0.3 }],
+      xp: 38,
+    },
+    {
+      id: 'the_approach',
+      name: 'The Approach Lights',
+      description: 'A mile of gantries out past the fence, still lit, still counting something down.',
+      levelRequired: 90,
+      duration: 7,
+      outputs: [
+        { item: 'avionics_board', qty: 3 },
+        { item: 'turbine_blade', qty: 2 },
+      ],
+      drops: [{ item: 'airframe_spar', qty: 4, chance: 0.35 }],
+      xp: 63,
+    },
   ],
 }

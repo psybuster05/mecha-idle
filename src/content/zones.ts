@@ -27,6 +27,14 @@ export const ZONES: readonly ZoneDef[] = [
     enemies: ['scuttler', 'deck_gunner', 'boarding_rig', 'quartermaster'],
     levelRequired: 25,
   },
+  {
+    id: 'abandoned_airfield',
+    name: 'The Abandoned Airfield',
+    description:
+      'A regional airport that never closed, exactly. The ground crew are still working, the tower is still sequencing, and none of them have been told.',
+    enemies: ['baggage_hauler', 'gate_sentry', 'approach_drone', 'tower_actual'],
+    levelRequired: 45,
+  },
 ] as const
 
 const byId = new Map(ZONES.map((z) => [z.id, z]))

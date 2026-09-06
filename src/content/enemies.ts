@@ -23,6 +23,14 @@ export interface BossPhase {
   attackIntervalMultiplier?: number
   /** Changes what the boss deals. */
   damageType?: DamageType
+  /**
+   * Scales how hard the boss is to hit. Above 1 makes it evasive.
+   *
+   * A phase that only moves resistances always asks the same question - "which weapon?"
+   * This asks a different one: can you land anything at all. Keeps bosses from all
+   * feeling like the same fight with different numbers.
+   */
+  evasionMultiplier?: number
 }
 
 /**
@@ -198,6 +206,61 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [{ item: 'sonar_array', qty: 1, chance: 0.25 }],
   },
 
+  // --- Abandoned Airfield --------------------------------------------------
+  //
+  // Light composite and dense avionics: fragile, and EMP works again here after the
+  // Graveyard shut it down. Their defence is evasion, not plate - which is what
+  // retires slow weapons. Missing half your swings punishes a long attack interval
+  // far harder than it punishes a short one.
+  {
+    id: 'baggage_hauler',
+    name: 'Baggage Hauler',
+    description: 'Still working the carousel. It has loaded the same nine bags for thirty years and it is not behind schedule.',
+    maxHp: 380,
+    accuracy: 60,
+    evasion: 14,
+    damage: 38,
+    armour: 16,
+    attackInterval: 3.2,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.8, energy: 1, emp: 1.1 },
+    xp: 220,
+    guaranteed: [{ item: 'airframe_spar', qty: 3 }],
+    drops: [{ item: 'scrap_steel', qty: 8, chance: 0.5 }],
+  },
+  {
+    id: 'gate_sentry',
+    name: 'Gate Sentry',
+    description: 'It checks your documentation. It has been very patient about the fact that you have none.',
+    maxHp: 210,
+    accuracy: 74,
+    evasion: 78,
+    damage: 30,
+    armour: 5,
+    attackInterval: 2.3,
+    damageType: 'energy',
+    resistances: { kinetic: 1, energy: 1.2, emp: 1.4 },
+    xp: 260,
+    guaranteed: [{ item: 'avionics_board', qty: 1 }],
+    drops: [{ item: 'airframe_spar', qty: 3, chance: 0.5 }],
+  },
+  {
+    id: 'approach_drone',
+    name: 'Approach Drone',
+    description: 'It flies the pattern. Over and over, on a schedule, for an aircraft that is not coming.',
+    maxHp: 130,
+    accuracy: 88,
+    evasion: 150,
+    damage: 26,
+    armour: 2,
+    attackInterval: 1.8,
+    damageType: 'energy',
+    resistances: { kinetic: 1.1, energy: 1.25, emp: 1.5 },
+    xp: 300,
+    guaranteed: [{ item: 'avionics_board', qty: 2 }],
+    drops: [{ item: 'turbine_blade', qty: 1, chance: 0.2 }],
+  },
+
   // --- Bosses --------------------------------------------------------------
   {
     id: 'overseer',
@@ -303,6 +366,60 @@ export const ENEMIES: readonly EnemyDef[] = [
         damageType: 'kinetic',
         damageMultiplier: 2.1,
         attackIntervalMultiplier: 0.55,
+      },
+    ],
+  },
+  {
+    id: 'tower_actual',
+    name: 'Tower Actual',
+    description:
+      'Ground control for an airport with no aircraft. It has been sequencing an empty sky for three decades and it will not accept that the pattern is clear.',
+    maxHp: 5200,
+    accuracy: 118,
+    evasion: 96,
+    damage: 52,
+    armour: 18,
+    attackInterval: 2.5,
+    damageType: 'energy',
+    resistances: { kinetic: 1, energy: 0.9, emp: 1.2 },
+    xp: 9000,
+    isBoss: true,
+    perk: {
+      id: 'clearance',
+      name: 'Clearance',
+      description:
+        'You are on the sequence now. Every route you take is the one it would have given you, and nothing questions where you are going.',
+      moveSpeed: 25,
+      xpBonus: 0.05,
+    },
+    guaranteed: [
+      { item: 'beacon_core', qty: 1 },
+      { item: 'turbine_blade', qty: 5 },
+      { item: 'avionics_board', qty: 14 },
+    ],
+    drops: [
+      { item: 'guidance_module', qty: 2, chance: 0.6 },
+      { item: 'beacon_core', qty: 1, chance: 0.2 },
+    ],
+    // Phases here move *evasion*, not resistance. Every other boss asks "which
+    // weapon"; this one asks whether you can land anything at all, then whether you
+    // can survive what happens when it stops dodging.
+    phases: [
+      {
+        below: 0.6,
+        name: 'Holding Pattern',
+        message: 'It stops engaging and starts circling. Almost nothing you throw connects.',
+        evasionMultiplier: 2.4,
+        damageMultiplier: 0.55,
+        attackIntervalMultiplier: 1.25,
+      },
+      {
+        below: 0.22,
+        name: 'Final Approach',
+        message: 'It abandons the pattern and comes straight in. You will not miss. Neither will it.',
+        evasionMultiplier: 0.3,
+        damageMultiplier: 2.4,
+        attackIntervalMultiplier: 0.5,
       },
     ],
   },

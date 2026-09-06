@@ -73,6 +73,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'reforge_core' },
       { skill: 'refining', action: 'temper_marine' },
       { skill: 'refining', action: 'seat_seal' },
+      { skill: 'refining', action: 'roll_alumide' },
+      { skill: 'refining', action: 'sync_guidance' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
@@ -85,6 +87,9 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'fabrication', action: 'fab_legs_thruster' },
       { skill: 'fabrication', action: 'fab_weapon_harpoon' },
       { skill: 'fabrication', action: 'fab_frame_marine' },
+      { skill: 'fabrication', action: 'fab_weapon_repeater' },
+      { skill: 'fabrication', action: 'fab_legs_vector' },
+      { skill: 'fabrication', action: 'fab_frame_aeroshell' },
     ],
   },
   {
@@ -209,6 +214,50 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     actions: [{ skill: 'scavenging', action: 'deep_berths' }],
     combat: 'ship_graveyard',
   },
+
+  // --- The Abandoned Airfield, north-west past the ring road -----------------
+  //
+  // Locked behind the Quartermaster, so the regions chain: Rustbelt is open, the
+  // Overseer opens the coast, the Quartermaster opens the airfield.
+  {
+    id: 'hangars',
+    name: 'Maintenance Hangars',
+    description: 'Engines opened up on stands, tools laid beside them in the order they would be needed.',
+    x: 120,
+    y: 20,
+    unlockedBy: 'quartermaster',
+    actions: [{ skill: 'scavenging', action: 'maintenance_hangars' }],
+    combat: 'abandoned_airfield',
+  },
+  {
+    id: 'runway',
+    name: 'The Long Runway',
+    description: 'Two miles of concrete with three aircraft on it, all facing the same way, none of them going.',
+    x: 260,
+    y: -80,
+    unlockedBy: 'quartermaster',
+    actions: [{ skill: 'scavenging', action: 'long_runway' }],
+  },
+  {
+    id: 'terminal_c',
+    name: 'Terminal C',
+    description: 'The carousel is still turning, and there are still bags on it. Something keeps putting them back.',
+    x: 450,
+    y: -130,
+    unlockedBy: 'quartermaster',
+    actions: [{ skill: 'scavenging', action: 'terminal_c' }],
+    combat: 'abandoned_airfield',
+  },
+  {
+    id: 'approach_lights',
+    name: 'The Approach Lights',
+    description: 'A mile of gantries out past the fence, still lit, still counting something down. The tower watches from the far end.',
+    x: 610,
+    y: -40,
+    unlockedBy: 'quartermaster',
+    actions: [{ skill: 'scavenging', action: 'the_approach' }],
+    combat: 'abandoned_airfield',
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -235,6 +284,14 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'tanker_rows', b: 'drydock', difficulty: 1.2 },
   { a: 'tanker_rows', b: 'deep_berths', difficulty: 1.4 },
   { a: 'drydock', b: 'deep_berths', difficulty: 1.3 },
+
+  // North-west to the airfield. Two ways in again.
+  { a: 'roadside', b: 'hangars', difficulty: 1.3 },
+  { a: 'graveyard', b: 'terminal_c', difficulty: 1.4 },
+  { a: 'hangars', b: 'runway', difficulty: 1.1 },
+  { a: 'runway', b: 'terminal_c', difficulty: 1.2 },
+  { a: 'terminal_c', b: 'approach_lights', difficulty: 1.2 },
+  { a: 'runway', b: 'approach_lights', difficulty: 1.5 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

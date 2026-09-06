@@ -94,6 +94,35 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- Abandoned Airfield salvage -------------------------------------------
+  //
+  // Aerospace: light, precise, fragile. Feeds a build that avoids hits rather than
+  // absorbing them - the opposite of the Graveyard's sealed heavy plate.
+  {
+    id: 'airframe_spar',
+    name: 'Airframe Spar',
+    description: 'Aluminium ribbing, machined to the gram. Nothing here was built heavier than it had to be.',
+    category: 'material',
+  },
+  {
+    id: 'avionics_board',
+    name: 'Avionics Board',
+    description: 'Redundant to a fault, and it needed to be. Three of everything, all still arguing.',
+    category: 'component',
+  },
+  {
+    id: 'turbine_blade',
+    name: 'Turbine Blade',
+    description: 'Single-crystal, grown not cast. It ran at temperatures that would have run the rest of the aircraft.',
+    category: 'component',
+  },
+  {
+    id: 'beacon_core',
+    name: 'Approach Beacon Core',
+    description: 'Pulled from the tower itself. It is still trying to guide something down.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
@@ -150,6 +179,18 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'material',
   },
   {
+    id: 'alumide_sheet',
+    name: 'Alumide Sheet',
+    description: 'Rolled thin enough to flex and stiff enough not to. Weighs almost nothing.',
+    category: 'material',
+  },
+  {
+    id: 'guidance_module',
+    name: 'Guidance Module',
+    description: 'It knows exactly where it is at all times. You envy that.',
+    category: 'component',
+  },
+  {
     id: 'core_matrix',
     name: 'Core Matrix',
     description: 'Rebuilt from slag into something that hums again.',
@@ -191,7 +232,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'A construction tool. It was never meant for this, and neither were you.',
     category: 'part',
     slot: 'weapon',
-    stats: { damage: 5, accuracy: 3, damageType: 'kinetic' },
+    stats: { accuracy: 3, damageType: 'kinetic', damageMultiplier: 1.15 },
   },
   {
     id: 'weapon_arc',
@@ -199,7 +240,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Cuts rather than strikes. Plate that laughs at impacts runs like wax.',
     category: 'part',
     slot: 'weapon',
-    stats: { damage: 14, accuracy: 8, damageType: 'energy' },
+    stats: { accuracy: 8, damageType: 'energy', damageMultiplier: 1.35 },
   },
   {
     id: 'weapon_pulse',
@@ -207,7 +248,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'No hole, no scorch. Whatever was thinking in there simply stops.',
     category: 'part',
     slot: 'weapon',
-    stats: { damage: 12, accuracy: 14, damageType: 'emp' },
+    stats: { accuracy: 14, damageType: 'emp', damageMultiplier: 1.3 },
   },
   {
     id: 'reactor_cell',
@@ -257,7 +298,34 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'One shot, and a long wait. Everything it hits stays hit.',
     category: 'part',
     slot: 'weapon',
-    stats: { damage: 34, accuracy: 6, damageType: 'kinetic', attackSpeed: -1.1 },
+    stats: { accuracy: 6, damageType: 'kinetic', damageMultiplier: 2.25, attackSpeed: -1.0 },
+  },
+  // Airfield parts: the light build. Low HP and thin armour, bought back with evasion,
+  // speed and accuracy. Against anything that hits hard and rarely, being missed beats
+  // being armoured.
+  {
+    id: 'frame_aeroshell',
+    name: 'Aeroshell Frame',
+    description: 'Built to fly, not to be shot at. You are much harder to hit and much sorrier when something lands.',
+    category: 'part',
+    slot: 'frame',
+    stats: { hp: 30, armour: 2, evasion: 46 },
+  },
+  {
+    id: 'legs_vector',
+    name: 'Vector Thrusters',
+    description: 'Attitude jets meant for a landing gear bay. You cross the map like weather.',
+    category: 'part',
+    slot: 'legs',
+    stats: { hp: 10, armour: 2, evasion: 14, moveSpeed: 70 },
+  },
+  {
+    id: 'weapon_repeater',
+    name: 'Arc Repeater',
+    description: 'Barely a weapon on its own. It simply does not stop, and it does not miss.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { accuracy: 30, damageType: 'energy', damageMultiplier: 1.0, attackSpeed: 0.9 },
   },
 ] as const
 

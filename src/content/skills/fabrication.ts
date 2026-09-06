@@ -178,5 +178,49 @@ export const FABRICATION: SkillDef = {
       outputs: [{ item: 'frame_marine', qty: 1 }],
       xp: 40,
     },
+
+    // --- Abandoned Airfield sidegrades: the light build. ---
+    {
+      id: 'fab_weapon_repeater',
+      name: 'Arc Repeater',
+      description: 'Almost no weight behind each shot, and it never stops making them.',
+      levelRequired: 60,
+      duration: 9,
+      inputs: [
+        { item: 'avionics_board', qty: 4 },
+        { item: 'alumide_sheet', qty: 2 },
+        { item: 'charged_cell', qty: 2 },
+      ],
+      outputs: [{ item: 'weapon_repeater', qty: 1 }],
+      xp: 40,
+    },
+    {
+      id: 'fab_legs_vector',
+      name: 'Vector Thrusters',
+      description: 'Landing gear jets, re-aimed. The ground becomes a suggestion.',
+      levelRequired: 75,
+      duration: 10,
+      inputs: [
+        { item: 'turbine_blade', qty: 2 },
+        { item: 'alumide_sheet', qty: 3 },
+        { item: 'guidance_module', qty: 1 },
+      ],
+      outputs: [{ item: 'legs_vector', qty: 1 }],
+      xp: 63,
+    },
+    {
+      id: 'fab_frame_aeroshell',
+      name: 'Aeroshell Frame',
+      description: 'You give up most of your armour. In exchange, far less of what is aimed at you arrives.',
+      levelRequired: 90,
+      duration: 12,
+      inputs: [
+        { item: 'alumide_sheet', qty: 6 },
+        { item: 'guidance_module', qty: 2 },
+        { item: 'beacon_core', qty: 1 },
+      ],
+      outputs: [{ item: 'frame_aeroshell', qty: 1 }],
+      xp: 108,
+    },
   ],
 }

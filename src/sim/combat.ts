@@ -176,6 +176,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     const enemyInterval = enemy.attackInterval * (phase?.attackIntervalMultiplier ?? 1)
     const enemyDamage = enemy.damage * (phase?.damageMultiplier ?? 1)
     const enemyType = phase?.damageType ?? enemy.damageType
+    const enemyEvasion = enemy.evasion * (phase?.evasionMultiplier ?? 1)
 
     const untilOurs = Math.max(0, stats.attackInterval - combat.attackProgress)
     const untilTheirs = Math.max(0, enemyInterval - combat.enemyAttackProgress)
@@ -193,7 +194,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         stats.accuracy,
         stats.damage,
         stats.damageType,
-        enemy.evasion,
+        enemyEvasion,
         enemy.armour,
         effectiveResistances(enemy, combat.enemyHp),
       )

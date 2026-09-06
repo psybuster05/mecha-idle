@@ -125,7 +125,8 @@ describe('equipment', () => {
     expect(equipItem(state, 'weapon_rivet')).toBeNull()
     expect(count(state, 'weapon_rivet')).toBe(0)
     expect(state.equipment.weapon).toBe('weapon_rivet')
-    expect(derivedStats(state).damage).toBe(before + 5)
+    // Weapons multiply rather than add, so their advantage does not decay with level.
+    expect(derivedStats(state).damage).toBeCloseTo(before * 1.15, 6)
   })
 
   it('returns the displaced part to the bank when swapping a slot', () => {
