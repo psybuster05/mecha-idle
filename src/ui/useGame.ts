@@ -6,7 +6,7 @@
  * flat no matter how much is happening in the sim.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { applyOffline, MAX_OFFLINE_SECONDS, type OfflineReport } from '../sim/offline'
 import { deserialize, serialize } from '../sim/save'
 import { newGame, type GameState } from '../sim/state'
@@ -18,7 +18,16 @@ const RENDER_INTERVAL_MS = 100
 const AUTOSAVE_INTERVAL_MS = 10_000
 
 export interface Game {
+  /** Throttled snapshot for React panels. Changes ~10 times a second. */
   state: GameState
+  /**
+   * The live simulation, updated every animation frame.
+   *
+   * The world map reads this directly in its own rAF loop so the sprite moves at
+   * full frame rate, while panels keep re-rendering at the throttled snapshot rate.
+   * Never read this during React rendering - it is mutable by design.
+   */
+  live: RefObject<GameState>
   ready: boolean
   offlineReport: OfflineReport | null
   dismissOffline: () => void
@@ -146,5 +155,5 @@ export function useGame(adapter: SaveAdapter): Game {
 
   const dismissOffline = useCallback(() => setOfflineReport(null), [])
 
-  return { state: snapshot, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow }
+  return { state: snapshot, live: stateRef, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow }
 }

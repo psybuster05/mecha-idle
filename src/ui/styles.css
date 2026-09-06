@@ -196,3 +196,21 @@ img.sprite { image-rendering: pixelated; }
   .rail { width: 100%; border-right: none; border-bottom: 1px solid var(--line); }
   .engagement { flex-direction: column; }
 }
+
+/* --- world map ---------------------------------------------------------- */
+
+.world-canvas {
+  width: 100%;
+  max-width: 740px;
+  background: #0a0d10;
+  border: 1px solid var(--line);
+  /* Pixel art, when it replaces the placeholder blocks: never smooth it. */
+  image-rendering: pixelated;
+}
+
+.here-list { display: flex; flex-direction: column; gap: 6px; }
+.here-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 8px 12px; background: var(--panel); border: 1px solid var(--line);
+}
+.here-list li.active { border-color: var(--accent); background: var(--panel-2); }

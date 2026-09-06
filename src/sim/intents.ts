@@ -7,7 +7,9 @@
  */
 
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
+import { nodesForAction, nodesForZone } from '../content/world'
 import { cloneState, haltActivity, setActivity } from './state'
+import { routeTo } from './world'
 import type { ActionId, ActorId, EquipSlot, GameState, GatheringSkillId, ItemId, ZoneId } from './state'
 
 /** Point the mech at a gathering action. Returns the same state if it is not allowed. */
@@ -18,7 +20,16 @@ export function startSkillAction(
   actor: ActorId = 'mech',
 ): GameState {
   const next = cloneState(state)
-  return setActivity(next, actor, { kind: 'skill', skill, action }) ? next : state
+  if (!setActivity(next, actor, { kind: 'skill', skill, action })) return state
+
+  // Actions happen somewhere. Walk there first; the activity is the intent until we
+  // arrive, and the tick loop will not start producing until travel finishes.
+  const where = nodesForAction(skill, action).map((n) => n.id)
+  if (routeTo(next, actor, where) === null) {
+    haltActivity(next, actor, 'unreachable')
+    return next
+  }
+  return next
 }
 
 /** Deploy into a combat zone. */
@@ -29,6 +40,12 @@ export function startCombat(
 ): GameState {
   const next = cloneState(state)
   if (!setActivity(next, actor, { kind: 'combat', zone })) return state
+
+  const where = nodesForZone(zone).map((n) => n.id)
+  if (routeTo(next, actor, where) === null) {
+    haltActivity(next, actor, 'unreachable')
+    return next
+  }
   // Redeploying always starts a clean engagement rather than resuming a half-dead
   // enemy from a previous sortie.
   next.combat.enemyId = null

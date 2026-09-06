@@ -9,6 +9,7 @@
 import { advanceCombatActivity } from './combat'
 import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
+import { advanceTravel } from './world'
 
 /** Pure. Returns a new state advanced by `dtSeconds`. */
 export function tick(state: GameState, dtSeconds: number): GameState {
@@ -25,14 +26,21 @@ export function advance(state: GameState, dt: number): void {
 
   for (const actorId of ACTOR_IDS) {
     const actor = state.actors[actorId]
-    if (!actor.unlocked || !actor.activity) continue
+    if (!actor.unlocked) continue
+
+    // Walking comes first, and hands back whatever time is left once the actor
+    // arrives - so one large offline step both travels and then works, rather than
+    // arriving and standing idle until the next tick.
+    let working = dt
+    if (actor.travel) working = advanceTravel(state, actorId, dt)
+    if (!actor.activity || working <= 0) continue
 
     switch (actor.activity.kind) {
       case 'skill':
-        advanceSkillActivity(state, actorId, dt)
+        advanceSkillActivity(state, actorId, working)
         break
       case 'combat':
-        advanceCombatActivity(state, actorId, dt)
+        advanceCombatActivity(state, actorId, working)
         break
     }
   }

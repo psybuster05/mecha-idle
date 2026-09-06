@@ -73,3 +73,23 @@ you could tell whether a number was good.
 
 Skill ids are in save files, so renaming one is a migration (see `MIGRATIONS` in
 `src/sim/save.ts` for the v1 -> v2 example), not a find-and-replace.
+
+## The world is a graph, not a tilemap
+
+You never steer the mech - you pick a destination and it walks. So `src/content/world.ts`
+holds nodes (places with coordinates) and edges (walks with a length), and that is all
+the spatial model there is. No tiles, no collision, no navmesh, no physics.
+
+**Travel is simulated, not animated.** `src/sim/world.ts` owns pathfinding (Dijkstra,
+because edges carry a difficulty multiplier so fewest-hops is not cheapest) and advances
+the walk inside `tick`. The canvas sprite only ever *reads* `actorPosition`. That is what
+keeps offline catch-up honest: eight hours away credits the walk and then the work.
+
+`advanceTravel` returns leftover seconds so one large step both travels and then works.
+Without that, a single offline step would arrive and stand still until the next tick.
+
+Actions and combat zones live at nodes. Starting one routes you to the nearest place
+that offers it; the activity is the *intent* until you arrive.
+
+Rendering runs its own animation-frame loop off `game.live` (the mutable state ref) so
+the sprite moves at full frame rate, while React panels stay on the throttled snapshot.

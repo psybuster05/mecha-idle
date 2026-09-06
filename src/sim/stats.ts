@@ -17,6 +17,8 @@ export const BASE_ATTACK_INTERVAL = 3
 export const MIN_ATTACK_INTERVAL = 1.2
 /** Fraction of maximum HP restored on each kill. */
 export const HEAL_ON_KILL = 0.08
+/** Map units walked per second with nothing fitted. */
+export const BASE_MOVE_SPEED = 30
 /** Seconds between one enemy dying and the next arriving. */
 export const RESPAWN_DELAY = 2
 
@@ -27,6 +29,8 @@ export interface DerivedStats {
   damage: number
   armour: number
   attackInterval: number
+  /** Map units per second. Thrusters and similar Back-slot parts raise this. */
+  moveSpeed: number
 }
 
 /** Sum of one stat across everything currently equipped. */
@@ -57,6 +61,7 @@ export function derivedStats(state: GameState): DerivedStats {
       MIN_ATTACK_INTERVAL,
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),
     ),
+    moveSpeed: BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed'),
   }
 }
 

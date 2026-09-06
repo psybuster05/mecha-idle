@@ -190,3 +190,64 @@ describe('migration v1 -> v2: combat skill rename', () => {
     expect(noMigrations.ok).toBe(false)
   })
 })
+
+/**
+ * Regression: a save once loaded with the mech in no location at all.
+ *
+ * serialize() stamps the current version onto whatever state it holds, so a
+ * mid-development save was written already labelled v3 while still carrying v2-shaped
+ * actors. The migration therefore never ran, and withDefaults merged actors one level
+ * too shallow to repair it - the mech was "Nowhere" and every destination unreachable.
+ */
+describe('save repair: fields added inside an actor', () => {
+  it('fills actor fields a save predates, even at the current version', () => {
+    const stale = {
+      ...newGame(),
+      version: SAVE_VERSION, // already current, so no migration will run
+      actors: {
+        mech: { unlocked: true, activity: null, progress: 0, stoppedReason: null },
+        crawler: { unlocked: false, activity: null, progress: 0, stoppedReason: null },
+      },
+    }
+
+    const result = deserialize(JSON.stringify(stale))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.state.actors.mech.at).toBe('the_hollow')
+    expect(result.state.actors.mech.travel).toBeNull()
+    expect(result.state.actors.crawler.at).toBe('the_hollow')
+  })
+
+  it('still prefers what the save actually recorded', () => {
+    const saved = {
+      ...newGame(),
+      version: SAVE_VERSION,
+      actors: {
+        mech: { unlocked: true, activity: null, progress: 0, stoppedReason: null, at: 'graveyard', travel: null },
+        crawler: { unlocked: false, activity: null, progress: 0, stoppedReason: null, at: 'the_hollow', travel: null },
+      },
+    }
+
+    const result = deserialize(JSON.stringify(saved))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.actors.mech.at).toBe('graveyard')
+  })
+
+  it('migrates a genuine v2 save to the camp', () => {
+    const v2 = {
+      ...newGame(),
+      version: 2,
+      actors: {
+        mech: { unlocked: true, activity: null, progress: 0, stoppedReason: null },
+        crawler: { unlocked: false, activity: null, progress: 0, stoppedReason: null },
+      },
+    }
+    const result = deserialize(JSON.stringify(v2))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.actors.mech.at).toBe('the_hollow')
+    expect(result.migratedFrom).toBe(2)
+  })
+})

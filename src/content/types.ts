@@ -31,6 +31,8 @@ export interface EquipStats {
   armour?: number
   /** Added to maximum HP. */
   hp?: number
+  /** Map units per second added to movement. Thrusters, tracks, better legs. */
+  moveSpeed?: number
   /** Seconds shaved off our attack interval. Negative values would slow us down. */
   attackSpeed?: number
 }

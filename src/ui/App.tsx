@@ -12,11 +12,13 @@ import { CombatPanel } from './components/CombatPanel'
 import { MechPanel } from './components/MechPanel'
 import { OfflineDialog } from './components/OfflineDialog'
 import { SkillPanel } from './components/SkillPanel'
+import { WorldPanel } from './components/WorldPanel'
 
-type Tab = GatheringSkillId | 'combat' | 'mech' | 'bank'
+type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank'
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
+  if (state.actors.mech.travel) return 'Travelling'
   const activity = state.actors.mech.activity
   if (!activity) return 'Idle'
   if (activity.kind === 'combat') return 'Fighting'
@@ -28,8 +30,10 @@ function activitySummary(state: GameState): string {
 export function App() {
   // One adapter for the life of the app; swapping this line is the whole desktop port.
   const adapter = useMemo(() => new LocalStorageAdapter(), [])
-  const { state, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
-  const [tab, setTab] = useState<Tab>('scavenging')
+  const { state, live, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
+  // The world opens first: the walking sprite is the thing that makes this feel like
+  // a place rather than a spreadsheet.
+  const [tab, setTab] = useState<Tab>('world')
 
   if (!ready) {
     return (
@@ -71,6 +75,18 @@ export function App() {
 
       <div className="layout">
         <nav className="rail">
+          <div className="rail-group">
+            <button
+              className={`rail-item ${tab === 'world' ? 'selected' : ''}`}
+              onClick={() => setTab('world')}
+            >
+              <span className="rail-name">
+                {state.actors.mech.travel && <span className="running-dot" aria-label="travelling" />}
+                World
+              </span>
+            </button>
+          </div>
+
           <div className="rail-group">
             <div className="rail-heading dim">Skills</div>
             {GATHERING_SKILLS.map((id) => {
@@ -129,7 +145,9 @@ export function App() {
         </nav>
 
         <main className="content">
-          {tab === 'combat' ? (
+          {tab === 'world' ? (
+            <WorldPanel state={state} live={live} dispatch={dispatch} />
+          ) : tab === 'combat' ? (
             <CombatPanel state={state} dispatch={dispatch} />
           ) : tab === 'mech' ? (
             <MechPanel state={state} dispatch={dispatch} />

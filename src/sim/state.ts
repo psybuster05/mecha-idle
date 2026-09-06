@@ -38,6 +38,7 @@ export const COMBAT_SKILLS: readonly CombatSkillId[] = [
 export const ALL_SKILLS: readonly SkillId[] = [...GATHERING_SKILLS, ...COMBAT_SKILLS]
 
 export type ItemId = string
+export type NodeId = string
 export type ActionId = string
 export type ZoneId = string
 
@@ -61,7 +62,29 @@ export type Activity =
   | { kind: 'combat'; zone: ZoneId }
 
 /** Why an activity stopped on its own, so the UI can say so rather than silently idling. */
-export type StopReason = 'missing-inputs' | 'level-too-low' | 'unknown-action' | 'destroyed'
+export type StopReason =
+  | 'missing-inputs'
+  | 'level-too-low'
+  | 'unknown-action'
+  | 'destroyed'
+  | 'unreachable'
+
+/**
+ * A walk in progress. The sprite is a view of this - lerp from "from" to "to" by
+ * progress/legSeconds - so movement is simulated, not animated, and offline catch-up
+ * credits travel exactly as live play does.
+ */
+export interface TravelState {
+  from: NodeId
+  /** The next hop, not the final destination. */
+  to: NodeId
+  /** Seconds into the current hop. */
+  progress: number
+  /** Seconds this hop takes in total. */
+  legSeconds: number
+  /** Hops still to make after "to". Empty means "to" is the destination. */
+  remaining: NodeId[]
+}
 
 export interface ActorState {
   unlocked: boolean
@@ -70,6 +93,13 @@ export interface ActorState {
   progress: number
   /** Set when an activity halted itself. Cleared whenever a new activity starts. */
   stoppedReason: StopReason | null
+  /** Where this actor currently stands. */
+  at: NodeId
+  /**
+   * Non-null while walking. The activity above is the *intent* - it does not start
+   * producing until travel finishes.
+   */
+  travel: TravelState | null
 }
 
 // ---------------------------------------------------------------------------
@@ -94,7 +124,7 @@ export interface CombatState {
 // Game state
 // ---------------------------------------------------------------------------
 
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */
@@ -115,8 +145,21 @@ export interface GameState {
   combat: CombatState
 }
 
+/**
+ * Kept in sync with STARTING_NODE in content/world.ts by a test - sim/ cannot import
+ * from content/ at runtime without creating a cycle.
+ */
+export const DEFAULT_START_NODE: NodeId = 'the_hollow'
+
 function idleActor(unlocked: boolean): ActorState {
-  return { unlocked, activity: null, progress: 0, stoppedReason: null }
+  return {
+    unlocked,
+    activity: null,
+    progress: 0,
+    stoppedReason: null,
+    at: DEFAULT_START_NODE,
+    travel: null,
+  }
 }
 
 export function newGame(seed: number = 1): GameState {
@@ -200,6 +243,8 @@ export function setActivity(
   actor.activity = activity
   actor.progress = 0
   actor.stoppedReason = null
+  // Any walk in progress belonged to the old activity.
+  actor.travel = null
   return true
 }
 
@@ -209,4 +254,5 @@ export function haltActivity(state: GameState, actorId: ActorId, reason: StopRea
   actor.activity = null
   actor.progress = 0
   actor.stoppedReason = reason
+  actor.travel = null
 }

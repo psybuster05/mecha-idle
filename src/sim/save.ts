@@ -6,7 +6,7 @@
  * rather than thrown away. Idle players do not forgive lost progress.
  */
 
-import { newGame, SAVE_VERSION, type GameState } from './state'
+import { newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
 
 export type LoadResult =
   | { ok: true; state: GameState; migratedFrom: number | null }
@@ -34,6 +34,20 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
 }
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /**
+   * 2 -> 3: the world became a graph and actors gained a position.
+   *
+   * withDefaults now also fills missing actor fields, so this is belt-and-braces -
+   * but it states the intent explicitly: everyone comes back at the camp, which is
+   * the one place always safe to stand, rather than wherever a default happens to be.
+   */
+  2: (raw) => {
+    const actors = { ...(raw['actors'] as Record<string, Record<string, unknown>> | undefined) }
+    for (const [id, actor] of Object.entries(actors)) {
+      actors[id] = { ...actor, at: actor['at'] ?? 'the_hollow', travel: null }
+    }
+    return { ...raw, version: 3, actors }
+  },
   1: (raw) => {
     const skills = { ...(raw['skills'] as Record<string, number> | undefined) }
     for (const [from, to] of Object.entries(RENAMED_COMBAT_SKILLS_V1)) {
@@ -57,7 +71,16 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   const merged = { ...base, ...raw } as GameState
 
   merged.skills = { ...base.skills, ...(raw['skills'] as object | undefined) }
-  merged.actors = { ...base.actors, ...(raw['actors'] as object | undefined) }
+
+  // Actors are merged *per field*, not wholesale. Spreading whole actor objects
+  // leaves any field added later missing on old saves - which is exactly how a save
+  // once loaded with no map position at all, leaving the mech nowhere and every
+  // destination unreachable. Migrations handle reshaping; this handles new fields.
+  const rawActors = raw['actors'] as Record<string, object> | undefined
+  merged.actors = { ...base.actors }
+  for (const id of Object.keys(base.actors) as ActorId[]) {
+    merged.actors[id] = { ...base.actors[id], ...(rawActors?.[id] ?? {}) }
+  }
   merged.combat = { ...base.combat, ...(raw['combat'] as object | undefined) }
   merged.bank = { ...(raw['bank'] as object | undefined) }
   merged.equipment = { ...(raw['equipment'] as object | undefined) }

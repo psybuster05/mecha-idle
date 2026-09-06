@@ -37,12 +37,42 @@ describe('starting activities', () => {
   })
 
   it('switching action abandons progress on the old one', () => {
-    let state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
-    state = tick(state, 2) // two thirds through a 3s action
+    // Refining happens at the camp, which is where a new game starts - so this one
+    // needs no walk and begins producing straight away.
+    let state = startSkillAction(newGame(), 'refining', 'smelt_steel')
+    state.bank['scrap_steel'] = 100
+    expect(state.actors.mech.travel).toBeNull()
+
+    state = tick(state, 2) // two thirds through a 4s action
     expect(state.actors.mech.progress).toBeGreaterThan(0)
 
-    state = startSkillAction(state, 'refining', 'smelt_steel')
+    state = startSkillAction(state, 'fabrication', 'fab_frame_steel')
     expect(state.actors.mech.progress).toBe(0)
+  })
+
+  it('walks to an action that is somewhere else before starting it', () => {
+    // Scavenging is out in the world, so this one has to travel first.
+    let state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
+    expect(state.actors.mech.at).toBe('the_hollow')
+    expect(state.actors.mech.travel).not.toBeNull()
+
+    state = tick(state, 2)
+    expect(state.actors.mech.travel).not.toBeNull()
+    expect(state.actors.mech.progress).toBe(0) // walking, not working yet
+
+    state = tick(state, 120) // long enough to arrive and then work
+    expect(state.actors.mech.at).toBe('roadside')
+    expect(state.actors.mech.travel).toBeNull()
+    expect(state.bank['scrap_steel']).toBeGreaterThan(0)
+  })
+
+  it('cancels a walk when the order changes', () => {
+    let state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
+    expect(state.actors.mech.travel).not.toBeNull()
+
+    state = stopActivity(state)
+    expect(state.actors.mech.travel).toBeNull()
+    expect(state.actors.mech.activity).toBeNull()
   })
 
   it('refuses to command a locked actor', () => {
