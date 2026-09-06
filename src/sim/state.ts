@@ -60,11 +60,16 @@ export type Activity =
   | { kind: 'skill'; skill: GatheringSkillId; action: ActionId }
   | { kind: 'combat'; zone: ZoneId }
 
+/** Why an activity stopped on its own, so the UI can say so rather than silently idling. */
+export type StopReason = 'missing-inputs' | 'level-too-low' | 'unknown-action' | 'destroyed'
+
 export interface ActorState {
   unlocked: boolean
   activity: Activity | null
   /** Seconds accumulated toward the current activity's next completion. */
   progress: number
+  /** Set when an activity halted itself. Cleared whenever a new activity starts. */
+  stoppedReason: StopReason | null
 }
 
 // ---------------------------------------------------------------------------
@@ -111,7 +116,7 @@ export interface GameState {
 }
 
 function idleActor(unlocked: boolean): ActorState {
-  return { unlocked, activity: null, progress: 0 }
+  return { unlocked, activity: null, progress: 0, stoppedReason: null }
 }
 
 export function newGame(seed: number = 1): GameState {
@@ -174,4 +179,34 @@ export function canStartActivity(state: GameState, actor: ActorId): boolean {
   if (!state.actors[actor].unlocked) return false
   if (state.actors[actor].activity !== null) return true // switching is always allowed
   return busyActors(state).length < maxConcurrentActivities(state)
+}
+
+export const ACTOR_IDS: readonly ActorId[] = ['mech', 'crawler']
+
+/**
+ * Point an actor at a new activity. Mutates.
+ *
+ * Returns false if the concurrency rule forbids it (see maxConcurrentActivities).
+ * Progress and any previous stop reason are reset - switching actions abandons
+ * partial progress, which is the Melvor behaviour and keeps the rule easy to reason about.
+ */
+export function setActivity(
+  state: GameState,
+  actorId: ActorId,
+  activity: Activity | null,
+): boolean {
+  if (activity !== null && !canStartActivity(state, actorId)) return false
+  const actor = state.actors[actorId]
+  actor.activity = activity
+  actor.progress = 0
+  actor.stoppedReason = null
+  return true
+}
+
+/** Mutates. Halts an actor and records why, so the UI can explain the stop. */
+export function haltActivity(state: GameState, actorId: ActorId, reason: StopReason): void {
+  const actor = state.actors[actorId]
+  actor.activity = null
+  actor.progress = 0
+  actor.stoppedReason = reason
 }
