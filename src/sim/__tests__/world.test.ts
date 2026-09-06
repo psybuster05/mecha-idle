@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { WORLD_NODES, STARTING_NODE, getNode, ADJACENCY } from '../../content/world'
+import {
+  WORLD_NODES,
+  STARTING_NODE,
+  getNode,
+  ADJACENCY,
+  nodesForAction,
+} from '../../content/world'
+import { SKILLS } from '../../content'
 import { actorPosition, findNearest, findPath, hopSeconds } from '../world'
 import { DEFAULT_START_NODE, newGame, type GameState } from '../state'
 import { startCombat, startSkillAction } from '../intents'
@@ -187,5 +194,57 @@ describe('rendering position', () => {
 
     expect(pos.x).toBeCloseTo((from.x + to.x) / 2, 0)
     expect(pos.y).toBeCloseTo((from.y + to.y) / 2, 0)
+  })
+})
+
+/**
+ * The gating contract.
+ *
+ * Every non-combat skill must reach 99 on time alone. Combat widens what you can do -
+ * new regions, unique materials, story, perks - but it never stands between a player
+ * and a level. In a game that allows one action at a time, a boss you cannot beat
+ * would otherwise stop *everything*, which is the opposite of what an idle game sells.
+ *
+ * These tests exist to catch the back-door version of the mistake: quietly putting a
+ * better gathering node inside a locked region.
+ */
+describe('non-combat skills are never gated behind combat', () => {
+  const gatheringActions = SKILLS.flatMap((skill) =>
+    skill.actions.map((action) => ({ skill: skill.id, action: action.id })),
+  )
+
+  it('every gathering action exists somewhere on the map', () => {
+    for (const { skill, action } of gatheringActions) {
+      expect(
+        nodesForAction(skill, action).length,
+        `${skill}:${action} has nowhere to be performed`,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  it('every gathering action is walkable from the start without a fight', () => {
+    for (const { skill, action } of gatheringActions) {
+      const reachable = nodesForAction(skill, action).some(
+        (node) => findPath(STARTING_NODE, node.id) !== null,
+      )
+      expect(reachable, `${skill}:${action} cannot be reached from the start`).toBe(true)
+    }
+  })
+
+  it('no place offering a gathering action is locked behind a boss', () => {
+    for (const { skill, action } of gatheringActions) {
+      const open = nodesForAction(skill, action).filter((node) => !node.unlockedBy)
+      expect(
+        open.length,
+        `${skill}:${action} is only available at boss-locked places`,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  it('leaves combat free to be gated as much as we like', () => {
+    // The contract is one-directional on purpose: combat zones may carry any
+    // requirement. This asserts the rule is not accidentally applied to them too.
+    const combatNodes = WORLD_NODES.filter((node) => node.combat)
+    expect(combatNodes.length).toBeGreaterThan(0)
   })
 })

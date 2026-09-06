@@ -26,6 +26,15 @@ export interface WorldNodeDef {
   combat?: ZoneId
   /** Where the crawler is parked. Industry happens here. */
   isCamp?: boolean
+  /**
+   * Boss that must be defeated before this place can be entered.
+   *
+   * Unused for now, and deliberately declared early so the rule below has something
+   * to check. **A node carrying gathering actions must never set this.** Non-combat
+   * skills reach 99 on time alone; combat widens what you can do, it does not unblock
+   * the ladder you are already on. A test enforces it.
+   */
+  unlockedBy?: string
 }
 
 /** An undirected walk between two nodes. Length comes from their coordinates. */
@@ -48,16 +57,29 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     x: 300,
     y: 260,
     isCamp: true,
+    // All industry happens at the camp. Every Refining and Fabrication action must be
+    // listed here or it is unreachable - starting one halts immediately. A test in
+    // world.test.ts catches omissions, which is how the tier 5-8 recipes were found
+    // stranded after the rebalance.
     actions: [
       { skill: 'refining', action: 'smelt_steel' },
       { skill: 'refining', action: 'draw_wire' },
       { skill: 'refining', action: 'cast_titanium' },
       { skill: 'refining', action: 'charge_cell' },
+      { skill: 'refining', action: 'true_bearings' },
+      { skill: 'refining', action: 'grind_lenses' },
+      { skill: 'refining', action: 'press_weave' },
+      { skill: 'refining', action: 'reforge_core' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
       { skill: 'fabrication', action: 'fab_weapon_rivet' },
       { skill: 'fabrication', action: 'fab_reactor_cell' },
+      { skill: 'fabrication', action: 'fab_weapon_arc' },
+      { skill: 'fabrication', action: 'fab_weapon_pulse' },
+      { skill: 'fabrication', action: 'fab_frame_titanium' },
+      { skill: 'fabrication', action: 'fab_arms_precision' },
+      { skill: 'fabrication', action: 'fab_legs_thruster' },
     ],
   },
   {

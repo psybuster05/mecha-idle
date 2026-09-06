@@ -93,3 +93,24 @@ that offers it; the activity is the *intent* until you arrive.
 
 Rendering runs its own animation-frame loop off `game.live` (the mutable state ref) so
 the sprite moves at full frame rate, while React panels stay on the throttled snapshot.
+
+## Gating: combat widens, it never unblocks
+
+**Time alone must be able to max any non-combat skill.** Every Scavenging, Refining and
+Fabrication action reaches level 99 without a single fight. This is the Melvor contract
+and it is load-bearing: idle players are buying predictable progress, and in a game that
+allows one action at a time, a boss you cannot beat would stop *everything*.
+
+Bosses unlock **breadth, not height** — new regions, unique materials for the best gear,
+story beats, and permanent perks. A player who never fights still has a complete idle
+game; they just cannot reach the best equipment, see the whole world, or finish the story.
+
+Practical rules:
+- `WorldNodeDef.unlockedBy` gates a place behind a boss. **Never set it on a node that
+  carries gathering actions.** Enforced by a test.
+- Later zones give *different* gathering at comparable rates, not strictly better. Making
+  them better re-gates the ladder through the back door, since the fastest route to 99
+  would end up behind a boss.
+- Every skill action must be listed on some world node. An action with nowhere to be
+  performed halts instantly as `unreachable` - also enforced by a test, which is how nine
+  stranded recipes were found.
