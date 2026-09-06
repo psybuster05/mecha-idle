@@ -18,8 +18,8 @@ type Tab = GatheringSkillId | 'combat' | 'mech' | 'bank'
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
   const activity = state.actors.mech.activity
-  if (!activity) return 'Standby'
-  if (activity.kind === 'combat') return 'Deployed'
+  if (!activity) return 'Idle'
+  if (activity.kind === 'combat') return 'Fighting'
   const skill = getSkill(activity.skill)
   const action = skill?.actions.find((a) => a.id === activity.action)
   return action ? action.name : skill?.name ?? 'Working'
@@ -52,11 +52,11 @@ export function App() {
           <span className="dim">{activitySummary(state)}</span>
         </div>
         <div className="topbar-stats">
-          <div className="integrity">
+          <div className="hp">
             <Bar
               value={state.combat.hp > 0 ? state.combat.hp / stats.maxHp : 1}
-              tone="integrity"
-              label="Integrity"
+              tone="hp"
+              label="HP"
               detail={`${formatNumber(state.combat.hp > 0 ? state.combat.hp : stats.maxHp)} / ${formatNumber(stats.maxHp)}`}
             />
           </div>
@@ -72,7 +72,7 @@ export function App() {
       <div className="layout">
         <nav className="rail">
           <div className="rail-group">
-            <div className="rail-heading dim">Subroutines</div>
+            <div className="rail-heading dim">Skills</div>
             {GATHERING_SKILLS.map((id) => {
               const skill = SKILLS.find((s) => s.id === id)
               const xp = state.skills[id]
@@ -92,31 +92,31 @@ export function App() {
                 </button>
               )
             })}
-          </div>
-
-          <div className="rail-group">
-            <div className="rail-heading dim">Systems</div>
             <button
               className={`rail-item ${tab === 'combat' ? 'selected' : ''}`}
               onClick={() => setTab('combat')}
             >
               <span className="rail-name">
                 {activity?.kind === 'combat' && <span className="running-dot" aria-label="running" />}
-                Sorties
+                Combat
               </span>
               <span className="rail-level">{combatLevel(state)}</span>
             </button>
+          </div>
+
+          <div className="rail-group">
+            <div className="rail-heading dim">Character</div>
             <button
               className={`rail-item ${tab === 'mech' ? 'selected' : ''}`}
               onClick={() => setTab('mech')}
             >
-              <span className="rail-name">Chassis</span>
+              <span className="rail-name">Equipment</span>
             </button>
             <button
               className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
               onClick={() => setTab('bank')}
             >
-              <span className="rail-name">Hold</span>
+              <span className="rail-name">Bank</span>
               <span className="rail-level">{Object.keys(state.bank).length}</span>
             </button>
           </div>

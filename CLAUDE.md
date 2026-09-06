@@ -53,3 +53,17 @@ file, not writing engine code. "Make tier 3 parts stronger" should be a number e
 - `npm test` - vitest (sim unit tests)
 - `npm run typecheck` - tsc
 - `npm run lint` - eslint (also enforces the sim purity boundary)
+
+## Naming: standard RPG terms, not mecha jargon
+
+Anything the player reads as a *label* uses the vocabulary idle-game players already
+know: **HP, Attack, Strength, Defence, Hitpoints, Damage, Accuracy, Armour, Evasion,
+Attack Speed, Bank, Equipment**. Panels are Skills / Combat / Equipment / Bank.
+
+The setting lives in flavour text, item names and enemy names - never in the words a
+player has to decode to read a stat. An earlier pass used Integrity / Targeting / Servos
+/ Plating / Structure / Sorties / Chassis / Hold, and it meant learning a glossary before
+you could tell whether a number was good.
+
+Skill ids are in save files, so renaming one is a migration (see `MIGRATIONS` in
+`src/sim/save.ts` for the v1 -> v2 example), not a find-and-replace.

@@ -2,7 +2,7 @@ interface BarProps {
   /** 0..1. Clamped, so callers need not guard against overshoot. */
   value: number
   /** Visual role; drives colour only. */
-  tone?: 'xp' | 'progress' | 'integrity' | 'enemy'
+  tone?: 'xp' | 'progress' | 'hp' | 'enemy'
   label?: string
   /** Shown at the right end of the label row. */
   detail?: string

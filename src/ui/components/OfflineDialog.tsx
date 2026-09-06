@@ -7,10 +7,10 @@ const SKILL_LABELS: Record<SkillId, string> = {
   scavenging: 'Scavenging',
   refining: 'Refining',
   fabrication: 'Fabrication',
-  targeting: 'Targeting',
-  servos: 'Servos',
-  plating: 'Plating',
-  structure: 'Structure',
+  attack: 'Attack',
+  strength: 'Strength',
+  defence: 'Defence',
+  hitpoints: 'Hitpoints',
 }
 
 const STOP_TEXT: Record<string, string> = {
@@ -40,9 +40,9 @@ export function OfflineDialog({
   return (
     <div className="modal-backdrop" onClick={onDismiss}>
       <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h2>Standby Ended</h2>
+        <h2>While You Were Away</h2>
         <p className="dim">
-          You were dormant for {formatDuration(report.seconds)}.
+          You were away for {formatDuration(report.seconds)}.
           {report.awaySeconds !== null && (
             <> Your reactor could only sustain {formatDuration(report.seconds)} of the{' '}
             {formatDuration(report.awaySeconds)} you were gone.</>
@@ -55,7 +55,7 @@ export function OfflineDialog({
 
         {skills.length > 0 && (
           <section>
-            <h3>Subroutines</h3>
+            <h3>Skills</h3>
             <ul className="tally">
               {skills.map(([skill, xp]) => (
                 <li key={skill}>
@@ -69,7 +69,7 @@ export function OfflineDialog({
 
         {items.length > 0 && (
           <section>
-            <h3>Salvage</h3>
+            <h3>Items</h3>
             <ul className="tally">
               {items.map(([item, qty]) => (
                 <li key={item}>

@@ -59,10 +59,10 @@ function spawnEnemy(state: GameState, enemyIds: readonly string[], rng: Rng): vo
 
 /** Mutates. Awards xp and loot, heals, and clears the field. */
 function onKill(state: GameState, enemy: EnemyDef, stats: DerivedStats, rng: Rng): void {
-  state.skills.targeting += enemy.xp
-  state.skills.servos += enemy.xp
-  state.skills.plating += enemy.xp
-  state.skills.structure += Math.round(enemy.xp * 0.4)
+  state.skills.attack += enemy.xp
+  state.skills.strength += enemy.xp
+  state.skills.defence += enemy.xp
+  state.skills.hitpoints += Math.round(enemy.xp * 0.4)
 
   if (enemy.guaranteed) grantAll(state, enemy.guaranteed, 1)
   for (const drop of enemy.drops ?? []) {

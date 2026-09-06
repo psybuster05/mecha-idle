@@ -72,7 +72,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Not the chassis you were built with. It holds.',
     category: 'part',
     slot: 'frame',
-    stats: { integrity: 25, armour: 2 },
+    stats: { hp: 25, armour: 2 },
   },
   {
     id: 'arms_servo',
@@ -88,7 +88,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Slower than the originals. Far harder to knock down.',
     category: 'part',
     slot: 'legs',
-    stats: { armour: 3, integrity: 10 },
+    stats: { armour: 3, hp: 10 },
   },
   {
     id: 'weapon_rivet',
@@ -104,7 +104,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Steady output at last. The tremor in your servos stops.',
     category: 'part',
     slot: 'reactor',
-    stats: { attackSpeed: 0.4, integrity: 5 },
+    stats: { attackSpeed: 0.4, hp: 5 },
   },
 ] as const
 

@@ -39,7 +39,7 @@ export function MechPanel({ state, dispatch }: Props) {
     <div className="panel">
       <header className="panel-head">
         <div>
-          <h2>Chassis</h2>
+          <h2>Equipment</h2>
           <p className="dim flavour">
             Every part here is you. There is not much of the original left.
           </p>
@@ -47,15 +47,15 @@ export function MechPanel({ state, dispatch }: Props) {
       </header>
 
       <section className="stat-grid">
-        <StatLine label="Max integrity" value={formatNumber(stats.maxHp)} />
+        <StatLine label="Max HP" value={formatNumber(stats.maxHp)} />
         <StatLine label="Damage" value={formatNumber(stats.damage)} />
         <StatLine label="Accuracy" value={formatNumber(stats.accuracy)} />
         <StatLine label="Armour" value={formatNumber(stats.armour)} />
         <StatLine label="Evasion" value={formatNumber(stats.evasion)} />
-        <StatLine label="Attack every" value={formatSeconds(stats.attackInterval)} />
+        <StatLine label="Attack Speed" value={formatSeconds(stats.attackInterval)} />
       </section>
 
-      <h3>Fitted</h3>
+      <h3>Equipped</h3>
       <ul className="slots">
         {EQUIP_SLOTS.map((slot) => {
           const fitted = state.equipment[slot]
@@ -71,7 +71,7 @@ export function MechPanel({ state, dispatch }: Props) {
                       .map(([stat, value]) => `+${value} ${stat}`)
                       .join(' · ')}
                   </div>
-                  <button onClick={() => dispatch((s) => unequip(s, slot))}>Remove</button>
+                  <button onClick={() => dispatch((s) => unequip(s, slot))}>Unequip</button>
                 </>
               ) : (
                 <div className="slot-item dim">empty</div>
@@ -81,7 +81,7 @@ export function MechPanel({ state, dispatch }: Props) {
         })}
       </ul>
 
-      <h3>In storage</h3>
+      <h3>In your bank</h3>
       {available.length === 0 ? (
         <p className="dim">
           Nothing fabricated yet. Refine some stock, then build a frame.
@@ -90,7 +90,6 @@ export function MechPanel({ state, dispatch }: Props) {
         <ul className="parts">
           {available.map((item) => {
             if (!item) return null
-            const isFitted = state.equipment[item.slot as EquipSlot] === item.id
             return (
               <li key={item.id} className="part">
                 <div>
@@ -107,7 +106,7 @@ export function MechPanel({ state, dispatch }: Props) {
                   className="primary"
                   onClick={() => dispatch((s) => equip(s, item.id).state)}
                 >
-                  {isFitted ? 'Fit another' : 'Fit'}
+                  Equip
                 </button>
               </li>
             )

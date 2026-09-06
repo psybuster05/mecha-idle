@@ -15,7 +15,7 @@ import { levelFromXp } from './xp'
 export const BASE_ATTACK_INTERVAL = 3
 /** However much attack speed is stacked, swings never get faster than this. */
 export const MIN_ATTACK_INTERVAL = 1.2
-/** Fraction of maximum integrity restored on each kill. */
+/** Fraction of maximum HP restored on each kill. */
 export const HEAL_ON_KILL = 0.08
 /** Seconds between one enemy dying and the next arriving. */
 export const RESPAWN_DELAY = 2
@@ -41,18 +41,18 @@ function equippedTotal(state: GameState, stat: keyof EquipStats): number {
 }
 
 export function derivedStats(state: GameState): DerivedStats {
-  const targeting = levelFromXp(state.skills.targeting)
-  const servos = levelFromXp(state.skills.servos)
-  const plating = levelFromXp(state.skills.plating)
-  const structure = levelFromXp(state.skills.structure)
+  const attack = levelFromXp(state.skills.attack)
+  const strength = levelFromXp(state.skills.strength)
+  const defence = levelFromXp(state.skills.defence)
+  const hitpoints = levelFromXp(state.skills.hitpoints)
 
   return {
-    maxHp: 50 + structure * 8 + equippedTotal(state, 'integrity'),
-    accuracy: 10 + targeting * 2 + equippedTotal(state, 'accuracy'),
-    // Evasion rides on Plating too: heavier armour makes you harder to meaningfully hit.
-    evasion: 8 + plating * 1.5,
-    damage: 3 + servos * 1.2 + equippedTotal(state, 'damage'),
-    armour: plating * 0.8 + equippedTotal(state, 'armour'),
+    maxHp: 50 + hitpoints * 8 + equippedTotal(state, 'hp'),
+    accuracy: 10 + attack * 2 + equippedTotal(state, 'accuracy'),
+    // Evasion rides on Defence too: heavier armour makes you harder to meaningfully hit.
+    evasion: 8 + defence * 1.5,
+    damage: 3 + strength * 1.2 + equippedTotal(state, 'damage'),
+    armour: defence * 0.8 + equippedTotal(state, 'armour'),
     attackInterval: Math.max(
       MIN_ATTACK_INTERVAL,
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),
@@ -63,10 +63,10 @@ export function derivedStats(state: GameState): DerivedStats {
 /** Mean of the four combat skill levels. Gates zone entry. */
 export function combatLevel(state: GameState): number {
   const levels = [
-    levelFromXp(state.skills.targeting),
-    levelFromXp(state.skills.servos),
-    levelFromXp(state.skills.plating),
-    levelFromXp(state.skills.structure),
+    levelFromXp(state.skills.attack),
+    levelFromXp(state.skills.strength),
+    levelFromXp(state.skills.defence),
+    levelFromXp(state.skills.hitpoints),
   ]
   return Math.floor(levels.reduce((a, b) => a + b, 0) / levels.length)
 }

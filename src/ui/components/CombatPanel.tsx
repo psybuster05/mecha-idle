@@ -22,15 +22,14 @@ export function CombatPanel({ state, dispatch }: Props) {
     <div className="panel">
       <header className="panel-head">
         <div>
-          <h2>Sorties</h2>
+          <h2>Combat</h2>
           <p className="dim flavour">
-            Threat assessment and fire control. The oldest subroutines you have, and the ones you
-            trust least.
+            The oldest instincts you have, and the ones you trust least.
           </p>
         </div>
         <div className="level-block">
           <div className="level-number">{level}</div>
-          <div className="dim">combat</div>
+          <div className="dim">level</div>
         </div>
       </header>
 
@@ -51,7 +50,7 @@ export function CombatPanel({ state, dispatch }: Props) {
                 <Bar
                   value={combat.enemyHp / enemy.maxHp}
                   tone="enemy"
-                  label="Integrity"
+                  label="HP"
                   detail={`${formatNumber(Math.max(0, combat.enemyHp))} / ${formatNumber(enemy.maxHp)}`}
                 />
                 <Bar
@@ -72,8 +71,8 @@ export function CombatPanel({ state, dispatch }: Props) {
                 </p>
                 <Bar
                   value={combat.hp / stats.maxHp}
-                  tone="integrity"
-                  label="Integrity"
+                  tone="hp"
+                  label="HP"
                   detail={`${formatNumber(Math.max(0, combat.hp))} / ${formatNumber(stats.maxHp)}`}
                 />
                 <Bar
@@ -86,7 +85,7 @@ export function CombatPanel({ state, dispatch }: Props) {
             </>
           ) : (
             <div className="scanning">
-              <div className="combatant-name">Scanning</div>
+              <div className="combatant-name">Finding a target</div>
               <Bar value={combat.respawnProgress / RESPAWN_DELAY} tone="progress" />
               <p className="dim">Something is always still moving out there.</p>
             </div>
@@ -129,7 +128,7 @@ export function CombatPanel({ state, dispatch }: Props) {
                 {locked ? (
                   <span className="lock">Combat {zone.levelRequired}</span>
                 ) : active ? (
-                  <button onClick={() => dispatch((s) => stopActivity(s))}>Withdraw</button>
+                  <button onClick={() => dispatch((s) => stopActivity(s))}>Stop</button>
                 ) : (
                   <button className="primary" onClick={() => dispatch((s) => startCombat(s, zone.id))}>
                     Deploy

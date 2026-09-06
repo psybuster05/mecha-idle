@@ -21,7 +21,7 @@
 export type ActorId = 'mech' | 'crawler'
 
 export type GatheringSkillId = 'scavenging' | 'refining' | 'fabrication'
-export type CombatSkillId = 'targeting' | 'servos' | 'plating' | 'structure'
+export type CombatSkillId = 'attack' | 'strength' | 'defence' | 'hitpoints'
 export type SkillId = GatheringSkillId | CombatSkillId
 
 export const GATHERING_SKILLS: readonly GatheringSkillId[] = [
@@ -30,10 +30,10 @@ export const GATHERING_SKILLS: readonly GatheringSkillId[] = [
   'fabrication',
 ]
 export const COMBAT_SKILLS: readonly CombatSkillId[] = [
-  'targeting',
-  'servos',
-  'plating',
-  'structure',
+  'attack',
+  'strength',
+  'defence',
+  'hitpoints',
 ]
 export const ALL_SKILLS: readonly SkillId[] = [...GATHERING_SKILLS, ...COMBAT_SKILLS]
 
@@ -82,7 +82,7 @@ export interface CombatState {
   enemyHp: number
   /** Seconds until the enemy's next swing. */
   enemyAttackProgress: number
-  /** Current mech integrity. Max is derived from the Structure skill + equipment. */
+  /** Current HP. Max is derived from the Hitpoints skill + equipment. */
   hp: number
   /** Seconds until our next swing. */
   attackProgress: number
@@ -94,7 +94,7 @@ export interface CombatState {
 // Game state
 // ---------------------------------------------------------------------------
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */

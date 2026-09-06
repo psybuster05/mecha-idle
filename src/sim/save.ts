@@ -20,8 +20,29 @@ export type LoadResult =
  */
 export type Migration = (raw: Record<string, unknown>) => Record<string, unknown>
 
+/**
+ * Combat skills were renamed from mecha jargon to the standard RPG terms players
+ * already know. The ids live in save files, so the xp has to be carried across by
+ * hand - withDefaults would otherwise fill the new keys with zero and silently
+ * throw away every combat level the player had earned.
+ */
+const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
+  targeting: 'attack',
+  servos: 'strength',
+  plating: 'defence',
+  structure: 'hitpoints',
+}
+
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
-  // 1: (raw) => ({ ...raw, version: 2, /* ...changes... */ }),
+  1: (raw) => {
+    const skills = { ...(raw['skills'] as Record<string, number> | undefined) }
+    for (const [from, to] of Object.entries(RENAMED_COMBAT_SKILLS_V1)) {
+      if (!(from in skills)) continue
+      skills[to] = skills[from] ?? 0
+      delete skills[from]
+    }
+    return { ...raw, version: 2, skills }
+  },
 }
 
 /**

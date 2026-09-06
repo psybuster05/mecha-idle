@@ -105,7 +105,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 .bar { height: 6px; background: #0a0d10; border: 1px solid var(--line); overflow: hidden; }
 .bar-fill { height: 100%; background: var(--accent); transition: width 90ms linear; }
 .bar-xp .bar-fill { background: var(--accent-dim); }
-.bar-integrity .bar-fill { background: var(--good); }
+.bar-hp .bar-fill { background: var(--good); }
 .bar-enemy .bar-fill { background: var(--enemy); }
 
 /* --- action lists ------------------------------------------------------ */

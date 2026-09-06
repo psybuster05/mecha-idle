@@ -46,7 +46,7 @@ export const SCAVENGING: SkillDef = {
     {
       id: 'reactor_slag',
       name: 'Reactor Slag Fields',
-      description: 'Still ticking. Your plating does not mind; little else would.',
+      description: 'Still ticking. Your armour does not mind; little else would.',
       levelRequired: 40,
       duration: 6,
       outputs: [

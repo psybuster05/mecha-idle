@@ -22,8 +22,8 @@ npm run dev
 ## The loop
 
 ```
-Scavenging  ->  Refining  ->  Fabrication  ->  equip  ->  Sorties
- raw salvage    usable stock   mech parts       chassis    combat
+Scavenging  ->  Refining  ->  Fabrication  ->  equip  ->  Combat
+ raw salvage    usable stock   mech parts       your mech   xp + drops
       ^                                                       |
       +-------------------- salvage and xp --------------------+
 ```

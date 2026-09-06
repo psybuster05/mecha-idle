@@ -10,7 +10,7 @@ export const REFINING: SkillDef = {
   id: 'refining',
   name: 'Refining',
   description:
-    'Furnace and crucible subroutines. Heat is the only argument scrap responds to.',
+    'Furnace and crucible. Heat is the only argument scrap responds to.',
   actions: [
     {
       id: 'smelt_steel',

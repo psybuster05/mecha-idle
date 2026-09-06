@@ -13,7 +13,7 @@ export interface EnemyDef {
   /** Seconds between the enemy's swings. */
   attackInterval: number
   /**
-   * Xp per kill. Granted in full to Targeting, Servos and Plating; Structure gets
+   * Xp per kill. Granted in full to Attack, Strength and Defence; Hitpoints gets
    * 40%, so survivability trails offence slightly and stays worth investing in.
    */
   xp: number

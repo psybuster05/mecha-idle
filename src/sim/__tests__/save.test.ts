@@ -135,3 +135,58 @@ describe('save repair', () => {
     expect(Number.isFinite(result.state.savedAt)).toBe(true)
   })
 })
+
+/**
+ * The first real migration: combat skills were renamed from mecha jargon
+ * (targeting/servos/plating/structure) to the standard RPG terms
+ * (attack/strength/defence/hitpoints) that players already know.
+ */
+describe('migration v1 -> v2: combat skill rename', () => {
+  const v1Save = (skills: Record<string, number>) =>
+    JSON.stringify({ ...newGame(), version: 1, skills })
+
+  it('carries combat xp across to the new skill names', () => {
+    const result = deserialize(
+      v1Save({ targeting: 1000, servos: 2000, plating: 3000, structure: 4000, scavenging: 500 }),
+    )
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.state.skills.attack).toBe(1000)
+    expect(result.state.skills.strength).toBe(2000)
+    expect(result.state.skills.defence).toBe(3000)
+    expect(result.state.skills.hitpoints).toBe(4000)
+    expect(result.state.skills.scavenging).toBe(500)
+    expect(result.migratedFrom).toBe(1)
+  })
+
+  it('leaves no trace of the old skill ids', () => {
+    const result = deserialize(v1Save({ targeting: 1000 }))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(Object.keys(result.state.skills).sort()).toEqual([
+      'attack',
+      'defence',
+      'fabrication',
+      'hitpoints',
+      'refining',
+      'scavenging',
+      'strength',
+    ])
+  })
+
+  it('is a no-op on a save that never had the old names', () => {
+    const result = deserialize(v1Save({ scavenging: 700 }))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.skills.scavenging).toBe(700)
+    expect(result.state.skills.attack).toBe(0)
+  })
+
+  it('would have silently destroyed that xp without the migration', () => {
+    // Guards the reason this migration exists: withDefaults fills unknown keys with
+    // zero, so a rename without a migration loses every combat level earned.
+    const noMigrations = deserialize(v1Save({ targeting: 1000 }), {})
+    expect(noMigrations.ok).toBe(false)
+  })
+})

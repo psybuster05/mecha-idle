@@ -15,7 +15,7 @@ function deployed(seed = 7): GameState {
 /** A mech levelled and kitted well enough to farm the Rustbelt indefinitely. */
 function veteran(seed = 7): GameState {
   const state = deployed(seed)
-  for (const skill of ['targeting', 'servos', 'plating', 'structure'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
     state.skills[skill] = xpForLevel(40)
   }
   return state
@@ -53,26 +53,26 @@ describe('combat - kills', () => {
   it('awards xp to all four combat skills and drops loot', () => {
     const state = tickBy(veteran(), 120, 0.5)
 
-    expect(state.skills.targeting).toBeGreaterThan(xpForLevel(40))
-    expect(state.skills.servos).toBeGreaterThan(xpForLevel(40))
-    expect(state.skills.plating).toBeGreaterThan(xpForLevel(40))
-    expect(state.skills.structure).toBeGreaterThan(xpForLevel(40))
+    expect(state.skills.attack).toBeGreaterThan(xpForLevel(40))
+    expect(state.skills.strength).toBeGreaterThan(xpForLevel(40))
+    expect(state.skills.defence).toBeGreaterThan(xpForLevel(40))
+    expect(state.skills.hitpoints).toBeGreaterThan(xpForLevel(40))
     expect(count(state, 'scrap_steel')).toBeGreaterThan(0)
   })
 
-  it('gives Structure less xp than the offensive skills', () => {
+  it('gives Hitpoints less xp than the offensive skills', () => {
     // Deliberate: survivability should trail slightly so it stays worth investing in.
     const state = tickBy(veteran(), 300, 0.5)
-    const gainedTargeting = state.skills.targeting - xpForLevel(40)
-    const gainedStructure = state.skills.structure - xpForLevel(40)
-    expect(gainedStructure).toBeGreaterThan(0)
-    expect(gainedStructure).toBeLessThan(gainedTargeting)
+    const gainedAttack = state.skills.attack - xpForLevel(40)
+    const gainedHitpoints = state.skills.hitpoints - xpForLevel(40)
+    expect(gainedHitpoints).toBeGreaterThan(0)
+    expect(gainedHitpoints).toBeLessThan(gainedAttack)
   })
 
   it('a stronger mech kills faster than a weaker one', () => {
     const weak = tickBy(deployed(99), 600, 0.5)
     const strong = tickBy(veteran(99), 600, 0.5)
-    expect(strong.skills.targeting - xpForLevel(40)).toBeGreaterThan(weak.skills.targeting)
+    expect(strong.skills.attack - xpForLevel(40)).toBeGreaterThan(weak.skills.attack)
   })
 })
 
@@ -177,8 +177,8 @@ describe('combat level', () => {
   it('is the mean of the four combat skills', () => {
     const state = newGame()
     expect(combatLevel(state)).toBe(1)
-    state.skills.targeting = xpForLevel(20)
-    state.skills.servos = xpForLevel(10)
+    state.skills.attack = xpForLevel(20)
+    state.skills.strength = xpForLevel(10)
     // (20 + 10 + 1 + 1) / 4 = 8
     expect(combatLevel(state)).toBe(8)
   })

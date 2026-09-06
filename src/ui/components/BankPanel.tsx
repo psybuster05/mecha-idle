@@ -18,7 +18,7 @@ export function BankPanel({ state }: { state: GameState }) {
     <div className="panel">
       <header className="panel-head">
         <div>
-          <h2>Hold</h2>
+          <h2>Bank</h2>
           <p className="dim flavour">
             Everything you have picked up and not yet become.
           </p>

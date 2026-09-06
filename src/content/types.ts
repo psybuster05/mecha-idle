@@ -29,8 +29,8 @@ export interface EquipStats {
   damage?: number
   /** Reduces incoming damage. */
   armour?: number
-  /** Added to maximum integrity (HP). */
-  integrity?: number
+  /** Added to maximum HP. */
+  hp?: number
   /** Seconds shaved off our attack interval. Negative values would slow us down. */
   attackSpeed?: number
 }
