@@ -54,6 +54,12 @@ file, not writing engine code. "Make tier 3 parts stronger" should be a number e
 - `npm run typecheck` - tsc
 - `npm run lint` - eslint (also enforces the sim purity boundary)
 
+## Design intent
+
+The living design lives in `docs/GDD.md`. Items tagged BUILT are true in code; PROPOSED
+is a suggestion; OPEN is waiting on the user. Check it before inventing new mechanics,
+and when a question there gets answered, update the tag rather than leaving it stale.
+
 ## Naming: standard RPG terms, not mecha jargon
 
 Anything the player reads as a *label* uses the vocabulary idle-game players already

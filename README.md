@@ -51,3 +51,6 @@ See [CLAUDE.md](CLAUDE.md) for the architecture rules and why they exist, and
 v1 vertical slice: three gathering skills, one combat zone, five equipment slots,
 saves with migrations, and offline progress. Art is a placeholder CSS pass - pixel art
 comes once the loop is proven fun.
+
+- [Game Design Document](docs/GDD.md) - the design in progress. Fill in the OPEN items;
+  they drive most of what gets built next.
