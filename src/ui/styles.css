@@ -1,0 +1,28 @@
+:root {
+  --bg: #0d1114;
+  --panel: #161c21;
+  --line: #2a343c;
+  --text: #c8d4dc;
+  --dim: #6c7f8c;
+  --accent: #ffb648;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 ui-monospace, "Cascadia Mono", "Consolas", monospace;
+}
+
+.app { padding: 24px; }
+h1 { font-size: 20px; letter-spacing: 0.18em; margin: 0 0 4px; }
+.dim { color: var(--dim); margin: 0; }
+
+/* Pixel art: integer scaling only. See CLAUDE.md. */
+img.sprite {
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+}
