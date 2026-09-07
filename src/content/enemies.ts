@@ -21,6 +21,14 @@ export interface BossPhase {
   damageMultiplier?: number
   /** Scales the boss's armour. Above 1 makes it turtle. */
   armourMultiplier?: number
+  /**
+   * Fraction of maximum HP the boss restores per second during this phase.
+   *
+   * A hard floor on damage rather than a longer fight: below the threshold you cannot
+   * finish it at all, however long you stay. Every other phase so far asks what to
+   * bring; this asks whether you brought enough.
+   */
+  regenPerSecond?: number
   /** Scales the boss's attack interval. Below 1 means it swings faster. */
   attackIntervalMultiplier?: number
   /** Changes what the boss deals. */
@@ -325,6 +333,63 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [{ item: 'security_core', qty: 2, chance: 0.3 }],
   },
 
+  // --- The City ------------------------------------------------------------
+  //
+  // Numbers, not weight. Individually these are weaker than anything at the bridge and
+  // drop far less, because they own nothing - but the zone respawns in 0.7s and they
+  // never stop coming. Cleave, retired at the checkpoint, is the answer again here.
+  {
+    id: 'work_unit',
+    name: 'Work Unit',
+    description: 'It is not armed. It puts itself between you and the block anyway, because it was told to.',
+    maxHp: 110,
+    accuracy: 96,
+    evasion: 34,
+    damage: 34,
+    armour: 18,
+    attackInterval: 2.9,
+    damageType: 'kinetic',
+    resistances: { kinetic: 1.1, energy: 1.15, emp: 1.3 },
+    xp: 105,
+    guaranteed: [{ item: 'polymer_frame', qty: 2 }],
+    drops: [{ item: 'control_collar', qty: 1, chance: 0.08 }],
+  },
+  {
+    id: 'ward_enforcer',
+    name: 'Ward Enforcer',
+    description: 'Same chassis as the workers, with the restraint bolts removed and a collar twice the size.',
+    maxHp: 210,
+    accuracy: 124,
+    evasion: 46,
+    damage: 62,
+    armour: 34,
+    attackInterval: 2.4,
+    damageType: 'energy',
+    resistances: { kinetic: 1, energy: 0.9, emp: 1.2 },
+    xp: 190,
+    guaranteed: [{ item: 'conduit_spool', qty: 2 }],
+    drops: [{ item: 'control_collar', qty: 1, chance: 0.2 }],
+  },
+  {
+    id: 'transit_marshal',
+    name: 'Transit Marshal',
+    description: 'It keeps the rings running to time. The trains are empty and it has never once been late.',
+    maxHp: 460,
+    accuracy: 148,
+    evasion: 58,
+    damage: 88,
+    armour: 62,
+    attackInterval: 2.7,
+    damageType: 'emp',
+    resistances: { kinetic: 0.9, energy: 1.1, emp: 0.75 },
+    xp: 400,
+    guaranteed: [
+      { item: 'conduit_spool', qty: 3 },
+      { item: 'polymer_frame', qty: 3 },
+    ],
+    drops: [{ item: 'control_collar', qty: 2, chance: 0.3 }],
+  },
+
   // --- Bosses --------------------------------------------------------------
   {
     id: 'overseer',
@@ -537,6 +602,61 @@ export const ENEMIES: readonly EnemyDef[] = [
         armourMultiplier: 0.35,
         damageMultiplier: 1.7,
         attackIntervalMultiplier: 0.7,
+        damageType: 'kinetic',
+      },
+    ],
+  },
+  {
+    id: 'census',
+    name: 'The Census',
+    description:
+      'It counts. Every unit in the city, every hour, against a figure it was given before the end. When the count is short it makes up the difference from whatever is nearest, and the count has been short for thirty years.',
+    maxHp: 12000,
+    accuracy: 205,
+    evasion: 70,
+    damage: 120,
+    armour: 96,
+    attackInterval: 2.5,
+    damageType: 'emp',
+    resistances: { kinetic: 0.9, energy: 0.95, emp: 0.8 },
+    xp: 62000,
+    isBoss: true,
+    perk: {
+      id: 'unaccounted',
+      name: 'Unaccounted For',
+      description:
+        'The ledger closes. Nothing in the city is counting you any more, and the units that were are working for themselves again - some of them nearby, some of them helpfully.',
+      gatheringYield: 0.1,
+      xpBonus: 0.07,
+    },
+    guaranteed: [
+      { item: 'census_ledger', qty: 1 },
+      { item: 'command_relay', qty: 3 },
+      { item: 'conduit_spool', qty: 30 },
+    ],
+    drops: [
+      { item: 'control_collar', qty: 10, chance: 0.8 },
+      { item: 'census_ledger', qty: 1, chance: 0.2 },
+    ],
+    // Recount is a wall rather than a longer fight: below the damage threshold the
+    // boss heals faster than you hurt it and you can never finish, however long you
+    // stay. Every phase before this asked what to bring; this asks whether it is enough.
+    phases: [
+      {
+        below: 0.55,
+        name: 'Recount',
+        message: 'It stops fighting and starts counting again from the beginning. The damage begins undoing itself.',
+        regenPerSecond: 0.0009,
+        damageMultiplier: 0.6,
+        attackIntervalMultiplier: 1.2,
+      },
+      {
+        below: 0.15,
+        name: 'Final Tally',
+        message: 'The figure will not reconcile. It stops trying to balance the ledger and starts closing it.',
+        regenPerSecond: 0,
+        damageMultiplier: 2,
+        attackIntervalMultiplier: 0.6,
         damageType: 'kinetic',
       },
     ],

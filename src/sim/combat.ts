@@ -143,6 +143,9 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     return
   }
 
+  // How fast the next one steps forward. A crowded zone sets its own.
+  const respawnDelay = zone.respawnDelay ?? RESPAWN_DELAY
+
   // Recomputed after every kill, never cached across the whole call: combat xp levels
   // the mech up mid-fight, and a large offline dt must feel those level-ups exactly
   // when live play would. Caching this for the whole step silently under-credits
@@ -162,12 +165,12 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
   while (remaining > EPS && guard++ < MAX_EVENTS_PER_CALL) {
     // --- Between enemies -------------------------------------------------
     if (!combat.enemyId) {
-      const untilSpawn = Math.max(0, RESPAWN_DELAY - combat.respawnProgress)
+      const untilSpawn = Math.max(0, respawnDelay - combat.respawnProgress)
       const step = Math.min(remaining, untilSpawn)
       combat.respawnProgress += step
       remaining -= step
       combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * HP_REGEN_PER_SECOND * step)
-      if (combat.respawnProgress >= RESPAWN_DELAY - EPS) {
+      if (combat.respawnProgress >= respawnDelay - EPS) {
         spawnEnemy(state, zone.enemies, rng, activity.enemy)
 
         const arrived = combat.enemyId ? getEnemy(combat.enemyId) : undefined
@@ -209,6 +212,15 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     combat.attackProgress += step
     combat.enemyAttackProgress += step
     remaining -= step
+
+    // Enemy regeneration, applied per step so it competes with incoming damage in
+    // real time rather than arriving in a lump.
+    if (phase?.regenPerSecond) {
+      combat.enemyHp = Math.min(
+        enemy.maxHp,
+        combat.enemyHp + enemy.maxHp * phase.regenPerSecond * step,
+      )
+    }
     // Regenerate inside the loop rather than once per call, so healing interleaves
     // with incoming hits exactly as it would in live play.
     combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * HP_REGEN_PER_SECOND * step)

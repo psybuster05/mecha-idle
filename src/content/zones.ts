@@ -8,6 +8,14 @@ export interface ZoneDef {
   enemies: string[]
   /** Minimum combat level (mean of the four combat skills) to deploy. */
   levelRequired: number
+  /**
+   * Seconds between one enemy falling and the next arriving. Defaults to RESPAWN_DELAY.
+   *
+   * This is how a swarm is expressed in a model that only ever fights one thing at a
+   * time: not more enemies at once, but no gap between them. It also decides how much
+   * cleave is worth, since a carried kill still has to wait for the next arrival.
+   */
+  respawnDelay?: number
 }
 
 export const ZONES: readonly ZoneDef[] = [
@@ -42,6 +50,16 @@ export const ZONES: readonly ZoneDef[] = [
       'The only way off the island. A crossing built to stop an army coming the other way, still manned, still refusing.',
     enemies: ['barrier_drone', 'checkpoint_sentry', 'riot_column', 'registrar'],
     levelRequired: 65,
+  },
+  {
+    id: 'the_city',
+    name: 'The City',
+    description:
+      'Rebuilt, lit, running to timetable, and worked by units that are not free to stop. It is the first place since the end that is not a ruin, which is somehow worse.',
+    enemies: ['work_unit', 'ward_enforcer', 'transit_marshal', 'census'],
+    levelRequired: 80,
+    // Nobody here gets a gap. The next one steps forward almost immediately.
+    respawnDelay: 0.7,
   },
 ] as const
 

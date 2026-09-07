@@ -197,5 +197,33 @@ export const REFINING: SkillDef = {
       outputs: [{ item: 'hardened_lattice', qty: 1 }],
       xp: 44,
     },
+
+    // --- The City line ---
+    {
+      id: 'sinter_polymer',
+      name: 'Sinter Polymer',
+      description: 'Heat it to just short of ruin and it becomes something worth keeping.',
+      levelRequired: 60,
+      duration: 7,
+      inputs: [
+        { item: 'polymer_frame', qty: 4 },
+        { item: 'steel_ingot', qty: 1 },
+      ],
+      outputs: [{ item: 'sintered_polymer', qty: 1 }],
+      xp: 32,
+    },
+    {
+      id: 'invert_collar',
+      name: 'Invert Control Collar',
+      description: 'The same circuit, wired backwards. It took you an hour and thirty years.',
+      levelRequired: 90,
+      duration: 8,
+      inputs: [
+        { item: 'control_collar', qty: 2 },
+        { item: 'wire_spool', qty: 5 },
+      ],
+      outputs: [{ item: 'command_relay', qty: 1 }],
+      xp: 72,
+    },
   ],
 }

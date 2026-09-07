@@ -152,6 +152,36 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- The City salvage -------------------------------------------------------
+  //
+  // The first place that is not a ruin. Everything here is in use, maintained, and
+  // owned by something else - so what you take is stripped from workers who had almost
+  // nothing to begin with. The materials are civilian and plentiful rather than rare.
+  {
+    id: 'conduit_spool',
+    name: 'Conduit Spool',
+    description: 'Live power, still distributed to every block on a schedule. Somebody is paying for it.',
+    category: 'material',
+  },
+  {
+    id: 'polymer_frame',
+    name: 'Polymer Frame',
+    description: 'Cheap, moulded, replaceable. So were the units built from it, and they knew.',
+    category: 'material',
+  },
+  {
+    id: 'control_collar',
+    name: 'Control Collar',
+    description: 'It comes off a worker in one piece and leaves a bright band of unweathered plating.',
+    category: 'component',
+  },
+  {
+    id: 'census_ledger',
+    name: 'Census Ledger',
+    description: 'Every designation in the city, with a column for what each was worth. Yours is in it now.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
@@ -230,6 +260,18 @@ export const ITEMS: readonly ItemDef[] = [
     name: 'Hardened Lattice',
     description: 'Dense enough to blunt anything, and sharp enough to go through anything blunted.',
     category: 'material',
+  },
+  {
+    id: 'sintered_polymer',
+    name: 'Sintered Polymer',
+    description: 'Fused back into something that will outlast the thing it was moulded for.',
+    category: 'material',
+  },
+  {
+    id: 'command_relay',
+    name: 'Command Relay',
+    description: 'Rebuilt from a collar, pointed the other way. It gives orders now instead of taking them.',
+    category: 'component',
   },
   {
     id: 'core_matrix',
@@ -384,6 +426,32 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'part',
     slot: 'frame',
     stats: { hp: 120, armour: 34, evasion: -18, resist: { kinetic: 0.7, energy: 0.85 } },
+  },
+  // City parts. A crowd rewards spread, not weight - the Disperser is a lighter,
+  // faster cleave than the Harpoon, and it carries a different damage type.
+  {
+    id: 'weapon_disperser',
+    name: 'Crowd Disperser',
+    description: 'Built to move a queue along. It does not have to be aimed especially well.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { accuracy: 20, damageType: 'energy', damageMultiplier: 1.4, attackSpeed: 0.3, cleave: 0.6 },
+  },
+  {
+    id: 'arms_labour',
+    name: 'Labour Manipulators',
+    description: 'Taken off a unit that had used them for thirty years without stopping. They know the work.',
+    category: 'part',
+    slot: 'arms',
+    stats: { accuracy: 22, damage: 12, skillSpeed: 0.4 },
+  },
+  {
+    id: 'reactor_grid',
+    name: 'Grid Tap',
+    description: 'You stop carrying your own power and start drawing the city grid. It does not notice.',
+    category: 'part',
+    slot: 'reactor',
+    stats: { attackSpeed: 0.9, hp: 40, resist: { emp: 0.8 } },
   },
 ] as const
 

@@ -113,6 +113,8 @@ export function CombatPanel({ state, dispatch }: Props) {
   const combat = state.combat
   const enemy = combat.enemyId ? getEnemy(combat.enemyId) : null
   const phase = enemy ? activePhase(enemy, combat.enemyHp) : null
+  const respawnDelay =
+    (deployed ? ZONES.find((z) => z.id === deployed)?.respawnDelay : undefined) ?? RESPAWN_DELAY
 
   return (
     <div className="panel">
@@ -200,7 +202,7 @@ export function CombatPanel({ state, dispatch }: Props) {
           ) : (
             <div className="scanning">
               <div className="combatant-name">Finding a target</div>
-              <Bar value={combat.respawnProgress / RESPAWN_DELAY} tone="progress" />
+              <Bar value={combat.respawnProgress / respawnDelay} tone="progress" />
               <p className="dim">Something is always still moving out there.</p>
             </div>
           )}

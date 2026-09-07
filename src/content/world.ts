@@ -77,6 +77,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'sync_guidance' },
       { skill: 'refining', action: 'fire_ceramic' },
       { skill: 'refining', action: 'draw_lattice' },
+      { skill: 'refining', action: 'sinter_polymer' },
+      { skill: 'refining', action: 'invert_collar' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
@@ -94,6 +96,9 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'fabrication', action: 'fab_frame_aeroshell' },
       { skill: 'fabrication', action: 'fab_weapon_lance' },
       { skill: 'fabrication', action: 'fab_frame_bulwark' },
+      { skill: 'fabrication', action: 'fab_reactor_grid' },
+      { skill: 'fabrication', action: 'fab_weapon_disperser' },
+      { skill: 'fabrication', action: 'fab_arms_labour' },
     ],
   },
   {
@@ -297,6 +302,49 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     actions: [{ skill: 'scavenging', action: 'north_gatehouse' }],
     combat: 'bridge_checkpoint',
   },
+
+  // --- The City, on the mainland past the bridge ----------------------------
+  //
+  // Locked behind the Registrar, so crossing the bridge is what opens the mainland.
+  {
+    id: 'outer_wards',
+    name: 'Outer Wards',
+    description: 'Housing blocks for units that do not sleep, maintained to a standard nobody inspects.',
+    x: 1600,
+    y: 200,
+    unlockedBy: 'registrar',
+    actions: [{ skill: 'scavenging', action: 'outer_wards' }],
+    combat: 'the_city',
+  },
+  {
+    id: 'the_works',
+    name: 'The Works',
+    description: 'Three shifts, no breaks, and no output anyone collects. They build spares for spares.',
+    x: 1760,
+    y: 330,
+    unlockedBy: 'registrar',
+    actions: [{ skill: 'scavenging', action: 'the_works' }],
+    combat: 'the_city',
+  },
+  {
+    id: 'transit_rings',
+    name: 'Transit Rings',
+    description: 'Trains running to timetable, full of nothing, stopping where nothing waits.',
+    x: 1840,
+    y: 140,
+    unlockedBy: 'registrar',
+    actions: [{ skill: 'scavenging', action: 'transit_rings' }],
+    combat: 'the_city',
+  },
+  {
+    id: 'census_hall',
+    name: 'The Census Hall',
+    description: 'The only building in the city with nothing in it but a count, and the thing that keeps it.',
+    x: 1980,
+    y: 260,
+    unlockedBy: 'registrar',
+    combat: 'the_city',
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -336,6 +384,13 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'vitrified_zone', b: 'south_approach', difficulty: 1.3 },
   { a: 'south_approach', b: 'the_span', difficulty: 1.1 },
   { a: 'the_span', b: 'north_gatehouse', difficulty: 1.1 },
+
+  // Onto the mainland. The city is dense, so moving inside it is quick.
+  { a: 'north_gatehouse', b: 'outer_wards', difficulty: 1.2 },
+  { a: 'outer_wards', b: 'the_works', difficulty: 0.9 },
+  { a: 'outer_wards', b: 'transit_rings', difficulty: 0.9 },
+  { a: 'the_works', b: 'census_hall', difficulty: 0.9 },
+  { a: 'transit_rings', b: 'census_hall', difficulty: 0.9 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

@@ -252,5 +252,49 @@ export const FABRICATION: SkillDef = {
       outputs: [{ item: 'frame_bulwark', qty: 1 }],
       xp: 108,
     },
+
+    // --- The City: kit for fighting numbers rather than weight. ---
+    {
+      id: 'fab_reactor_grid',
+      name: 'Grid Tap',
+      description: 'You stop carrying your own power. The city has plenty and is not counting.',
+      levelRequired: 60,
+      duration: 9,
+      inputs: [
+        { item: 'conduit_spool', qty: 5 },
+        { item: 'sintered_polymer', qty: 2 },
+        { item: 'charged_cell', qty: 2 },
+      ],
+      outputs: [{ item: 'reactor_grid', qty: 1 }],
+      xp: 40,
+    },
+    {
+      id: 'fab_weapon_disperser',
+      name: 'Crowd Disperser',
+      description: 'Made for moving a queue along. You will use it for that, more or less.',
+      levelRequired: 75,
+      duration: 10,
+      inputs: [
+        { item: 'sintered_polymer', qty: 4 },
+        { item: 'conduit_spool', qty: 6 },
+        { item: 'lens_array', qty: 1 },
+      ],
+      outputs: [{ item: 'weapon_disperser', qty: 1 }],
+      xp: 63,
+    },
+    {
+      id: 'fab_arms_labour',
+      name: 'Labour Manipulators',
+      description: 'You fit them, and something in them still knows the work. You let it.',
+      levelRequired: 90,
+      duration: 12,
+      inputs: [
+        { item: 'command_relay', qty: 2 },
+        { item: 'sintered_polymer', qty: 5 },
+        { item: 'census_ledger', qty: 1 },
+      ],
+      outputs: [{ item: 'arms_labour', qty: 1 }],
+      xp: 108,
+    },
   ],
 }

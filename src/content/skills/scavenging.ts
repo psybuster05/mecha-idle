@@ -255,5 +255,43 @@ export const SCAVENGING: SkillDef = {
       drops: [{ item: 'barrier_segment', qty: 4, chance: 0.35 }],
       xp: 63,
     },
+
+    // --- The City. Levels 60/75/90, matching the rates already at each. ---
+    {
+      id: 'outer_wards',
+      name: 'Outer Wards',
+      description: 'Housing blocks for units that do not sleep, maintained to a standard nobody inspects.',
+      levelRequired: 60,
+      duration: 6,
+      outputs: [{ item: 'polymer_frame', qty: 3 }],
+      drops: [{ item: 'conduit_spool', qty: 1, chance: 0.3 }],
+      xp: 27,
+    },
+    {
+      id: 'the_works',
+      name: 'The Works',
+      description: 'Three shifts, no breaks, no output anyone collects. They have been building spares for spares.',
+      levelRequired: 75,
+      duration: 6,
+      outputs: [
+        { item: 'conduit_spool', qty: 2 },
+        { item: 'polymer_frame', qty: 2 },
+      ],
+      drops: [{ item: 'control_collar', qty: 1, chance: 0.2 }],
+      xp: 38,
+    },
+    {
+      id: 'transit_rings',
+      name: 'Transit Rings',
+      description: 'Trains running to timetable, full of nothing, stopping at platforms where nothing waits.',
+      levelRequired: 90,
+      duration: 7,
+      outputs: [
+        { item: 'conduit_spool', qty: 3 },
+        { item: 'control_collar', qty: 1 },
+      ],
+      drops: [{ item: 'polymer_frame', qty: 5, chance: 0.4 }],
+      xp: 63,
+    },
   ],
 }
