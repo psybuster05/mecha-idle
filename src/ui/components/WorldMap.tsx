@@ -63,7 +63,14 @@ interface View {
   y: number
 }
 
-const RESET: View = { zoom: 1, x: 0, y: 0 }
+/**
+ * Where the map sits before anyone touches it.
+ *
+ * Close enough to read the names around you, far enough to see what they connect to.
+ * The whole world at once is the *least* useful framing - it is what you get by zooming
+ * out, not what you should be handed.
+ */
+const DEFAULT_ZOOM = 2.5
 
 /**
  * Keep the drawn world overlapping the canvas.
@@ -90,6 +97,25 @@ function bounds(nodes: readonly WorldNodeDef[]) {
     minY: Math.min(...ys),
     maxY: Math.max(...ys),
   }
+}
+
+/**
+ * The view that keeps the mech in the middle at a given zoom.
+ *
+ * Used whenever the player has not taken manual control, so the map follows you as you
+ * move rather than showing wherever you happened to start. Without this, starting an
+ * action would leave the map looking at the place you just left.
+ */
+function followView(state: GameState, zoom: number): View {
+  const shown = visibleNodes((id) => isNodeOpen(state, id))
+  const project = makeProjection(shown)
+  const pos = actorPosition(state, 'mech')
+  const base = project(pos.x, pos.y)
+  return clampView({
+    zoom,
+    x: MAP_WIDTH / 2 - base.x * zoom,
+    y: MAP_HEIGHT / 2 - base.y * zoom,
+  })
 }
 
 /** Map units -> canvas pixels, fitting the visible nodes with padding. Ignores zoom. */
@@ -215,8 +241,19 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, view: View, ratio
 
 export function WorldMap({ state }: { state: GameState }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [view, setView] = useState<View>(RESET)
+  // null means "follow the mech". Any deliberate zoom, pan or button press pins the
+  // view where the player put it, because a map that yanks itself back while you are
+  // reading it is worse than one that does not follow at all.
+  const [manual, setManual] = useState<View | null>(null)
   const drag = useRef<{ x: number; y: number } | null>(null)
+
+  const view = manual ?? followView(state, DEFAULT_ZOOM)
+  const following = manual === null
+
+  // The wheel listener is bound once, so it cannot close over `state` - it would go
+  // stale the moment the mech moved. This is how it reads the current one.
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   /** Client pixels -> logical map pixels. The canvas is displayed far smaller than it
    *  is drawn, so a raw offsetX would be wrong by that ratio. */
@@ -242,7 +279,7 @@ export function WorldMap({ state }: { state: GameState }) {
     ctx.imageSmoothingEnabled = false
 
     draw(ctx, state, view, ratio)
-  }, [state, view])
+  }, [state, view.zoom, view.x, view.y])
 
   // Native listener rather than onWheel, because React attaches wheel handlers passively
   // and preventDefault is what stops the page scrolling as you zoom.
@@ -253,7 +290,8 @@ export function WorldMap({ state }: { state: GameState }) {
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       const cursor = toLogical(event)
-      setView((current) => {
+      setManual((pinned) => {
+        const current = pinned ?? followView(stateRef.current, DEFAULT_ZOOM)
         const zoom = current.zoom * (event.deltaY < 0 ? 1.15 : 1 / 1.15)
         const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
         // Hold whatever is under the cursor still while the scale changes around it.
@@ -270,15 +308,33 @@ export function WorldMap({ state }: { state: GameState }) {
     return () => canvas.removeEventListener('wheel', onWheel)
   }, [toLogical])
 
+  /** Step the zoom about the middle of the canvas, for the +/- buttons. */
+  const step = (factor: number) =>
+    setManual((pinned) => {
+      const current = pinned ?? followView(stateRef.current, DEFAULT_ZOOM)
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current.zoom * factor))
+      const ratio = next / current.zoom
+      const cx = MAP_WIDTH / 2
+      const cy = MAP_HEIGHT / 2
+      return clampView({
+        zoom: next,
+        x: cx - (cx - current.x) * ratio,
+        y: cy - (cy - current.y) * ratio,
+      })
+    })
+
   return (
     <div className="world-map">
       <canvas
         ref={canvasRef}
         className="world-canvas"
-        style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`, cursor: view.zoom > 1 ? 'grab' : 'default' }}
+        style={{
+          aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
+          cursor: view.zoom > MIN_ZOOM ? 'grab' : 'default',
+        }}
         aria-label="World map. Scroll to zoom, drag to pan."
         onPointerDown={(event) => {
-          if (view.zoom <= 1) return
+          if (view.zoom <= MIN_ZOOM) return
           drag.current = toLogical(event)
           event.currentTarget.setPointerCapture(event.pointerId)
         }}
@@ -287,21 +343,35 @@ export function WorldMap({ state }: { state: GameState }) {
           const now = toLogical(event)
           const from = drag.current
           drag.current = now
-          setView((current) =>
-            clampView({ ...current, x: current.x + (now.x - from.x), y: current.y + (now.y - from.y) }),
-          )
+          setManual((pinned) => {
+            const current = pinned ?? view
+            return clampView({
+              ...current,
+              x: current.x + (now.x - from.x),
+              y: current.y + (now.y - from.y),
+            })
+          })
         }}
         onPointerUp={(event) => {
           drag.current = null
           event.currentTarget.releasePointerCapture(event.pointerId)
         }}
-        onDoubleClick={() => setView(RESET)}
+        onDoubleClick={() => setManual(null)}
       />
-      {view.zoom > 1 && (
-        <button className="map-reset" onClick={() => setView(RESET)} title="Double-click the map too">
-          reset
+
+      <div className="map-controls">
+        <button onClick={() => step(1 / 1.4)} disabled={view.zoom <= MIN_ZOOM} title="Zoom out">
+          &minus;
         </button>
-      )}
+        <button onClick={() => step(1.4)} disabled={view.zoom >= MAX_ZOOM} title="Zoom in">
+          +
+        </button>
+        {!following && (
+          <button onClick={() => setManual(null)} title="Follow the mech again">
+            &#9678;
+          </button>
+        )}
+      </div>
     </div>
   )
 }

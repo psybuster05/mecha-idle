@@ -293,7 +293,13 @@ of when waiting), and the map pinned to the bottom corner.
 space shown in a ~270px column, so at 1x the place names land at about four physical
 pixels - drawn, and unreadable. Zoom is what makes the names worth having.
 
-Two rules it must keep:
+It **opens zoomed in on where you are, and follows you**, until the player touches it -
+then it stays where they put it, because a map that yanks itself back while you are
+reading it is worse than one that never follows. That is the whole meaning of `manual`
+being nullable in `WorldMap`: null is "follow", anything else is "the player decided".
+The recenter button only appears once there is something to recenter *from*.
+
+Three rules it must keep:
 
 - **Zoom is a canvas transform, not arithmetic on coordinates.** That is what scales line
   widths and font sizes with it. Applying it per-coordinate would spread the nodes apart
@@ -301,6 +307,9 @@ Two rules it must keep:
 - **The mech sprite is drawn with that transform reset, at an integer scale.** Vectors
   take any scale; pixel art does not. Under a fractional transform each 1x1 pixel lands
   on a fractional boundary and smears.
+- **The wheel handler must not close over `state`.** It is bound once, so it reads the
+  current state through a ref. Closing over it directly would freeze the follow view at
+  whatever node the mech was standing on when the listener was attached.
 
 `MAX_ZOOM` is bounded by how sparse the graph is rather than by legibility: the visible
 window is 740/zoom units and nodes average ~150 apart, so past about 4x you are usually
