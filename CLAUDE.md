@@ -190,3 +190,22 @@ Vite caches transformed modules in `node_modules/.vite`, and that cache **surviv
 server restart**. If behaviour in the browser contradicts a passing test, run the exact
 state through the real code in a scratch test first; if Node is right and the browser is
 wrong, delete `node_modules/.vite` and restart. This has now cost time twice.
+
+## Boss budgets
+
+Player DPS tops out near 25 and max HP near 1,100. **A boss is bounded by how long the
+player can stand in front of it, not by how much HP it has.** Inflating boss HP does not
+make a fight harder, it makes it longer, and length is what kills.
+
+Two consequences, both learned by shipping the mistake:
+
+- **Damage floors must sit below reachable DPS.** The Census first shipped regenerating
+  120 HP/s against about 30 achievable - not a wall, a brick nobody could pass. Anything
+  using `regenPerSecond` needs measuring against real output first.
+- **Long fights need `PHASE_TRANSITION_HEAL`.** Regeneration alone is 0.4%/s, so a
+  400-second boss could only ever deal ~2.6 net DPS. Healing 35% of max HP at each phase
+  threshold turns one long fight into several short ones, which is the shape the budget
+  supports.
+
+Measure every boss before shipping it. Use **time to first kill**, never kills-per-hour -
+the latter measures death-and-recovery cycles rather than damage, and hides the design.

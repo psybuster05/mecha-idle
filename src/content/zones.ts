@@ -61,6 +61,24 @@ export const ZONES: readonly ZoneDef[] = [
     // Nobody here gets a gap. The next one steps forward almost immediately.
     respawnDelay: 0.7,
   },
+  {
+    id: 'the_base',
+    name: 'The Base',
+    description:
+      'Not a ruin and not a work camp. A garrison at readiness, stocked, maintained, and waiting for an order that stopped coming thirty-one years ago.',
+    enemies: ['line_trooper', 'shock_lancer', 'siege_bastion', 'adjutant'],
+    levelRequired: 88,
+  },
+  {
+    id: 'the_lair',
+    name: 'The Switch Room',
+    description:
+      'The only building on the mainland that never lost power. Everything in it is at attention, and has been since the day the lights went out everywhere else.',
+    enemies: ['household_guard', 'colonel'],
+    levelRequired: 95,
+    // Few, and each one takes a long time. Nothing here comes in a hurry.
+    respawnDelay: 4,
+  },
 ] as const
 
 const byId = new Map(ZONES.map((z) => [z.id, z]))

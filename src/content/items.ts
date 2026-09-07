@@ -182,6 +182,29 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- The Base and the Lair ------------------------------------------------
+  //
+  // Military supply, maintained and stocked, for a garrison that has been at readiness
+  // for thirty-one years without being relieved.
+  {
+    id: 'munitions_case',
+    name: 'Munitions Case',
+    description: 'Sealed, dated, and rotated on schedule. The seals are unbroken. Nothing here has ever been issued.',
+    category: 'material',
+  },
+  {
+    id: 'command_plate',
+    name: 'Command Plate',
+    description: 'The good armour, the kind that was never sent to the districts. There was always enough. It was just never sent.',
+    category: 'material',
+  },
+  {
+    id: 'continuity_core',
+    name: 'Continuity Core',
+    description: 'Warm, and heavier than it should be. It has been running without pause for thirty-one years, and it is tired in a way you recognise.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
@@ -272,6 +295,12 @@ export const ITEMS: readonly ItemDef[] = [
     name: 'Command Relay',
     description: 'Rebuilt from a collar, pointed the other way. It gives orders now instead of taking them.',
     category: 'component',
+  },
+  {
+    id: 'field_alloy',
+    name: 'Field Alloy',
+    description: 'Mixed to a military specification that assumed resupply. There was never any resupply, and it is still perfect.',
+    category: 'material',
   },
   {
     id: 'core_matrix',
@@ -452,6 +481,31 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'part',
     slot: 'reactor',
     stats: { attackSpeed: 0.9, hp: 40, resist: { emp: 0.8 } },
+  },
+  // The last two. Not strictly better than what came before - a generalist frame and
+  // a weapon that does a little of everything the game has taught, which is exactly
+  // what the Colonel asks for.
+  {
+    id: 'frame_command',
+    name: 'Command Frame',
+    description: 'Built for whoever was going to hold this place after him. It fits you without adjustment, which is the worst thing you have learned all day.',
+    category: 'part',
+    slot: 'frame',
+    stats: { hp: 150, armour: 26, evasion: 12, resist: { kinetic: 0.85, energy: 0.85, emp: 0.85 } },
+  },
+  {
+    id: 'weapon_sentence',
+    name: 'The Sentence',
+    description: 'It goes through armour and it does not waste what is left over. You did not design it that way. You just needed both.',
+    category: 'part',
+    slot: 'weapon',
+    stats: {
+      accuracy: 24,
+      damageType: 'kinetic',
+      damageMultiplier: 1.5,
+      armourPierce: 0.7,
+      cleave: 0.5,
+    },
   },
 ] as const
 

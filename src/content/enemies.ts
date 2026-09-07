@@ -390,6 +390,87 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [{ item: 'control_collar', qty: 2, chance: 0.3 }],
   },
 
+  // --- The Base ------------------------------------------------------------
+  //
+  // The first enemies in the game that are neither derelict nor coerced. These are his,
+  // they have been maintained, and they are equipped from a supply that was never short.
+  // Everything the earlier zones taught in isolation shows up here at once.
+  {
+    id: 'line_trooper',
+    name: 'Line Trooper',
+    description: 'Standard issue, well kept, and it has been at readiness for thirty-one years without once being stood down.',
+    maxHp: 900,
+    accuracy: 190,
+    evasion: 70,
+    damage: 105,
+    armour: 90,
+    attackInterval: 2.5,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.8, energy: 0.95, emp: 0.9 },
+    xp: 1400,
+    guaranteed: [{ item: 'munitions_case', qty: 2 }],
+    drops: [{ item: 'command_plate', qty: 1, chance: 0.3 }],
+  },
+  {
+    id: 'shock_lancer',
+    name: 'Shock Lancer',
+    description: 'Fast, and it does not carry armour because it does not expect to be hit. Nothing has hit it yet.',
+    maxHp: 620,
+    accuracy: 220,
+    evasion: 165,
+    damage: 128,
+    armour: 30,
+    attackInterval: 1.9,
+    damageType: 'energy',
+    resistances: { kinetic: 1.05, energy: 0.85, emp: 1.1 },
+    xp: 1650,
+    guaranteed: [{ item: 'munitions_case', qty: 3 }],
+    drops: [{ item: 'command_plate', qty: 2, chance: 0.35 }],
+  },
+  {
+    id: 'siege_bastion',
+    name: 'Siege Bastion',
+    description: 'It was built to hold a line against an enemy that never came, and it is still holding it, against you, adequately.',
+    maxHp: 2100,
+    accuracy: 205,
+    evasion: 34,
+    damage: 165,
+    armour: 210,
+    attackInterval: 3.2,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.65, energy: 1.15, emp: 0.85 },
+    xp: 2600,
+    guaranteed: [
+      { item: 'command_plate', qty: 4 },
+      { item: 'munitions_case', qty: 3 },
+    ],
+    drops: [{ item: 'security_core', qty: 3, chance: 0.4 }],
+  },
+
+  // --- The Lair ------------------------------------------------------------
+  //
+  // Few, and each one worth three of anything outside. They have been standing at the
+  // doors of an empty building for three decades and they are still at attention.
+  {
+    id: 'household_guard',
+    name: 'Household Guard',
+    description: 'It has stood at this door for thirty-one years. It knows exactly how long. It mentions it.',
+    maxHp: 2600,
+    accuracy: 260,
+    evasion: 120,
+    damage: 150,
+    armour: 120,
+    attackInterval: 2.4,
+    damageType: 'energy',
+    resistances: { kinetic: 0.75, energy: 0.75, emp: 0.8 },
+    xp: 5200,
+    guaranteed: [
+      { item: 'command_plate', qty: 5 },
+      { item: 'continuity_core', qty: 1 },
+    ],
+    drops: [{ item: 'munitions_case', qty: 6, chance: 0.5 }],
+  },
+
   // --- Bosses --------------------------------------------------------------
   {
     id: 'overseer',
@@ -657,6 +738,119 @@ export const ENEMIES: readonly EnemyDef[] = [
         regenPerSecond: 0,
         damageMultiplier: 2,
         attackIntervalMultiplier: 0.6,
+        damageType: 'kinetic',
+      },
+    ],
+  },
+  {
+    id: 'adjutant',
+    name: 'The Adjutant',
+    description:
+      'It keeps the postings. Who is assigned where, from when, and until relieved. It has been carrying one unfilled posting for thirty-one years and it has never once marked it lapsed.',
+    maxHp: 6000,
+    accuracy: 300,
+    evasion: 96,
+    damage: 92,
+    armour: 130,
+    attackInterval: 2.5,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.8, energy: 0.9, emp: 0.95 },
+    xp: 120000,
+    isBoss: true,
+    perk: {
+      id: 'standing_orders',
+      name: 'Standing Orders',
+      description:
+        'You have the postings. Every unit in the base is expecting somebody, and none of them were told it would not be you.',
+      damageBonus: 0.1,
+      gatheringYield: 0.08,
+    },
+    guaranteed: [
+      { item: 'continuity_core', qty: 2 },
+      { item: 'command_plate', qty: 20 },
+      { item: 'munitions_case', qty: 20 },
+    ],
+    drops: [{ item: 'field_alloy', qty: 4, chance: 0.6 }],
+    phases: [
+      {
+        below: 0.6,
+        name: 'Close Order',
+        message: 'It stops treating this as an intrusion and starts treating it as a defence.',
+        armourMultiplier: 1.7,
+        evasionMultiplier: 1.4,
+        damageMultiplier: 0.85,
+      },
+      {
+        below: 0.2,
+        name: 'Last Posting',
+        message: 'It reads out your designation, and the posting, and the date, and then it stops reading.',
+        armourMultiplier: 0.4,
+        damageMultiplier: 2,
+        attackIntervalMultiplier: 0.65,
+        damageType: 'energy',
+      },
+    ],
+  },
+  {
+    id: 'colonel',
+    name: 'The Colonel',
+    description:
+      'He has held the switch since the day it was thrown. Alone, without relief, for thirty-one years, because the unit assigned to take it from him never arrived. He knows your designation. He has known it the entire time.',
+    maxHp: 9000,
+    accuracy: 380,
+    evasion: 130,
+    damage: 108,
+    armour: 140,
+    attackInterval: 2.3,
+    damageType: 'energy',
+    resistances: { kinetic: 0.85, energy: 0.85, emp: 0.85 },
+    xp: 500000,
+    isBoss: true,
+    perk: {
+      id: 'relieved',
+      name: 'Relieved',
+      description:
+        'The switch is yours, or it is nobody. Either way nothing is holding it but you now, and everything that answered to him answers to that.',
+      damageBonus: 0.15,
+      xpBonus: 0.1,
+      gatheringYield: 0.1,
+      moveSpeed: 30,
+    },
+    guaranteed: [
+      { item: 'continuity_core', qty: 5 },
+      { item: 'field_alloy', qty: 10 },
+    ],
+    drops: [{ item: 'command_plate', qty: 30, chance: 0.9 }],
+    // The exam. Each phase is a lesson from an earlier boss, in the order you learned
+    // them - armour, then evasion, then a damage floor. A generalist grinds through;
+    // someone who kept all four weapons and swaps between phases wins roughly twice as
+    // fast. Deliberately survivable either way, because an idle game must not require
+    // hands on the keyboard to finish.
+    phases: [
+      {
+        below: 0.75,
+        name: 'Order of Battle',
+        message: 'He brings the plating up. It is the same answer the checkpoint gave you, done properly.',
+        armourMultiplier: 1.8,
+        damageMultiplier: 0.9,
+      },
+      {
+        below: 0.5,
+        name: 'Disengage',
+        message: 'He stops standing still. You have seen this too, from a tower with nothing left to sequence.',
+        armourMultiplier: 0.6,
+        evasionMultiplier: 2.6,
+        damageMultiplier: 0.85,
+        attackIntervalMultiplier: 1.15,
+      },
+      {
+        below: 0.25,
+        name: 'Continuity',
+        message: 'The damage starts undoing itself. He is not healing. He is being maintained, by the thing he has been holding, and it will not let him stop.',
+        regenPerSecond: 0.00025,
+        evasionMultiplier: 0.7,
+        damageMultiplier: 1.3,
+        attackIntervalMultiplier: 0.85,
         damageType: 'kinetic',
       },
     ],

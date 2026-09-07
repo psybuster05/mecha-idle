@@ -36,6 +36,17 @@ export const MIN_ATTACK_INTERVAL = 1.2
  */
 export const HP_REGEN_PER_SECOND = 0.004
 
+/**
+ * Fraction of maximum HP restored when a boss changes phase.
+ *
+ * Without it a long boss fight is unwinnable by arithmetic rather than by difficulty.
+ * Regeneration is 0.4%/s and max HP tops out near 1,100, so a 400-second fight lets a
+ * boss deal about 2.6 net damage per second - absurd for a finale. Healing on each
+ * transition turns one long fight into several short ones, which is the shape the HP
+ * budget can actually support, and it reads as the boss stepping back to reconfigure.
+ */
+export const PHASE_TRANSITION_HEAL = 0.35
+
 /** Fraction of maximum HP restored on each kill. */
 export const HEAL_ON_KILL = 0.08
 /** Map units walked per second with nothing fitted. */

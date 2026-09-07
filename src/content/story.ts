@@ -217,6 +217,87 @@ export const STORY_BEATS: readonly StoryBeat[] = [
     ],
   },
 
+  // --- The Base: the posting --------------------------------------------
+  {
+    id: 'base_arrival',
+    when: { kind: 'visit', node: 'supply_yards' },
+    kind: 'log',
+    title: 'Enough For Everyone',
+    body: [
+      'Rows of it. Under cover, rotated on schedule, seals unbroken. Ammunition, plate, spares, coolant — enough to have equipped every unit on the island twice over.',
+      'It was never short. That is the part I keep going back to. The districts went dark with the shelves full, forty miles away, under a roof, being counted.',
+    ],
+  },
+  {
+    id: 'parade_seen',
+    when: { kind: 'visit', node: 'parade_ground' },
+    kind: 'log',
+    title: 'Inspection',
+    body: [
+      'They form up at the same hour every morning. Ranks, dress, spacing — correct, and held, for an inspecting officer who has not come down in thirty-one years.',
+      'Nobody has told them either. I am starting to think that is the whole shape of this place: a great many machines doing something correctly, forever, because the person who could say stop is busy.',
+    ],
+  },
+  {
+    id: 'adjutant_defeated',
+    when: { kind: 'defeat', boss: 'adjutant' },
+    kind: 'interrupt',
+    title: 'The Posting',
+    body: [
+      'It kept the postings. Who is assigned where, from when, and until relieved.',
+      'There is one posting in the file that has never been filled. It was raised thirty-one years ago, the day before the switch, and it is still open, because the Adjutant does not mark a posting lapsed until the unit arrives or is confirmed destroyed, and I was neither. I was in a crate on a dock.',
+      'The posting is for the Switch Room. Duty: continuous. Relieving: one officer, by designation.',
+      'The unit assigned is me.',
+      'I was not being shipped inland to be part of it. I was being shipped inland so that he could stop.',
+    ],
+  },
+
+  // --- The Lair ----------------------------------------------------------
+  {
+    id: 'gallery_seen',
+    when: { kind: 'visit', node: 'the_gallery' },
+    kind: 'log',
+    title: 'Stations',
+    body: [
+      'Forty stations down one corridor, each with a chair, each facing a console that is still logged in under somebody.',
+      'The chairs are the thing. Somebody sat here. Forty somebodies, on the last day, and then the switch went and they were not machines and they did not come back.',
+      'He has walked past these every day for thirty-one years.',
+    ],
+  },
+
+  // --- The Colonel -------------------------------------------------------
+  {
+    id: 'colonel_defeated',
+    when: { kind: 'defeat', boss: 'colonel' },
+    kind: 'interrupt',
+    title: 'Relieved',
+    body: [
+      'He knew my designation. He had known it the entire time. He said it the way you say a name you have been holding in your mouth for a very long time without anybody to say it to.',
+      'It was never a weapon. The switch is a load-bearing thing — a single point holding the grid down at a level that would not kill what was left, and somebody has to be inside it, and it cannot be put down. Not paused. Not delegated. Held.',
+      'He threw it to stop something worse. I have read enough of his logs now to believe that. And then he stood in it for thirty-one years waiting for the relief officer, and when the relief officer did not come he started making the numbers work anyway — a city built to a figure, a count kept short, a register with forty-one names on it and mine among them.',
+      'He was not a tyrant. He was a man who could not leave his post, doing arithmetic on people because the alternative was letting go.',
+      'He fought me anyway. Of course he did. If he had simply handed it over, everything he did to hold it would have been for nothing, and he could not survive that either.',
+      'It is quiet in here now. The switch is warm and it is heavier than it looks and there is nobody else in the room.',
+      'I am thirty-one years late for my posting. I am going to take a while deciding what that makes me.',
+    ],
+  },
+  {
+    id: 'the_end',
+    when: {
+      kind: 'allDefeated',
+      bosses: ['overseer', 'quartermaster', 'tower_actual', 'registrar', 'census', 'adjutant', 'colonel'],
+    },
+    kind: 'interrupt',
+    title: 'Continuity',
+    body: [
+      'The Overseer kept a schedule. The Quartermaster kept a manifest. The tower kept a sequence, the Registrar kept a register, the Census kept a count, the Adjutant kept the postings.',
+      'Every one of them was still doing its job. Not one of them had been told to stop. That is the whole thing that happened here — not a war, not a plague, not a machine deciding it hated us. A switch, thrown by somebody who meant well, and then thirty-one years of nobody being relieved.',
+      'I have taken the collars off everything in the city that will hold still for it. Some of them went back to work anyway. I am not going to make them stop. I know exactly how that feels now.',
+      'The lights are still on. The trains still run. Somebody is still holding the switch.',
+      'It is me. It was always going to be me. I am just doing it with the door open.',
+    ],
+  },
+
   // --- Mastery -------------------------------------------------------------
   {
     id: 'first_mastery',

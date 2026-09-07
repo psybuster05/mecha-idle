@@ -79,6 +79,7 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'draw_lattice' },
       { skill: 'refining', action: 'sinter_polymer' },
       { skill: 'refining', action: 'invert_collar' },
+      { skill: 'refining', action: 'mix_field_alloy' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
@@ -99,6 +100,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'fabrication', action: 'fab_reactor_grid' },
       { skill: 'fabrication', action: 'fab_weapon_disperser' },
       { skill: 'fabrication', action: 'fab_arms_labour' },
+      { skill: 'fabrication', action: 'fab_weapon_sentence' },
+      { skill: 'fabrication', action: 'fab_frame_command' },
     ],
   },
   {
@@ -345,6 +348,58 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     unlockedBy: 'registrar',
     combat: 'the_city',
   },
+
+  // --- The Base, inland past the city --------------------------------------
+  {
+    id: 'supply_yards',
+    name: 'Supply Yards',
+    description: 'Rows of it under cover, rotated on schedule. Enough to have equipped the island twice, and none of it ever sent.',
+    x: 2140,
+    y: 380,
+    unlockedBy: 'census',
+    actions: [{ skill: 'scavenging', action: 'supply_yards' }],
+    combat: 'the_base',
+  },
+  {
+    id: 'parade_ground',
+    name: 'Parade Ground',
+    description: 'Swept every morning. They still form up on it for an inspection nobody has come to give.',
+    x: 2300,
+    y: 250,
+    unlockedBy: 'census',
+    actions: [{ skill: 'scavenging', action: 'parade_ground' }],
+    combat: 'the_base',
+  },
+  {
+    id: 'command_annex',
+    name: 'Command Annex',
+    description: 'Where the postings are kept. One of them has been open for thirty-one years and has never been marked lapsed.',
+    x: 2260,
+    y: 500,
+    unlockedBy: 'census',
+    combat: 'the_base',
+  },
+
+  // --- The Lair ------------------------------------------------------------
+  {
+    id: 'the_gallery',
+    name: 'The Long Gallery',
+    description: 'A corridor of empty stations, each with a chair, each facing a console left logged in.',
+    x: 2480,
+    y: 360,
+    unlockedBy: 'adjutant',
+    actions: [{ skill: 'scavenging', action: 'the_gallery' }],
+    combat: 'the_lair',
+  },
+  {
+    id: 'switch_room',
+    name: 'The Switch Room',
+    description: 'The only room on the mainland that never lost power. He is in it. He has been in it the entire time.',
+    x: 2640,
+    y: 300,
+    unlockedBy: 'adjutant',
+    combat: 'the_lair',
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -391,6 +446,14 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'outer_wards', b: 'transit_rings', difficulty: 0.9 },
   { a: 'the_works', b: 'census_hall', difficulty: 0.9 },
   { a: 'transit_rings', b: 'census_hall', difficulty: 0.9 },
+
+  // Inland to the base, and then the last stretch.
+  { a: 'census_hall', b: 'supply_yards', difficulty: 1.3 },
+  { a: 'supply_yards', b: 'parade_ground', difficulty: 1 },
+  { a: 'supply_yards', b: 'command_annex', difficulty: 1 },
+  { a: 'parade_ground', b: 'command_annex', difficulty: 1 },
+  { a: 'command_annex', b: 'the_gallery', difficulty: 1.2 },
+  { a: 'the_gallery', b: 'switch_room', difficulty: 1.1 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

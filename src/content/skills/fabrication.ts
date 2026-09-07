@@ -296,5 +296,35 @@ export const FABRICATION: SkillDef = {
       outputs: [{ item: 'arms_labour', qty: 1 }],
       xp: 108,
     },
+
+    // --- The last two things you will build. ---
+    {
+      id: 'fab_weapon_sentence',
+      name: 'The Sentence',
+      description: 'Through the armour, and nothing wasted after. You needed both, so you built both.',
+      levelRequired: 90,
+      duration: 12,
+      inputs: [
+        { item: 'field_alloy', qty: 4 },
+        { item: 'hardened_lattice', qty: 3 },
+        { item: 'munitions_case', qty: 6 },
+      ],
+      outputs: [{ item: 'weapon_sentence', qty: 1 }],
+      xp: 108,
+    },
+    {
+      id: 'fab_frame_command',
+      name: 'Command Frame',
+      description: 'It fits without adjustment. You do not think about why for as long as you can manage.',
+      levelRequired: 90,
+      duration: 14,
+      inputs: [
+        { item: 'field_alloy', qty: 6 },
+        { item: 'continuity_core', qty: 1 },
+        { item: 'ablative_ceramic', qty: 4 },
+      ],
+      outputs: [{ item: 'frame_command', qty: 1 }],
+      xp: 108,
+    },
   ],
 }

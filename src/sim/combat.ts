@@ -19,6 +19,7 @@ import {
   derivedStats,
   HEAL_ON_KILL,
   HP_REGEN_PER_SECOND,
+  PHASE_TRANSITION_HEAL,
   RESPAWN_DELAY,
   type DerivedStats,
 } from './stats'
@@ -239,6 +240,12 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         effectiveResistances(enemy, combat.enemyHp),
         stats.armourPierce,
       )
+      // Crossing a threshold buys a breather - the boss steps back to reconfigure.
+      // Derived from HP like the phase itself, so nothing can fall out of step.
+      if (combat.enemyHp > 0 && activePhase(enemy, combat.enemyHp) !== phase) {
+        combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * PHASE_TRANSITION_HEAL)
+      }
+
       if (combat.enemyHp <= 0) {
         // Everything past zero is waste unless the weapon cleaves, in which case it
         // is banked and spent on whatever arrives next.

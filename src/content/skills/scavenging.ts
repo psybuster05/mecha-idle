@@ -293,5 +293,43 @@ export const SCAVENGING: SkillDef = {
       drops: [{ item: 'polymer_frame', qty: 5, chance: 0.4 }],
       xp: 63,
     },
+
+    // --- The Base and the Lair. 75/90, matching the rates already there. ---
+    {
+      id: 'supply_yards',
+      name: 'Supply Yards',
+      description: 'Rows of it, under cover, rotated on schedule. Enough to have equipped every unit on the island twice over.',
+      levelRequired: 75,
+      duration: 6,
+      outputs: [{ item: 'munitions_case', qty: 2 }],
+      drops: [{ item: 'command_plate', qty: 1, chance: 0.25 }],
+      xp: 38,
+    },
+    {
+      id: 'parade_ground',
+      name: 'Parade Ground',
+      description: 'Swept. Marked out. Still swept, every morning, by units that form up on it for an inspection nobody has come to give.',
+      levelRequired: 90,
+      duration: 7,
+      outputs: [
+        { item: 'command_plate', qty: 2 },
+        { item: 'munitions_case', qty: 2 },
+      ],
+      drops: [{ item: 'security_core', qty: 2, chance: 0.3 }],
+      xp: 63,
+    },
+    {
+      id: 'the_gallery',
+      name: 'The Long Gallery',
+      description: 'A corridor of empty stations, each with a chair, each facing a console that has been left logged in.',
+      levelRequired: 90,
+      duration: 7,
+      outputs: [
+        { item: 'command_plate', qty: 3 },
+        { item: 'continuity_core', qty: 1 },
+      ],
+      drops: [{ item: 'munitions_case', qty: 4, chance: 0.35 }],
+      xp: 63,
+    },
   ],
 }

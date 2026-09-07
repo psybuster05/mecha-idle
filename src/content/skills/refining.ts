@@ -225,5 +225,20 @@ export const REFINING: SkillDef = {
       outputs: [{ item: 'command_relay', qty: 1 }],
       xp: 72,
     },
+
+    // --- The Base line ---
+    {
+      id: 'mix_field_alloy',
+      name: 'Mix Field Alloy',
+      description: 'The military specification, followed exactly. It assumes resupply. You follow it anyway.',
+      levelRequired: 90,
+      duration: 8,
+      inputs: [
+        { item: 'command_plate', qty: 3 },
+        { item: 'munitions_case', qty: 2 },
+      ],
+      outputs: [{ item: 'field_alloy', qty: 1 }],
+      xp: 72,
+    },
   ],
 }
