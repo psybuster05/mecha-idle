@@ -74,25 +74,31 @@ you could tell whether a number was good.
 Skill ids are in save files, so renaming one is a migration (see `MIGRATIONS` in
 `src/sim/save.ts` for the v1 -> v2 example), not a find-and-replace.
 
-## The world is a graph, not a tilemap
+## The world is a graph, and getting anywhere is free
 
-You never steer the mech - you pick a destination and it walks. So `src/content/world.ts`
-holds nodes (places with coordinates) and edges (walks with a length), and that is all
-the spatial model there is. No tiles, no collision, no navmesh, no physics.
+`src/content/world.ts` holds nodes (places with coordinates) and edges (which places
+touch which), and that is all the spatial model there is. No tiles, no collision, no
+navmesh, no physics.
 
-**Travel is simulated, not animated.** `src/sim/world.ts` owns pathfinding (Dijkstra,
-because edges carry a difficulty multiplier so fewest-hops is not cheapest) and advances
-the walk inside `tick`. The canvas sprite only ever *reads* `actorPosition`. That is what
-keeps offline catch-up honest: eight hours away credits the walk and then the work.
+**Travel was built and then deleted.** There was pathfinding, per-actor movement speed,
+waypoints, and a sprite that walked the map inside `tick`. It went because you almost
+never have the map open, so the walk was a cost you paid without seeing anything for it.
+This is a menu game. Do not rebuild it without a reason that survives that sentence.
 
-`advanceTravel` returns leftover seconds so one large step both travels and then works.
-Without that, a single offline step would arrive and stand still until the next tick.
+What survived is the part that was never about distance:
 
-Actions and combat zones live at nodes. Starting one routes you to the nearest place
-that offers it; the activity is the *intent* until you arrive.
+- **Places gate content.** A node with `unlockedBy` is shut until that boss falls. This
+  is what all seven bosses feed, and it is the whole reason nodes still exist.
+- **Actions and combat zones live at nodes.** `startSkillAction` puts you at one that
+  offers the job (`moveToAny`), instantly. If every such place is sealed the activity
+  halts as `unreachable` rather than looking active and producing nothing.
+- **The map draws the graph.** Edges are what make the frontier legible, so a node with
+  no edges would be invisible. `visibleNodes` in `content/world.ts` is the single answer
+  to "where is there" - the canvas and the World panel's list both call it, because two
+  different answers would read as a bug.
 
-Rendering runs its own animation-frame loop off `game.live` (the mutable state ref) so
-the sprite moves at full frame rate, while React panels stay on the throttled snapshot.
+Nothing on the map moves between player decisions, so `WorldMap` redraws from the
+throttled React snapshot. It has no animation-frame loop of its own any more.
 
 ## Gating: combat widens, it never unblocks
 
@@ -245,13 +251,8 @@ Rules that keep the two actors distinct:
 
 - **Industry only** (`CRAWLER_SKILLS`). You gather and fight; it refines, fabricates and
   salvages. They never compete for the same job.
-- **It never travels to work.** It carries the workshop, so `startSkillAction` skips
-  routing entirely for the crawler.
-- **New orders do not cancel a drive.** `setActivity` clears travel, which is right for
-  the mech - its activity is what decides where it goes - and wrong for the crawler,
-  which works anywhere. The intent restores the kept travel.
-- **It drives slowly and ignores waypoints.** Waypoints are your surveying, not its.
-  `moveSpeedOf` returns a fixed `CRAWLER_MOVE_SPEED` for it.
+- **It works wherever it is.** It carries the workshop, so `startSkillAction` never
+  moves it. Parking it is cosmetic - it is there so the world has two bodies in it.
 
 ## Waiting, not halting
 

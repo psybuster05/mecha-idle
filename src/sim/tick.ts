@@ -11,7 +11,6 @@ import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
 import { derivedStats, HP_REGEN_PER_SECOND } from './stats'
 import { advanceStory } from './story'
-import { advanceTravel } from './world'
 
 /** Pure. Returns a new state advanced by `dtSeconds`. */
 export function tick(state: GameState, dtSeconds: number): GameState {
@@ -43,14 +42,12 @@ export function advance(state: GameState, dt: number): void {
 }
 
 function advanceStep(state: GameState, dt: number): void {
-
   state.elapsed += dt
 
   // Out of combat, the reactor patches you up. In combat the same regeneration is
   // applied inside the event loop instead, so it interleaves with incoming damage
   // rather than all arriving at once - applying it here too would double-count.
-  const fighting =
-    state.actors.mech.activity?.kind === 'combat' && state.actors.mech.travel === null
+  const fighting = state.actors.mech.activity?.kind === 'combat'
   if (!fighting) {
     const max = derivedStats(state).maxHp
     if (state.combat.hp > 0 && state.combat.hp < max) {
@@ -64,19 +61,14 @@ function advanceStep(state: GameState, dt: number): void {
     const actor = state.actors[actorId]
     if (!actor.unlocked) continue
 
-    // Walking comes first, and hands back whatever time is left once the actor
-    // arrives - so one large offline step both travels and then works, rather than
-    // arriving and standing idle until the next tick.
-    let working = dt
-    if (actor.travel) working = advanceTravel(state, actorId, dt)
-    if (!actor.activity || working <= 0) continue
+    if (!actor.activity) continue
 
     switch (actor.activity.kind) {
       case 'skill':
-        advanceSkillActivity(state, actorId, working)
+        advanceSkillActivity(state, actorId, dt)
         break
       case 'combat':
-        advanceCombatActivity(state, actorId, working)
+        advanceCombatActivity(state, actorId, dt)
         break
     }
   }

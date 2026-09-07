@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { getItem } from '../../content'
-import { WAYPOINTS, WAYPOINT_TRAVEL_SECONDS } from '../../content/skills/cartography'
-import { getNode } from '../../content/world'
+import { getAction, SURVEY_BONUS_PER_LEVEL } from '../../content'
+import { ENEMIES, perkTotal } from '../../content/enemies'
 import { newGame, type GameState } from '../state'
 import { burnFuel, startSkillAction } from '../intents'
 import { tick } from '../tick'
 import { derivedStats } from '../stats'
-import { isWaypoint } from '../world'
 import { xpForLevel } from '../xp'
 import { deserialize, serialize } from '../save'
 
@@ -70,7 +69,10 @@ describe('burning fuel', () => {
   })
 
   it('discards a corrupt or expired boost on load', () => {
-    const broken = { ...newGame(), boost: { multiplier: 99, secondsRemaining: -5, source: 'x' } }
+    const broken = {
+      ...newGame(),
+      boost: { multiplier: 99, secondsRemaining: -5, source: 'x' },
+    }
     const result = deserialize(JSON.stringify(broken))
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -117,54 +119,78 @@ describe('a boost expiring mid-step', () => {
   })
 })
 
-describe('waypoints', () => {
-  it('open with Cartography level and not before', () => {
-    const first = WAYPOINTS[0]!
-    const state = newGame()
-    expect(isWaypoint(state, first.node)).toBe(false)
+/**
+ * Cartography's replacement job.
+ *
+ * It has been given away twice: zones went to bosses, travel was deleted. What is left
+ * is a passive bonus-haul chance on every gathering completion, which is the only thing
+ * a surveyor is plausibly worth once there is no journey to shorten.
+ */
+describe('surveying', () => {
+  const roadside = () => {
+    const s = newGame(99)
+    s.actors.mech.at = 'roadside'
+    return s
+  }
 
-    state.skills.cartography = xpForLevel(first.level)
-    expect(isWaypoint(state, first.node)).toBe(true)
+  it('does nothing at level 1 and a great deal at 99', () => {
+    const green = tickBy(startSkillAction(roadside(), 'scavenging', 'roadside_wrecks'), 3600, 1)
+
+    const veteran = roadside()
+    veteran.skills.cartography = xpForLevel(99)
+    const surveyed = tickBy(startSkillAction(veteran, 'scavenging', 'roadside_wrecks'), 3600, 1)
+
+    // Same completions either way - this is bonus haul, not faster work.
+    expect(surveyed.skills.scavenging).toBe(green.skills.scavenging)
+    expect(surveyed.bank['scrap_steel']!).toBeGreaterThan(green.bank['scrap_steel']!)
   })
 
-  it('only name places that exist', () => {
-    for (const waypoint of WAYPOINTS) {
-      expect(getNode(waypoint.node), `unknown waypoint "${waypoint.node}"`).toBeDefined()
-      expect(waypoint.level).toBeGreaterThan(0)
-      expect(waypoint.level).toBeLessThanOrEqual(99)
-    }
+  it('pays about what the number says', () => {
+    const veteran = roadside()
+    veteran.skills.cartography = xpForLevel(99)
+    const hours = 40
+    const after = tickBy(
+      startSkillAction(veteran, 'scavenging', 'roadside_wrecks'),
+      hours * 3600,
+      1,
+    )
+
+    const wrecks = getAction('scavenging', 'roadside_wrecks')!
+    const completions = (hours * 3600) / wrecks.duration
+    const perCompletion = wrecks.outputs.find((o) => o.item === 'scrap_steel')!.qty
+    const expected = completions * perCompletion * (1 + 98 * SURVEY_BONUS_PER_LEVEL)
+    expect(after.bank['scrap_steel']!).toBeGreaterThan(expected * 0.95)
+    expect(after.bank['scrap_steel']!).toBeLessThan(expected * 1.05)
   })
 
-  it('open in ascending order, so the ladder reads sensibly', () => {
-    const levels = WAYPOINTS.map((w) => w.level)
-    expect(levels).toEqual([...levels].sort((a, b) => a - b))
+  it('is a serious reward that still loses to clearing the world', () => {
+    // If maxing one skill beat every boss in the game on the same axis, the fastest
+    // route through an idle game would be to ignore all of it except this one. If it
+    // were negligible, the skill would be a chore. Either side retuning trips this.
+    const maxed = 98 * SURVEY_BONUS_PER_LEVEL
+    const allBosses = perkTotal(
+      Object.fromEntries(ENEMIES.filter((e) => e.isBoss).map((e) => [e.id, 1])),
+      'gatheringYield',
+    )
+    expect(maxed).toBeGreaterThan(allBosses * 0.4)
+    expect(maxed).toBeLessThan(allBosses)
   })
 
-  it('turn a long walk into a fixed short hop', () => {
-    // Reactor Slag Fields is a genuine trek from the camp on foot.
-    const walker = newGame()
-    walker.skills.scavenging = xpForLevel(30)
-    const onFoot = startSkillAction(walker, 'scavenging', 'reactor_slag')
-    const walkSeconds = onFoot.actors.mech.travel!.legSeconds
+  /**
+   * The trap this feature had to avoid.
+   *
+   * Cartography raises its own bonus as it levels, so a single large offline step would
+   * roll the whole span at the level it started at while many small steps would not -
+   * and unlike the usual rounding slop, that gap would grow with time away. The engine
+   * recomputes the chance per completion for exactly this reason.
+   */
+  it('levels itself mid-step without breaking the offline guarantee', () => {
+    const make = () => startSkillAction(newGame(4242), 'cartography', 'pace_the_hollow')
+    const bulk = tick(make(), 4 * 3600)
+    const incremental = tickBy(make(), 4 * 3600, 0.5)
 
-    const surveyed = newGame()
-    surveyed.skills.cartography = xpForLevel(30)
-    surveyed.skills.scavenging = xpForLevel(30)
-    const hopped = startSkillAction(surveyed, 'scavenging', 'reactor_slag')
-
-    expect(hopped.actors.mech.travel!.legSeconds).toBe(WAYPOINT_TRAVEL_SECONDS)
-    expect(hopped.actors.mech.travel!.to).toBe('slag_fields')
-    expect(WAYPOINT_TRAVEL_SECONDS).toBeLessThan(walkSeconds)
-  })
-
-  it('still arrive, and still record the visit', () => {
-    const surveyed = newGame()
-    surveyed.skills.cartography = xpForLevel(30)
-    surveyed.skills.scavenging = xpForLevel(30) // reactor_slag is level-gated
-    const arrived = tickBy(startSkillAction(surveyed, 'scavenging', 'reactor_slag'), 60, 0.5)
-
-    expect(arrived.actors.mech.at).toBe('slag_fields')
-    expect(arrived.visited).toContain('slag_fields')
-    expect(arrived.bank['scrap_steel']).toBeGreaterThan(0)
+    expect(bulk.skills).toEqual(incremental.skills)
+    expect(bulk.bank).toEqual(incremental.bank)
+    expect(bulk.rngSeed).toBe(incremental.rngSeed)
   })
 })

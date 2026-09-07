@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { WORLD_NODES } from '../../content/world'
 import { earnedPerks, getEnemy, perkTotal } from '../../content/enemies'
 import { hasDefeated, newGame, recordDefeat, type GameState } from '../state'
 import { startCombat, startSkillAction } from '../intents'
 import { tick } from '../tick'
-import { derivedStats } from '../stats'
-import { findPath, isNodeOpen } from '../world'
+import { isNodeOpen, placeActor } from '../world'
 import { deserialize, serialize } from '../save'
 import { xpForLevel } from '../xp'
 
@@ -76,25 +76,20 @@ describe('perks', () => {
 
   it('are inert until the boss is beaten', () => {
     expect(earnedPerks({})).toEqual([])
-    expect(perkTotal({}, 'moveSpeed')).toBe(0)
+    expect(perkTotal({}, 'gatheringYield')).toBe(0)
   })
 
   it('activate on the first kill and persist', () => {
     const defeated = { overseer: 1 }
     expect(earnedPerks(defeated).map((p) => p.id)).toEqual(['district_override'])
-    expect(perkTotal(defeated, 'moveSpeed')).toBe(overseer.perk!.moveSpeed)
+    expect(perkTotal(defeated, 'gatheringYield')).toBe(overseer.perk!.gatheringYield)
   })
 
   it('do not stack with repeat kills', () => {
     // Farming a boss must not compound its perk.
-    expect(perkTotal({ overseer: 9 }, 'moveSpeed')).toBe(perkTotal({ overseer: 1 }, 'moveSpeed'))
-  })
-
-  it('make travel faster', () => {
-    const before = derivedStats(newGame()).moveSpeed
-    const after = newGame()
-    recordDefeat(after, 'overseer')
-    expect(derivedStats(after).moveSpeed).toBe(before + overseer.perk!.moveSpeed!)
+    expect(perkTotal({ overseer: 9 }, 'gatheringYield')).toBe(
+      perkTotal({ overseer: 1 }, 'gatheringYield'),
+    )
   })
 
   it('grant bonus hauls while gathering', () => {
@@ -104,7 +99,6 @@ describe('perks', () => {
     recordDefeat(perked, 'overseer')
     const boosted = tickBy(startSkillAction(perked, 'scavenging', 'roadside_wrecks'), 3600, 1)
 
-    // Faster travel too, so it also spends slightly more of the hour working.
     expect(boosted.bank['scrap_steel']!).toBeGreaterThan(plain.bank['scrap_steel']!)
   })
 
@@ -150,24 +144,20 @@ describe('locked places', () => {
     expect(isNodeOpen(newGame(), 'atlantis')).toBe(false)
   })
 
-  it('refuses to route to a locked destination', () => {
-    // Simulates a future gated region without needing one to exist yet.
-    const closed = (id: string) => id !== 'slag_fields'
-    expect(findPath('the_hollow', 'slag_fields', closed)).toBeNull()
+  it('refuses to put you in a locked place, and lets you in once it opens', () => {
+    const state = newGame()
+    const sealed = WORLD_NODES.find((node) => node.unlockedBy)!
+
+    expect(placeActor(state, 'mech', sealed.id)).toBe(false)
+    recordDefeat(state, sealed.unlockedBy!)
+    expect(placeActor(state, 'mech', sealed.id)).toBe(true)
   })
 
-  it('routes around a locked place rather than through it', () => {
-    const openAll = findPath('the_hollow', 'freight_yard')
-    expect(openAll).not.toBeNull()
-
-    // Close the slag fields; freight yard is still reachable the long way round.
-    const detour = findPath('the_hollow', 'freight_yard', (id) => id !== 'slag_fields')
-    expect(detour).not.toBeNull()
-    expect(detour).not.toContain('slag_fields')
-  })
-
-  it('never strands you where you already stand', () => {
-    // Standing somewhere that later closes must not make every route fail.
-    expect(findPath('slag_fields', 'slag_fields', () => false)).toEqual([])
+  it('does not shut a place behind a lock that no boss can open', () => {
+    // A node gated on an enemy id that does not exist would be permanently sealed.
+    for (const node of WORLD_NODES) {
+      if (!node.unlockedBy) continue
+      expect(getEnemy(node.unlockedBy), `${node.id} is gated on nothing`).toBeDefined()
+    }
   })
 })

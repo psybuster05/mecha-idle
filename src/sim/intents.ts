@@ -11,7 +11,7 @@ import { removeItem } from './bank'
 import { getItem } from '../content'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
-import { routeTo } from './world'
+import { moveToAny, placeActor } from './world'
 import type {
   ActionId,
   ActorId,
@@ -35,22 +35,14 @@ export function startSkillAction(
   if (actor === 'crawler' && !canCrawlerRun(skill)) return state
 
   const next = cloneState(state)
-
-  // setActivity clears travel, which is right for the mech - its activity is what
-  // decides where it goes. The crawler works wherever it is, so new orders must not
-  // cancel a drive already under way. It simply produces nothing until it parks.
-  const keptTravel = actor === 'crawler' ? next.actors.crawler.travel : null
   if (!setActivity(next, actor, { kind: 'skill', skill, action })) return state
+  if (actor === 'crawler') return next
 
-  if (actor === 'crawler') {
-    next.actors.crawler.travel = keptTravel
-    return next
-  }
-
-  // Actions happen somewhere. Walk there first; the activity is the intent until we
-  // arrive, and the tick loop will not start producing until travel finishes.
+  // Actions still happen somewhere - places gate content even though getting to them is
+  // instant. If every node that does this job is still shut behind a boss, say so rather
+  // than silently doing nothing.
   const where = nodesForAction(skill, action).map((n) => n.id)
-  if (routeTo(next, actor, where) === null) {
+  if (!moveToAny(next, actor, where)) {
     haltActivity(next, actor, 'unreachable')
     return next
   }
@@ -68,7 +60,7 @@ export function startCombat(
   if (!setActivity(next, actor, { kind: 'combat', zone, enemy })) return state
 
   const where = nodesForZone(zone).map((n) => n.id)
-  if (routeTo(next, actor, where) === null) {
+  if (!moveToAny(next, actor, where)) {
     haltActivity(next, actor, 'unreachable')
     return next
   }
@@ -176,9 +168,10 @@ export type CrawlerFailure = 'no-core' | 'already-running'
  * Shaped like equipping deliberately: it consumes the part, it is explicit, and it is
  * the single moment the concurrency rule changes from one action at a time to two.
  */
-export function installCrawler(
-  state: GameState,
-): { state: GameState; error: CrawlerFailure | null } {
+export function installCrawler(state: GameState): {
+  state: GameState
+  error: CrawlerFailure | null
+} {
   if (state.actors.crawler.unlocked) return { state, error: 'already-running' }
   if ((state.bank['crawler_core'] ?? 0) < 1) return { state, error: 'no-core' }
 
@@ -190,12 +183,18 @@ export function installCrawler(
   return { state: next, error: null }
 }
 
-/** Send the crawler somewhere. It drives; it does not use your waypoints. */
-export function moveCrawler(state: GameState, node: NodeId): GameState {
-  if (!state.actors.crawler.unlocked) return state
-  if (state.actors.crawler.at === node && !state.actors.crawler.travel) return state
+/**
+ * Put an actor somewhere.
+ *
+ * Instant, and free. Since travel was removed this is no longer a cost to weigh, only a
+ * statement of where you are - but it is still worth having explicitly, because places
+ * are what the boss gates hang from and the map should show both bodies in the world.
+ */
+export function moveTo(state: GameState, node: NodeId, actor: ActorId = 'mech'): GameState {
+  if (!state.actors[actor].unlocked) return state
+  if (state.actors[actor].at === node) return state
 
   const next = cloneState(state)
-  if (routeTo(next, 'crawler', [node]) === null) return state
+  if (!placeActor(next, actor, node)) return state
   return next
 }

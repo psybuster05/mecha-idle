@@ -898,7 +898,7 @@ export function earnedPerks(defeated: Partial<Record<string, number>>): BossPerk
 /** Sum of one numeric perk field across everything earned. */
 export function perkTotal(
   defeated: Partial<Record<string, number>>,
-  field: 'gatheringYield' | 'moveSpeed' | 'xpBonus' | 'damageBonus',
+  field: 'gatheringYield' | 'xpBonus' | 'damageBonus',
 ): number {
   return earnedPerks(defeated).reduce((sum, perk) => sum + (perk[field] ?? 0), 0)
 }

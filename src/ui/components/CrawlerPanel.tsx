@@ -1,6 +1,6 @@
 import { getSkill } from '../../content'
 import { getNode, WORLD_NODES } from '../../content/world'
-import { installCrawler, moveCrawler, startSkillAction, stopActivity } from '../../sim/intents'
+import { installCrawler, moveTo, startSkillAction, stopActivity } from '../../sim/intents'
 import { CRAWLER_SKILLS, type GameState } from '../../sim/state'
 import { isNodeOpen } from '../../sim/world'
 import { waitingFor } from '../../sim/skillEngine'
@@ -21,8 +21,9 @@ interface Props {
  * industry while you are out, which is why it only ever offers Refining, Fabrication and
  * Salvaging - the two of you should never be competing for the same job.
  *
- * It carries its workshop, so it never travels to work. Moving it is a separate decision
- * about *where the workshop is*, and it drives slowly enough that the decision matters.
+ * It carries its workshop, so where it sits never changes what it can build. Parking it
+ * is cosmetic now that travel is gone - it is here so the world has two bodies in it
+ * rather than one.
  */
 export function CrawlerPanel({ state, dispatch }: Props) {
   const crawler = state.actors.crawler
@@ -35,15 +36,15 @@ export function CrawlerPanel({ state, dispatch }: Props) {
           <div>
             <h2>The Crawler</h2>
             <p className="dim flavour">
-              A hauler shell in the back of the Hollow, sitting on its axles. It has been
-              here longer than you have been awake, and it is in better condition.
+              A hauler shell in the back of the Hollow, sitting on its axles. It has been here
+              longer than you have been awake, and it is in better condition.
             </p>
           </div>
         </header>
 
         <p className="dim">
-          It needs a drive unit. Build a <strong>Traction Core</strong> at Fabrication
-          level 10 and wire it in, and it will work while you are out.
+          It needs a drive unit. Build a <strong>Traction Core</strong> at Fabrication level 10 and
+          wire it in, and it will work while you are out.
         </p>
 
         <button
@@ -59,8 +60,6 @@ export function CrawlerPanel({ state, dispatch }: Props) {
 
   const waiting = waitingFor(state, 'crawler')
   const here = getNode(crawler.at)
-  const travel = crawler.travel
-  const destination = travel ? getNode(travel.remaining.at(-1) ?? travel.to) : null
 
   return (
     <div className="panel">
@@ -68,25 +67,15 @@ export function CrawlerPanel({ state, dispatch }: Props) {
         <div>
           <h2>The Crawler</h2>
           <p className="dim flavour">
-            {travel
-              ? `On the move. It does not hurry, and it does not work while it is driving.`
-              : `Parked at ${here?.name ?? 'nowhere'}. The furnace and the press travel with it.`}
+            Parked at {here?.name ?? 'nowhere'}. The furnace and the press go where it goes.
           </p>
         </div>
       </header>
 
-      {travel && (
-        <div className="loadout">
-          <span className="dim">Driving to</span>
-          <span className="my-type">{destination?.name ?? '...'}</span>
-          <Bar value={travel.progress / travel.legSeconds} tone="progress" />
-        </div>
-      )}
-
       {waiting.length > 0 && (
         <p className="warn">
-          Out of {waiting.map((stack) => itemName(stack.item)).join(' and ')}. It is still
-          on the job and will pick up the moment you bring some back.
+          Out of {waiting.map((stack) => itemName(stack.item)).join(' and ')}. It is still on the
+          job and will pick up the moment you bring some back.
         </p>
       )}
 
@@ -143,19 +132,18 @@ export function CrawlerPanel({ state, dispatch }: Props) {
       )}
 
       <h3>Park it</h3>
-      <p className="dim">
-        It stops working while it drives, and it drives slowly. Move it when you are
-        changing where you live, not to follow you around.
-      </p>
+      <p className="dim">It works just as well anywhere. This is only where you keep it.</p>
       <ul className="here-list">
         {WORLD_NODES.filter((node) => isNodeOpen(state, node.id)).map((node) => (
           <li key={node.id} className={crawler.at === node.id ? 'active' : undefined}>
             <span>
               <strong>{node.name}</strong>
-              {crawler.at === node.id && !travel && <span className="dim"> &middot; parked here</span>}
+              {crawler.at === node.id && <span className="dim"> &middot; parked here</span>}
             </span>
             {crawler.at !== node.id && (
-              <button onClick={() => dispatch((s) => moveCrawler(s, node.id))}>Drive here</button>
+              <button onClick={() => dispatch((s) => moveTo(s, node.id, 'crawler'))}>
+                Park here
+              </button>
             )}
           </li>
         ))}

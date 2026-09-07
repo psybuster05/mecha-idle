@@ -44,4 +44,4 @@ export type { EnemyDef } from './enemies'
 export { ZONES, getZone } from './zones'
 export type { ZoneDef } from './zones'
 
-export { WAYPOINTS, WAYPOINT_TRAVEL_SECONDS } from './skills/cartography'
+export { SURVEY_BONUS_PER_LEVEL } from './skills/cartography'

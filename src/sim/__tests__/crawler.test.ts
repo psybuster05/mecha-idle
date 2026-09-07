@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { getAction } from '../../content'
 import {
   CRAWLER_SKILLS,
   canCrawlerRun,
@@ -7,10 +6,8 @@ import {
   newGame,
   type GameState,
 } from '../state'
-import { installCrawler, moveCrawler, startSkillAction, stopActivity } from '../intents'
+import { installCrawler, moveTo, startSkillAction, stopActivity } from '../intents'
 import { tick } from '../tick'
-import { CRAWLER_MOVE_SPEED } from '../stats'
-import { moveSpeedOf } from '../world'
 import { waitingFor } from '../skillEngine'
 import { deserialize, serialize } from '../save'
 import { xpForLevel } from '../xp'
@@ -136,13 +133,12 @@ describe('what the crawler will and will not do', () => {
     expect(after.actors.crawler.activity).toBeNull()
   })
 
-  it('never travels to work, because it carries the workshop', () => {
+  it('works wherever it is, because it carries the workshop', () => {
     // Refining is listed at the camp, but the crawler can be anywhere.
     let state = running()
     state.actors.crawler.at = 'slag_fields'
     state = startSkillAction(state, 'refining', 'smelt_steel', 'crawler')
 
-    expect(state.actors.crawler.travel).toBeNull()
     state = tickBy(state, 120, 0.5)
     expect(state.actors.crawler.at).toBe('slag_fields')
     expect(state.bank['steel_ingot']).toBeGreaterThan(0)
@@ -167,47 +163,36 @@ describe('what the crawler will and will not do', () => {
   })
 })
 
-describe('driving it', () => {
-  it('moves slower than you, and never uses your waypoints', () => {
-    const state = running()
-    state.skills.cartography = xpForLevel(99) // every waypoint open
-    expect(moveSpeedOf(state, 'crawler')).toBe(CRAWLER_MOVE_SPEED)
-    expect(moveSpeedOf(state, 'crawler')).toBeLessThan(moveSpeedOf(state, 'mech'))
-
-    const driving = moveCrawler(state, 'slag_fields')
-    // A waypoint hop would be a fixed few seconds; the crawler has to drive it.
-    expect(driving.actors.crawler.travel!.legSeconds).toBeGreaterThan(10)
-  })
-
-  it('arrives, and works again once it stops', () => {
-    let state = moveCrawler(running(), 'roadside')
+describe('parking it', () => {
+  it('moves where it is told, and keeps working there', () => {
+    let state = moveTo(running(), 'roadside', 'crawler')
     state = startSkillAction(state, 'refining', 'smelt_steel', 'crawler')
     state = tickBy(state, 600, 0.5)
 
     expect(state.actors.crawler.at).toBe('roadside')
-    expect(state.actors.crawler.travel).toBeNull()
     expect(state.bank['steel_ingot']).toBeGreaterThan(0)
   })
 
-  it('does no work while driving', () => {
-    // Travel eats the step before the activity gets any, same as for the mech.
-    let state = moveCrawler(running(), 'vitrified_zone')
+  it('does not interrupt its work to move', () => {
+    // It used to stop producing while it drove. Travel is gone, so parking it costs
+    // nothing but the click - which is also why parking it is now only cosmetic.
+    let state = running()
     state = startSkillAction(state, 'refining', 'smelt_steel', 'crawler')
+    const before = tickBy(state, 60, 0.5)
 
-    const smelt = getAction('refining', 'smelt_steel')!
-    const early = tickBy(state, smelt.duration * 2, 0.5)
-    expect(early.actors.crawler.travel).not.toBeNull()
-    expect(early.bank['steel_ingot']).toBeUndefined()
+    const moved = tickBy(moveTo(state, 'vitrified_zone', 'crawler'), 60, 0.5)
+    expect(moved.actors.crawler.at).toBe('vitrified_zone')
+    expect(moved.bank['steel_ingot']).toBe(before.bank['steel_ingot'])
   })
 
-  it('ignores an order to drive nowhere', () => {
+  it('ignores an order to move nowhere', () => {
     const state = running()
-    expect(moveCrawler(state, state.actors.crawler.at)).toBe(state)
+    expect(moveTo(state, state.actors.crawler.at, 'crawler')).toBe(state)
   })
 
   it('will not move while asleep', () => {
     const asleep = newGame()
-    expect(moveCrawler(asleep, 'roadside')).toBe(asleep)
+    expect(moveTo(asleep, 'roadside', 'crawler')).toBe(asleep)
   })
 })
 

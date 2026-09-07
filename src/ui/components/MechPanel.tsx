@@ -77,7 +77,7 @@ export function MechPanel({ state, dispatch }: Props) {
                     {[
                       perk.gatheringYield &&
                         `+${Math.round(perk.gatheringYield * 100)}% bonus haul chance`,
-                      perk.moveSpeed && `+${perk.moveSpeed} travel speed`,
+                      perk.damageBonus && `+${Math.round(perk.damageBonus * 100)}% damage`,
                       perk.xpBonus && `+${Math.round(perk.xpBonus * 100)}% xp`,
                     ]
                       .filter(Boolean)

@@ -1,23 +1,23 @@
 import { describe, it, expect } from 'vitest'
-import {
-  WORLD_NODES,
-  STARTING_NODE,
-  getNode,
-  ADJACENCY,
-  nodesForAction,
-} from '../../content/world'
+import { WORLD_NODES, STARTING_NODE, getNode, ADJACENCY, nodesForAction } from '../../content/world'
 import { SKILLS } from '../../content'
-import { actorPosition, findNearest, findPath, hopSeconds } from '../world'
-import { DEFAULT_START_NODE, newGame, type GameState } from '../state'
+import { actorPosition, isNodeOpen, moveToAny, placeActor } from '../world'
+import { DEFAULT_START_NODE, newGame, type GameState, type NodeId } from '../state'
 import { startCombat, startSkillAction } from '../intents'
 import { tick } from '../tick'
-import { derivedStats } from '../stats'
-import { applyOffline } from '../offline'
 
-function tickBy(state: GameState, total: number, step: number): GameState {
-  let next = state
-  for (let t = 0; t < Math.round(total / step); t++) next = tick(next, step)
-  return next
+/** Everything joined to `from` by edges, ignoring locks. */
+function connectedTo(from: NodeId): Set<string> {
+  const seen = new Set<string>([from])
+  const queue: NodeId[] = [from]
+  while (queue.length) {
+    for (const edge of ADJACENCY.get(queue.pop()!) ?? []) {
+      if (seen.has(edge.to)) continue
+      seen.add(edge.to)
+      queue.push(edge.to)
+    }
+  }
+  return seen
 }
 
 describe('world graph', () => {
@@ -34,166 +34,127 @@ describe('world graph', () => {
       for (const edge of edges) {
         expect(getNode(edge.to), `edge to unknown node "${edge.to}"`).toBeDefined()
         const back = ADJACENCY.get(edge.to)?.some((e) => e.to === from)
-        expect(back, `${from} -> ${edge.to} is not walkable in reverse`).toBe(true)
+        expect(back, `${from} -> ${edge.to} is not joined in reverse`).toBe(true)
         expect(edge.length).toBeGreaterThan(0)
       }
     }
   })
 
-  it('can reach every node from the start', () => {
-    // An unreachable node is content that no player can ever get to.
+  it('joins every node to the rest of the world', () => {
+    // Nothing walks these edges any more, but the map draws them, and it only shows
+    // places that touch somewhere you can already go. An island would be invisible.
+    const connected = connectedTo(STARTING_NODE)
     for (const node of WORLD_NODES) {
-      expect(findPath(STARTING_NODE, node.id), `${node.id} is stranded`).not.toBeNull()
+      expect(connected.has(node.id), `${node.id} is drawn nowhere`).toBe(true)
     }
   })
 })
 
-describe('pathfinding', () => {
-  it('returns an empty path when already there', () => {
-    expect(findPath('the_hollow', 'the_hollow')).toEqual([])
+/**
+ * Places, now that getting to them is free.
+ *
+ * Travel was removed - a walk you cannot watch is a cost with no feedback - but a place
+ * is still the thing a boss lock hangs from, so the question "can I be here" survived
+ * the deletion and the question "how long to get there" did not.
+ */
+describe('places', () => {
+  it('opens anywhere without a lock, and nothing behind one', () => {
+    const state = newGame()
+    expect(isNodeOpen(state, 'the_hollow')).toBe(true)
+
+    const sealed = WORLD_NODES.find((node) => node.unlockedBy)!
+    expect(isNodeOpen(state, sealed.id)).toBe(false)
+
+    state.defeated[sealed.unlockedBy!] = 1
+    expect(isNodeOpen(state, sealed.id)).toBe(true)
   })
 
-  it('returns null for nodes that do not exist', () => {
-    expect(findPath('the_hollow', 'atlantis')).toBeNull()
-    expect(findPath('atlantis', 'the_hollow')).toBeNull()
+  it('refuses to put an actor anywhere shut, or anywhere fictional', () => {
+    const state = newGame()
+    const sealed = WORLD_NODES.find((node) => node.unlockedBy)!
+
+    expect(placeActor(state, 'mech', sealed.id)).toBe(false)
+    expect(placeActor(state, 'mech', 'atlantis' as NodeId)).toBe(false)
+    expect(state.actors.mech.at).toBe(DEFAULT_START_NODE)
   })
 
-  it('finds a direct hop', () => {
-    expect(findPath('the_hollow', 'roadside')).toEqual(['roadside'])
+  it('records the visit when an actor arrives', () => {
+    const state = newGame()
+    expect(placeActor(state, 'mech', 'roadside')).toBe(true)
+    expect(state.actors.mech.at).toBe('roadside')
+    expect(state.visited).toContain('roadside')
   })
 
-  it('routes through intermediate nodes when there is no direct edge', () => {
-    const path = findPath('roadside', 'slag_fields')
-    expect(path).not.toBeNull()
-    expect(path!.length).toBeGreaterThan(1)
-    expect(path!.at(-1)).toBe('slag_fields')
+  it('stays put when it is already somewhere that will do', () => {
+    const state = newGame()
+    expect(moveToAny(state, 'mech', ['roadside', DEFAULT_START_NODE])).toBe(true)
+    expect(state.actors.mech.at).toBe(DEFAULT_START_NODE)
   })
 
-  it('prefers the cheapest route, not the fewest hops', () => {
-    // Edges carry a difficulty multiplier, which is the whole reason this is
-    // Dijkstra rather than a breadth-first search.
-    const path = findPath('the_hollow', 'slag_fields')
-    expect(path).not.toBeNull()
-    expect(path!.at(-1)).toBe('slag_fields')
+  it('skips shut candidates and takes the first open one', () => {
+    const state = newGame()
+    const sealed = WORLD_NODES.find((node) => node.unlockedBy)!
+    expect(moveToAny(state, 'mech', [sealed.id, 'roadside'])).toBe(true)
+    expect(state.actors.mech.at).toBe('roadside')
   })
 
-  it('picks the nearest of several candidate destinations', () => {
-    const nearest = findNearest('the_hollow', ['roadside', 'slag_fields'])
-    expect(nearest?.node).toBe('roadside')
-  })
-
-  it('ignores unreachable candidates', () => {
-    const nearest = findNearest('the_hollow', ['atlantis', 'roadside'])
-    expect(nearest?.node).toBe('roadside')
-    expect(findNearest('the_hollow', ['atlantis'])).toBeNull()
+  it('fails when every candidate is shut', () => {
+    const state = newGame()
+    const sealed = WORLD_NODES.find((node) => node.unlockedBy)!
+    expect(moveToAny(state, 'mech', [sealed.id])).toBe(false)
   })
 })
 
-describe('travel timing', () => {
-  it('takes longer the further you go, and less the faster you are', () => {
-    const near = hopSeconds('the_hollow', 'roadside', 30)
-    const fast = hopSeconds('the_hollow', 'roadside', 60)
-    expect(near).toBeGreaterThan(0)
-    expect(fast).toBeCloseTo(near / 2, 5)
-  })
-
-  it('arrives after roughly the predicted time', () => {
+describe('starting work', () => {
+  it('puts you where the work is, immediately', () => {
     const state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
-    const expected = hopSeconds('the_hollow', 'roadside', derivedStats(state).moveSpeed)
-
-    const justBefore = tick(state, expected - 0.5)
-    expect(justBefore.actors.mech.at).toBe('the_hollow')
-    expect(justBefore.actors.mech.travel).not.toBeNull()
-
-    const justAfter = tick(state, expected + 0.01)
-    expect(justAfter.actors.mech.at).toBe('roadside')
-    expect(justAfter.actors.mech.travel).toBeNull()
+    expect(state.actors.mech.at).toBe('roadside')
+    expect(state.actors.mech.stoppedReason).toBeNull()
   })
 
-  it('spends leftover time working instead of standing still on arrival', () => {
-    // The whole reason advanceTravel hands back the remainder: a single large step
-    // must both travel and then work.
-    const state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
-    const after = tick(state, 60)
-    expect(after.actors.mech.at).toBe('roadside')
-    expect(after.bank['scrap_steel']).toBeGreaterThan(0)
+  it('produces from the first second, with no journey to pay for', () => {
+    // The point of the removal: an hour ordered is an hour worked.
+    const sent = tick(startSkillAction(newGame(), 'scavenging', 'roadside_wrecks'), 3600)
+
+    const already = newGame()
+    already.actors.mech.at = 'roadside'
+    const stayed = tick(startSkillAction(already, 'scavenging', 'roadside_wrecks'), 3600)
+
+    expect(sent.bank['scrap_steel']).toBe(stayed.bank['scrap_steel'])
   })
 
-  it('walks to a combat zone before fighting', () => {
-    const state = startCombat(newGame(), 'rustbelt')
-    expect(state.actors.mech.travel).not.toBeNull()
-
-    const arrived = tick(state, 60)
-    expect(arrived.actors.mech.travel).toBeNull()
-    expect(['graveyard', 'checkpoint']).toContain(arrived.actors.mech.at)
-  })
-
-  it('does not walk when the action is already underfoot', () => {
+  it('does not move you when the work is already underfoot', () => {
     // Refining lives at the camp, where a new game begins.
     const state = startSkillAction(newGame(), 'refining', 'smelt_steel')
-    expect(state.actors.mech.travel).toBeNull()
     expect(state.actors.mech.at).toBe('the_hollow')
   })
-})
 
-describe('travel and the offline guarantee', () => {
-  it('one big step lands where many small ones do', () => {
-    // Travel is simulated, so it obeys the same equivalence everything else does -
-    // with one honest caveat. Leg lengths are hypot() distances, so the leftover
-    // seconds handed from travel to work cannot be bit-identical across step sizes.
-    // Everything that affects the player is exact; only the sub-second progress
-    // counter drifts, by about 1e-13 over an hour.
-    const make = () => startSkillAction(newGame(4242), 'scavenging', 'roadside_wrecks')
-    const bulk = tick(make(), 3600)
-    const incremental = tickBy(make(), 3600, 0.25)
-
-    expect(incremental.bank).toEqual(bulk.bank)
-    expect(incremental.skills).toEqual(bulk.skills)
-    expect(incremental.rngSeed).toBe(bulk.rngSeed)
-    expect(incremental.combat).toEqual(bulk.combat)
-    expect(incremental.actors.mech.at).toBe(bulk.actors.mech.at)
-    expect(incremental.actors.mech.travel).toEqual(bulk.actors.mech.travel)
-    expect(incremental.actors.mech.progress).toBeCloseTo(bulk.actors.mech.progress, 9)
+  it('deploys straight into a combat zone', () => {
+    const state = startCombat(newGame(), 'rustbelt')
+    expect(state.actors.mech.activity?.kind).toBe('combat')
+    expect(getNode(state.actors.mech.at)?.combat).toBe('rustbelt')
   })
 
-  it('credits the walk and then the work when returning from offline', () => {
-    const state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
-    state.savedAt = Date.now() - 8 * 3600 * 1000
+  it('halts rather than silently doing nothing when everywhere is shut', () => {
+    // Found by a dead Start button: an action whose every location is locked used to
+    // sit there looking active and produce nothing at all.
+    const sealedAction = SKILLS.flatMap((skill) =>
+      skill.actions.map((action) => ({ skill: skill.id, action: action.id })),
+    ).find(({ skill, action }) => nodesForAction(skill, action).every((node) => node.unlockedBy))
+    expect(sealedAction, 'no locked action to test with').toBeDefined()
 
-    const { state: after, report } = applyOffline(state, Date.now())
-    expect(after.actors.mech.at).toBe('roadside')
-    expect(report?.items['scrap_steel']).toBeGreaterThan(0)
-  })
-
-  it('loses the travel time rather than pretending it was free', () => {
-    // An hour spent partly walking must produce less than an hour spent all working.
-    const walked = tick(startSkillAction(newGame(), 'scavenging', 'roadside_wrecks'), 3600)
-
-    const noWalk = newGame()
-    noWalk.actors.mech.at = 'roadside'
-    const stayed = tick(startSkillAction(noWalk, 'scavenging', 'roadside_wrecks'), 3600)
-
-    expect(walked.bank['scrap_steel']).toBeLessThan(stayed.bank['scrap_steel'] ?? 0)
+    const state = newGame()
+    state.skills[sealedAction!.skill] = Number.MAX_SAFE_INTEGER
+    const after = startSkillAction(state, sealedAction!.skill, sealedAction!.action)
+    expect(after.actors.mech.stoppedReason).toBe('unreachable')
   })
 })
 
 describe('rendering position', () => {
-  it('sits on the node when standing still', () => {
-    const state = newGame()
+  it('sits on the node it is standing on', () => {
+    const state: GameState = newGame()
     const node = getNode('the_hollow')!
     expect(actorPosition(state, 'mech')).toEqual({ x: node.x, y: node.y })
-  })
-
-  it('interpolates between nodes while walking', () => {
-    const state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
-    const from = getNode('the_hollow')!
-    const to = getNode('roadside')!
-
-    const half = tick(state, hopSeconds('the_hollow', 'roadside', derivedStats(state).moveSpeed) / 2)
-    const pos = actorPosition(half, 'mech')
-
-    expect(pos.x).toBeCloseTo((from.x + to.x) / 2, 0)
-    expect(pos.y).toBeCloseTo((from.y + to.y) / 2, 0)
   })
 })
 
@@ -222,15 +183,6 @@ describe('non-combat skills are never gated behind combat', () => {
     }
   })
 
-  it('every gathering action is walkable from the start without a fight', () => {
-    for (const { skill, action } of gatheringActions) {
-      const reachable = nodesForAction(skill, action).some(
-        (node) => findPath(STARTING_NODE, node.id) !== null,
-      )
-      expect(reachable, `${skill}:${action} cannot be reached from the start`).toBe(true)
-    }
-  })
-
   it('leaves a full 1-99 ladder outside every lock', () => {
     // The contract is not "gathering is never locked" - locked regions may hold
     // gathering content, and the Ship Graveyard does. What they may never be is
@@ -243,7 +195,7 @@ describe('non-combat skills are never gated behind combat', () => {
       expect(open.length, `${skill.id} has no unlocked actions at all`).toBeGreaterThan(0)
       expect(
         Math.max(...open.map((a) => a.levelRequired)),
-        `${skill.id}'s unlocked actions stop too early to carry a player to 99`,
+        `${skill.id} stops too early outside the locks to carry a player to 99`,
       ).toBeGreaterThanOrEqual(90)
     }
   })

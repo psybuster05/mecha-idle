@@ -4,7 +4,7 @@ import type { SkillDef } from '../types'
  * Fabrication - refined stock becomes parts of your own body.
  *
  * The end of the production chain, and where the speed-up upgrades live: Arms grant
- * skillSpeed, Legs grant moveSpeed. Building better ones is how you buy back time.
+ * skillSpeed, Legs grant evasion. Building better arms is how you buy back time.
  *
  * Same eight-tier pacing as the other skills. Actions are the longest in the game,
  * with xp to match, because each one consumes a stack of processed stock.

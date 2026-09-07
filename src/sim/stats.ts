@@ -49,16 +49,6 @@ export const PHASE_TRANSITION_HEAL = 0.35
 
 /** Fraction of maximum HP restored on each kill. */
 export const HEAL_ON_KILL = 0.08
-/** Map units walked per second with nothing fitted. */
-export const BASE_MOVE_SPEED = 30
-
-/**
- * The crawler's speed. Slower than you on foot, and never upgraded by your legs.
- *
- * It is a building that happens to have tracks. Moving it is a decision rather than a
- * convenience, which is what stops it simply shadowing you around the map.
- */
-export const CRAWLER_MOVE_SPEED = 12
 /** Seconds between one enemy dying and the next arriving. */
 export const RESPAWN_DELAY = 2
 
@@ -69,8 +59,6 @@ export interface DerivedStats {
   damage: number
   armour: number
   attackInterval: number
-  /** Map units per second. Better legs raise this. */
-  moveSpeed: number
   /** Fraction of overkill carried to the next enemy, 0..1. */
   cleave: number
   /** Fraction of enemy armour ignored, 0..1. */
@@ -155,8 +143,6 @@ export function derivedStats(state: GameState): DerivedStats {
       MIN_ATTACK_INTERVAL,
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),
     ),
-    moveSpeed:
-      BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed') + perkTotal(state.defeated, 'moveSpeed'),
     // Expressed as a duration multiplier rather than a speed bonus so stacking is
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
     cleave: Math.min(1, Math.max(0, equippedTotal(state, 'cleave'))),

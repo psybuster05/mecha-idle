@@ -4,20 +4,21 @@ import type { ActionId } from '../sim/state'
 /**
  * The world is a **graph**, not a tilemap.
  *
- * You never steer the mech - you pick a destination and it walks there. So there is
- * no need for tile collision, a navmesh or physics: nodes are places, edges are walks
- * with a length, and the sprite is just a view of a number the simulation already
- * tracks. That keeps travel unit-testable and offline-correct for free.
+ * Nodes are places, edges say which places touch. There is no tile collision, no
+ * navmesh and no physics, because there is nothing to collide with: getting anywhere is
+ * instant. Travel was built here and then deleted - a walk you cannot watch is a cost
+ * with no feedback - and the graph survived it, because a place is still what a boss
+ * lock hangs from and an edge is still what makes the map legible.
  *
- * Coordinates are arbitrary map units. Travel time is distance / move speed, so
- * laying the map out visually is the same act as balancing how far things are.
+ * Coordinates are arbitrary map units, used only for drawing. Edge lengths are likewise
+ * only a record of how the map is laid out; nothing reads them as a cost any more.
  */
 
 export interface WorldNodeDef {
   id: NodeId
   name: string
   description: string
-  /** Position in map units. Also drives travel time between connected nodes. */
+  /** Position in map units, for drawing. */
   x: number
   y: number
   /** Skill actions performable here. */
@@ -132,7 +133,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'overpass',
     name: 'Collapsed Overpass',
-    description: 'Layers of roadway folded down on themselves. Rebar and conduit all the way through.',
+    description:
+      'Layers of roadway folded down on themselves. Rebar and conduit all the way through.',
     x: 175,
     y: 400,
     actions: [{ skill: 'scavenging', action: 'collapsed_overpass' }],
@@ -168,7 +170,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'freight_yard',
     name: 'Sunken Freight Yard',
-    description: 'Containers stacked six high, half of them underwater. Sealed things keep well down there.',
+    description:
+      'Containers stacked six high, half of them underwater. Sealed things keep well down there.',
     x: 760,
     y: 480,
     actions: [{ skill: 'scavenging', action: 'freight_yard' }],
@@ -176,7 +179,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'plant_ruins',
     name: 'Fabrication Plant',
-    description: 'A factory that built machines like you. The line is still halfway through an order.',
+    description:
+      'A factory that built machines like you. The line is still halfway through an order.',
     x: 820,
     y: 200,
     actions: [{ skill: 'scavenging', action: 'plant_ruins' }],
@@ -192,7 +196,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'vitrified_zone',
     name: 'The Vitrified Zone',
-    description: 'The ground here turned to glass and stayed that way. Nothing has moved in it since.',
+    description:
+      'The ground here turned to glass and stayed that way. Nothing has moved in it since.',
     x: 980,
     y: 330,
     actions: [{ skill: 'scavenging', action: 'vitrified_zone' }],
@@ -216,7 +221,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'tanker_rows',
     name: 'Tanker Rows',
-    description: 'Moored in ranks, still tied to bollards nobody untied. Something moves between them.',
+    description:
+      'Moored in ranks, still tied to bollards nobody untied. Something moves between them.',
     x: 500,
     y: 720,
     unlockedBy: 'overseer',
@@ -226,7 +232,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'drydock',
     name: 'The Drydock',
-    description: 'A ship propped on blocks, half repaired. The work order is still pinned to the gantry.',
+    description:
+      'A ship propped on blocks, half repaired. The work order is still pinned to the gantry.',
     x: 690,
     y: 620,
     unlockedBy: 'overseer',
@@ -236,7 +243,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'deep_berths',
     name: 'Deep Berths',
-    description: 'The water never fully left. Whatever kept the manifest is still down here keeping it.',
+    description:
+      'The water never fully left. Whatever kept the manifest is still down here keeping it.',
     x: 760,
     y: 790,
     unlockedBy: 'overseer',
@@ -251,7 +259,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'hangars',
     name: 'Maintenance Hangars',
-    description: 'Engines opened up on stands, tools laid beside them in the order they would be needed.',
+    description:
+      'Engines opened up on stands, tools laid beside them in the order they would be needed.',
     x: 120,
     y: 20,
     unlockedBy: 'quartermaster',
@@ -261,7 +270,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'runway',
     name: 'The Long Runway',
-    description: 'Two miles of concrete with three aircraft on it, all facing the same way, none of them going.',
+    description:
+      'Two miles of concrete with three aircraft on it, all facing the same way, none of them going.',
     x: 260,
     y: -80,
     unlockedBy: 'quartermaster',
@@ -270,7 +280,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'terminal_c',
     name: 'Terminal C',
-    description: 'The carousel is still turning, and there are still bags on it. Something keeps putting them back.',
+    description:
+      'The carousel is still turning, and there are still bags on it. Something keeps putting them back.',
     x: 450,
     y: -130,
     unlockedBy: 'quartermaster',
@@ -280,7 +291,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'approach_lights',
     name: 'The Approach Lights',
-    description: 'A mile of gantries out past the fence, still lit, still counting something down. The tower watches from the far end.',
+    description:
+      'A mile of gantries out past the fence, still lit, still counting something down. The tower watches from the far end.',
     x: 610,
     y: -40,
     unlockedBy: 'quartermaster',
@@ -305,7 +317,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'the_span',
     name: 'The Span',
-    description: 'Half a mile of deck over cold water. You can see the mainland from the middle of it.',
+    description:
+      'Half a mile of deck over cold water. You can see the mainland from the middle of it.',
     x: 1290,
     y: 380,
     unlockedBy: 'tower_actual',
@@ -315,7 +328,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'north_gatehouse',
     name: 'North Gatehouse',
-    description: 'The last structure on the island. Everything in it is still facing the way you came from.',
+    description:
+      'The last structure on the island. Everything in it is still facing the way you came from.',
     x: 1440,
     y: 290,
     unlockedBy: 'tower_actual',
@@ -329,7 +343,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'outer_wards',
     name: 'Outer Wards',
-    description: 'Housing blocks for units that do not sleep, maintained to a standard nobody inspects.',
+    description:
+      'Housing blocks for units that do not sleep, maintained to a standard nobody inspects.',
     x: 1600,
     y: 200,
     unlockedBy: 'registrar',
@@ -339,7 +354,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'the_works',
     name: 'The Works',
-    description: 'Three shifts, no breaks, and no output anyone collects. They build spares for spares.',
+    description:
+      'Three shifts, no breaks, and no output anyone collects. They build spares for spares.',
     x: 1760,
     y: 330,
     unlockedBy: 'registrar',
@@ -359,7 +375,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'census_hall',
     name: 'The Census Hall',
-    description: 'The only building in the city with nothing in it but a count, and the thing that keeps it.',
+    description:
+      'The only building in the city with nothing in it but a count, and the thing that keeps it.',
     x: 1980,
     y: 260,
     unlockedBy: 'registrar',
@@ -370,7 +387,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'supply_yards',
     name: 'Supply Yards',
-    description: 'Rows of it under cover, rotated on schedule. Enough to have equipped the island twice, and none of it ever sent.',
+    description:
+      'Rows of it under cover, rotated on schedule. Enough to have equipped the island twice, and none of it ever sent.',
     x: 2140,
     y: 380,
     unlockedBy: 'census',
@@ -380,7 +398,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'parade_ground',
     name: 'Parade Ground',
-    description: 'Swept every morning. They still form up on it for an inspection nobody has come to give.',
+    description:
+      'Swept every morning. They still form up on it for an inspection nobody has come to give.',
     x: 2300,
     y: 250,
     unlockedBy: 'census',
@@ -390,7 +409,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'command_annex',
     name: 'Command Annex',
-    description: 'Where the postings are kept. One of them has been open for thirty-one years and has never been marked lapsed.',
+    description:
+      'Where the postings are kept. One of them has been open for thirty-one years and has never been marked lapsed.',
     x: 2260,
     y: 500,
     unlockedBy: 'census',
@@ -401,7 +421,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'the_gallery',
     name: 'The Long Gallery',
-    description: 'A corridor of empty stations, each with a chair, each facing a console left logged in.',
+    description:
+      'A corridor of empty stations, each with a chair, each facing a console left logged in.',
     x: 2480,
     y: 360,
     unlockedBy: 'adjutant',
@@ -411,7 +432,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
   {
     id: 'switch_room',
     name: 'The Switch Room',
-    description: 'The only room on the mainland that never lost power. He is in it. He has been in it the entire time.',
+    description:
+      'The only room on the mainland that never lost power. He is in it. He has been in it the entire time.',
     x: 2640,
     y: 300,
     unlockedBy: 'adjutant',
@@ -513,4 +535,24 @@ export function nodesForAction(skill: GatheringSkillId, action: ActionId): World
 /** Every node from which `zone` can be fought. */
 export function nodesForZone(zone: ZoneId): WorldNodeDef[] {
   return WORLD_NODES.filter((node) => node.combat === zone)
+}
+
+/**
+ * What a player can see of the world: everywhere open, plus its immediate frontier.
+ *
+ * Twenty-four places drawn at once is unreadable on the map and a wall of locks in a
+ * list. Showing only the locked places one step beyond where you can already go keeps
+ * both legible, preserves the "there is more out there" hook, and makes the world
+ * visibly grow each time a boss falls.
+ *
+ * Lives here rather than in the map because the World panel's list has to agree with
+ * what is drawn above it - two different answers to "where is there" would read as a bug.
+ */
+export function visibleNodes(isOpen: (id: NodeId) => boolean): WorldNodeDef[] {
+  const frontier = new Set<string>()
+  for (const node of WORLD_NODES) {
+    if (!isOpen(node.id)) continue
+    for (const edge of ADJACENCY.get(node.id) ?? []) frontier.add(edge.to)
+  }
+  return WORLD_NODES.filter((node) => isOpen(node.id) || frontier.has(node.id))
 }

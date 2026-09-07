@@ -364,7 +364,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Slower than the originals. Far harder to knock down.',
     category: 'part',
     slot: 'legs',
-    stats: { armour: 3, hp: 10, moveSpeed: 12 },
+    stats: { armour: 3, hp: 10, evasion: 4 },
   },
   {
     id: 'weapon_rivet',
@@ -420,7 +420,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'You do not so much walk as decide to be somewhere else.',
     category: 'part',
     slot: 'legs',
-    stats: { armour: 9, hp: 30, moveSpeed: 45, resist: { emp: 0.7 } },
+    stats: { armour: 9, hp: 30, evasion: 18, resist: { emp: 0.7 } },
   },
   // Graveyard parts are sidegrades, not upgrades. The Marine Exoframe trades raw
   // defence for genuine energy protection; the Harpoon trades cadence for weight.
@@ -457,7 +457,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Attitude jets meant for a landing gear bay. You cross the map like weather.',
     category: 'part',
     slot: 'legs',
-    stats: { hp: 10, armour: 2, evasion: 14, moveSpeed: 70 },
+    stats: { hp: 10, armour: 2, evasion: 30 },
   },
   {
     id: 'weapon_repeater',

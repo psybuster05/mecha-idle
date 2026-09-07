@@ -24,7 +24,6 @@ type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank' | 'log' | 'cr
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
-  if (state.actors.mech.travel) return 'Travelling'
   const activity = state.actors.mech.activity
   if (!activity) return state.actors.crawler.activity ? 'Idle · crawler working' : 'Idle'
   if (activity.kind === 'combat') return 'Fighting'
@@ -37,9 +36,9 @@ function activitySummary(state: GameState): string {
 export function App() {
   // One adapter for the life of the app; swapping this line is the whole desktop port.
   const adapter = useMemo(() => new LocalStorageAdapter(), [])
-  const { state, live, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
-  // The world opens first: the walking sprite is the thing that makes this feel like
-  // a place rather than a spreadsheet.
+  const { state, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
+  // The world opens first: it is the one panel that says this is a place rather than a
+  // spreadsheet, and it is where the locks you have not opened yet are visible.
   const [tab, setTab] = useState<Tab>('world')
 
   if (!ready) {
@@ -89,10 +88,7 @@ export function App() {
               className={`rail-item ${tab === 'world' ? 'selected' : ''}`}
               onClick={() => setTab('world')}
             >
-              <span className="rail-name">
-                {state.actors.mech.travel && <span className="running-dot" aria-label="travelling" />}
-                World
-              </span>
+              <span className="rail-name">World</span>
             </button>
           </div>
 
@@ -181,7 +177,7 @@ export function App() {
 
         <main className="content">
           {tab === 'world' ? (
-            <WorldPanel state={state} live={live} dispatch={dispatch} />
+            <WorldPanel state={state} dispatch={dispatch} />
           ) : tab === 'combat' ? (
             <CombatPanel state={state} dispatch={dispatch} />
           ) : tab === 'mech' ? (

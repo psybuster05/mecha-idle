@@ -9,8 +9,7 @@
 import { newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
 
 export type LoadResult =
-  | { ok: true; state: GameState; migratedFrom: number | null }
-  | { ok: false; error: string }
+  { ok: true; state: GameState; migratedFrom: number | null } | { ok: false; error: string }
 
 /**
  * A migration rewrites a save from version N to N+1.
@@ -35,6 +34,28 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   /**
+   * 3 -> 4: travel was removed.
+   *
+   * Actors keep their position - places still gate content - but they no longer walk
+   * between them. A save mid-journey would otherwise carry a dead `travel` object
+   * forward through every future save, and withDefaults merges actors per field, so it
+   * would never be cleaned up on its own. Anyone caught mid-walk simply arrives.
+   */
+  3: (raw) => {
+    const actors = {
+      ...(raw['actors'] as Record<string, Record<string, unknown>> | undefined),
+    }
+    for (const [id, actor] of Object.entries(actors)) {
+      const travel = actor['travel'] as { to?: unknown } | null | undefined
+      const rest = { ...actor }
+      delete rest['travel']
+      // Land them at the destination they had chosen, not back where they set off.
+      if (travel && typeof travel.to === 'string') rest['at'] = travel.to
+      actors[id] = rest
+    }
+    return { ...raw, version: 4, actors }
+  },
+  /**
    * 2 -> 3: the world became a graph and actors gained a position.
    *
    * withDefaults now also fills missing actor fields, so this is belt-and-braces -
@@ -42,9 +63,11 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
    * the one place always safe to stand, rather than wherever a default happens to be.
    */
   2: (raw) => {
-    const actors = { ...(raw['actors'] as Record<string, Record<string, unknown>> | undefined) }
+    const actors = {
+      ...(raw['actors'] as Record<string, Record<string, unknown>> | undefined),
+    }
     for (const [id, actor] of Object.entries(actors)) {
-      actors[id] = { ...actor, at: actor['at'] ?? 'the_hollow', travel: null }
+      actors[id] = { ...actor, at: actor['at'] ?? 'the_hollow' }
     }
     return { ...raw, version: 3, actors }
   },
@@ -87,7 +110,10 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
   merged.visited = Array.isArray(raw['visited']) ? (raw['visited'] as string[]) : base.visited
   // A malformed boost must never leave work permanently accelerated.
-  const rawBoost = raw['boost'] as { multiplier?: unknown; secondsRemaining?: unknown } | null
+  const rawBoost = raw['boost'] as {
+    multiplier?: unknown
+    secondsRemaining?: unknown
+  } | null
   merged.boost =
     rawBoost &&
     typeof rawBoost.multiplier === 'number' &&
@@ -150,12 +176,15 @@ export function deserialize(
 
   const state = withDefaults(migrated.raw)
   state.version = SAVE_VERSION
-  return { ok: true, state, migratedFrom: startVersion === SAVE_VERSION ? null : startVersion }
+  return {
+    ok: true,
+    state,
+    migratedFrom: startVersion === SAVE_VERSION ? null : startVersion,
+  }
 }
 
 export type MigrationResult =
-  | { ok: true; raw: Record<string, unknown> }
-  | { ok: false; error: string }
+  { ok: true; raw: Record<string, unknown> } | { ok: false; error: string }
 
 /**
  * Walk a save forward from its own version to `target`, one migration at a time.
@@ -185,7 +214,10 @@ export function runMigrations(
     working = migration(working)
     const next = working['version']
     if (typeof next !== 'number' || next <= version) {
-      return { ok: false, error: `Migration from version ${version} did not advance the version.` }
+      return {
+        ok: false,
+        error: `Migration from version ${version} did not advance the version.`,
+      }
     }
     version = next
   }

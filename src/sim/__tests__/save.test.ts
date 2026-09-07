@@ -207,7 +207,6 @@ describe('save repair: fields added inside an actor', () => {
     if (!result.ok) return
 
     expect(result.state.actors.mech.at).toBe('the_hollow')
-    expect(result.state.actors.mech.travel).toBeNull()
     expect(result.state.actors.crawler.at).toBe('the_hollow')
   })
 
@@ -216,8 +215,8 @@ describe('save repair: fields added inside an actor', () => {
       ...newGame(),
       version: SAVE_VERSION,
       actors: {
-        mech: { unlocked: true, activity: null, progress: 0, stoppedReason: null, at: 'graveyard', travel: null },
-        crawler: { unlocked: false, activity: null, progress: 0, stoppedReason: null, at: 'the_hollow', travel: null },
+        mech: { unlocked: true, activity: null, progress: 0, stoppedReason: null, at: 'graveyard' },
+        crawler: { unlocked: false, activity: null, progress: 0, stoppedReason: null, at: 'the_hollow' },
       },
     }
 

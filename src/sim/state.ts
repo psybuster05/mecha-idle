@@ -21,11 +21,7 @@
 export type ActorId = 'mech' | 'crawler'
 
 export type GatheringSkillId =
-  | 'scavenging'
-  | 'refining'
-  | 'fabrication'
-  | 'salvaging'
-  | 'cartography'
+  'scavenging' | 'refining' | 'fabrication' | 'salvaging' | 'cartography'
 export type CombatSkillId = 'attack' | 'strength' | 'defence' | 'hitpoints'
 export type SkillId = GatheringSkillId | CombatSkillId
 
@@ -85,13 +81,7 @@ export type ZoneId = string
 
 export type EquipSlot = 'frame' | 'reactor' | 'arms' | 'legs' | 'weapon'
 
-export const EQUIP_SLOTS: readonly EquipSlot[] = [
-  'frame',
-  'reactor',
-  'arms',
-  'legs',
-  'weapon',
-]
+export const EQUIP_SLOTS: readonly EquipSlot[] = ['frame', 'reactor', 'arms', 'legs', 'weapon']
 
 // ---------------------------------------------------------------------------
 // Actors and activities
@@ -109,28 +99,7 @@ export type Activity =
 
 /** Why an activity stopped on its own, so the UI can say so rather than silently idling. */
 export type StopReason =
-  | 'missing-inputs'
-  | 'level-too-low'
-  | 'unknown-action'
-  | 'destroyed'
-  | 'unreachable'
-
-/**
- * A walk in progress. The sprite is a view of this - lerp from "from" to "to" by
- * progress/legSeconds - so movement is simulated, not animated, and offline catch-up
- * credits travel exactly as live play does.
- */
-export interface TravelState {
-  from: NodeId
-  /** The next hop, not the final destination. */
-  to: NodeId
-  /** Seconds into the current hop. */
-  progress: number
-  /** Seconds this hop takes in total. */
-  legSeconds: number
-  /** Hops still to make after "to". Empty means "to" is the destination. */
-  remaining: NodeId[]
-}
+  'missing-inputs' | 'level-too-low' | 'unknown-action' | 'destroyed' | 'unreachable'
 
 export interface ActorState {
   unlocked: boolean
@@ -139,13 +108,15 @@ export interface ActorState {
   progress: number
   /** Set when an activity halted itself. Cleared whenever a new activity starts. */
   stoppedReason: StopReason | null
-  /** Where this actor currently stands. */
-  at: NodeId
   /**
-   * Non-null while walking. The activity above is the *intent* - it does not start
-   * producing until travel finishes.
+   * Where this actor is.
+   *
+   * Kept after travel was removed, because places still gate content - a node behind a
+   * boss is still shut - and the map still shows the world opening up. Getting there is
+   * simply instant now: this is a menu game, and a walk you cannot watch was a cost with
+   * no feedback.
    */
-  travel: TravelState | null
+  at: NodeId
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +175,7 @@ export interface BoostState {
   source: ItemId
 }
 
-export const SAVE_VERSION = 3
+export const SAVE_VERSION = 4
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */
@@ -226,10 +197,9 @@ export interface GameState {
   /**
    * Every place ever reached.
    *
-   * Recorded on arrival inside the travel step rather than derived from where you are
-   * now, because "where you are" is not monotonic: one large offline step could walk
-   * you through somewhere and out the other side, and a story beat keyed on the visit
-   * would never fire. Monotonic facts are the only safe triggers.
+   * Recorded on arrival rather than derived from where you are now, because "where you
+   * are" is not monotonic: you move on, and a story beat keyed on having been somewhere
+   * would never fire again. Monotonic facts are the only safe triggers.
    */
   visited: NodeId[]
   /** Narrative progress. Reads from the world; the world never reads from it. */
@@ -263,7 +233,6 @@ function idleActor(unlocked: boolean): ActorState {
     progress: 0,
     stoppedReason: null,
     at: DEFAULT_START_NODE,
-    travel: null,
   }
 }
 
@@ -322,9 +291,7 @@ export function maxConcurrentActivities(state: GameState): number {
 }
 
 export function busyActors(state: GameState): ActorId[] {
-  return (Object.keys(state.actors) as ActorId[]).filter(
-    (id) => state.actors[id].activity !== null,
-  )
+  return (Object.keys(state.actors) as ActorId[]).filter((id) => state.actors[id].activity !== null)
 }
 
 /** Whether `actor` may start a new activity right now. */
@@ -383,8 +350,6 @@ export function setActivity(
   actor.activity = activity
   actor.progress = 0
   actor.stoppedReason = null
-  // Any walk in progress belonged to the old activity.
-  actor.travel = null
   return true
 }
 
@@ -394,5 +359,4 @@ export function haltActivity(state: GameState, actorId: ActorId, reason: StopRea
   actor.activity = null
   actor.progress = 0
   actor.stoppedReason = reason
-  actor.travel = null
 }

@@ -1,42 +1,45 @@
-import type { RefObject } from 'react'
-import { getNode, WORLD_NODES } from '../../content/world'
-import { getSkill, getZone } from '../../content'
-import { startCombat, startSkillAction } from '../../sim/intents'
+import { getNode, visibleNodes } from '../../content/world'
+import { getEnemy, getSkill, getZone } from '../../content'
+import { moveTo, startCombat, startSkillAction } from '../../sim/intents'
 import type { GameState } from '../../sim/state'
-import { derivedStats } from '../../sim/stats'
-import { findNearest } from '../../sim/world'
-import { formatSeconds } from '../format'
+import { isNodeOpen } from '../../sim/world'
 import { WorldMap } from './WorldMap'
 
 interface Props {
   state: GameState
-  live: RefObject<GameState>
   dispatch: (transform: (state: GameState) => GameState) => void
 }
 
-export function WorldPanel({ state, live, dispatch }: Props) {
+/**
+ * Where you are, and everywhere else.
+ *
+ * Travel used to be the point of this panel - a walk with a cost, a sprite crossing the
+ * map. It is gone, because a journey you cannot see is a bill with nothing bought. What
+ * is left is what the world was actually for: places hold different work, and some of
+ * them are shut until you beat what is holding them.
+ *
+ * Going somewhere is therefore instant and free. Starting an action from any skill panel
+ * moves you on its own; this list exists so the world stays somewhere you can look at
+ * rather than something that only happens to you.
+ */
+export function WorldPanel({ state, dispatch }: Props) {
   const mech = state.actors.mech
   const here = getNode(mech.at)
-  const travel = mech.travel
-  const destination = travel ? getNode(travel.remaining.at(-1) ?? travel.to) : null
-  const speed = derivedStats(state).moveSpeed
 
   return (
     <div className="panel">
       <header className="panel-head">
         <div>
-          <h2>{travel ? `Travelling to ${destination?.name ?? '...'}` : (here?.name ?? 'Nowhere')}</h2>
+          <h2>{here?.name ?? 'Nowhere'}</h2>
           <p className="dim flavour">
-            {travel
-              ? 'Walking. Nothing gets done on the road.'
-              : (here?.description ?? 'You are not anywhere the map knows about.')}
+            {here?.description ?? 'You are not anywhere the map knows about.'}
           </p>
         </div>
       </header>
 
-      <WorldMap live={live} />
+      <WorldMap state={state} />
 
-      {!travel && here && (
+      {here && (
         <>
           <h3>Here</h3>
           {here.actions?.length || here.combat ? (
@@ -51,7 +54,8 @@ export function WorldPanel({ state, live, dispatch }: Props) {
                 return (
                   <li key={`${skill}:${action}`} className={active ? 'active' : undefined}>
                     <span>
-                      <strong>{def.name}</strong> <span className="dim">{getSkill(skill)?.name}</span>
+                      <strong>{def.name}</strong>{' '}
+                      <span className="dim">{getSkill(skill)?.name}</span>
                     </span>
                     <button
                       className={active ? undefined : 'primary'}
@@ -83,26 +87,32 @@ export function WorldPanel({ state, live, dispatch }: Props) {
         </>
       )}
 
-      <h3>Travel</h3>
+      <h3>Elsewhere</h3>
       <ul className="here-list">
-        {WORLD_NODES.filter((node) => node.id !== mech.at).map((node) => {
-          const route = findNearest(mech.at, [node.id])
-          const seconds = route ? route.length / Math.max(1, speed) : null
-          return (
-            <li key={node.id}>
-              <span>
-                <strong>{node.name}</strong>{' '}
-                <span className="dim">
-                  {seconds === null ? 'unreachable' : `${formatSeconds(seconds)} away`}
+        {visibleNodes((id) => isNodeOpen(state, id))
+          .filter((node) => node.id !== mech.at)
+          .map((node) => {
+            const open = isNodeOpen(state, node.id)
+            const gate = node.unlockedBy
+              ? (getEnemy(node.unlockedBy)?.name ?? node.unlockedBy)
+              : null
+            return (
+              <li key={node.id}>
+                <span>
+                  <strong className={open ? undefined : 'dim'}>{node.name}</strong>{' '}
+                  {state.actors.crawler.unlocked && state.actors.crawler.at === node.id && (
+                    <span className="dim">&middot; crawler parked here</span>
+                  )}
                 </span>
-              </span>
-            </li>
-          )
-        })}
+                {open ? (
+                  <button onClick={() => dispatch((s) => moveTo(s, node.id))}>Go</button>
+                ) : (
+                  <span className="lock">Sealed &middot; {gate ?? 'unknown'}</span>
+                )}
+              </li>
+            )
+          })}
       </ul>
-      <p className="dim">
-        Walking speed {speed} units/sec. Thrusters and better legs will cut these times.
-      </p>
     </div>
   )
 }

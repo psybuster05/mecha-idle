@@ -152,13 +152,15 @@ describe('unlockable speed-ups', () => {
     expect(scale).toBeCloseTo(1 / 1.25, 5)
   })
 
-  it('legs make travel faster', () => {
-    const bare = derivedStats(newGame()).moveSpeed
+  it('legs make you harder to hit', () => {
+    // Legs used to carry movement speed. Travel is gone, so what is left of being fast
+    // is not being where the shot went.
+    const bare = derivedStats(newGame()).evasion
 
     const kitted = newGame()
     kitted.bank['legs_thruster'] = 1
     equipItem(kitted, 'legs_thruster')
-    expect(derivedStats(kitted).moveSpeed).toBeGreaterThan(bare)
+    expect(derivedStats(kitted).evasion).toBeGreaterThan(bare)
   })
 
   it('a fully kitted player beats the baseline by a worthwhile margin', () => {

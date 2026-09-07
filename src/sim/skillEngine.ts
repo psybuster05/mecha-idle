@@ -6,7 +6,7 @@
  * only in their content tables. Adding a fourth skill should require no code here.
  */
 
-import { getAction } from '../content'
+import { getAction, SURVEY_BONUS_PER_LEVEL } from '../content'
 import { perkTotal } from '../content/enemies'
 import type { ItemStack, SkillAction } from '../content/types'
 import { addItem, count, grantAll, maxCraftable, payCost } from './bank'
@@ -31,22 +31,34 @@ export function actionDuration(state: GameState, action: SkillAction): number {
 }
 
 /**
- * Roll every chance-based drop, once per completion.
+ * Roll everything chance-based, once per completion: the bonus haul, then the drops.
  *
- * Rolls happen in a fixed order - completion by completion, drop by drop - so that
- * applying N completions in bulk consumes the RNG exactly as N single completions
- * would. That equivalence is what makes offline progress match online play, and it is
- * asserted directly in the offline tests.
+ * All of it lives in one loop for one reason. Rolls must happen in a fixed order -
+ * completion by completion - so that applying N completions in bulk consumes the RNG
+ * exactly as N single completions would. Rolling all the hauls and *then* all the drops
+ * gives a different sequence for one big step than for many small ones, which is
+ * precisely the offline guarantee breaking. Two separate loops did exactly that.
+ *
+ * Returns the bonus hauls earned. The caller grants them, because the outputs are its
+ * business and the RNG order is this function's.
  */
-function rollDrops(state: GameState, action: SkillAction, completions: number): void {
-  if (!action.drops?.length) return
+function rollPerCompletion(
+  state: GameState,
+  action: SkillAction,
+  completions: number,
+  chanceAt: (completion: number) => number,
+): number {
   const rng = new Rng(state.rngSeed)
+  let bonus = 0
   for (let i = 0; i < completions; i++) {
-    for (const drop of action.drops) {
+    const chance = chanceAt(i)
+    if (chance > 0 && rng.chance(chance)) bonus++
+    for (const drop of action.drops ?? []) {
       if (rng.chance(drop.chance)) addItem(state, drop.item, drop.qty)
     }
   }
   state.rngSeed = rng.seed
+  return bonus
 }
 
 /** Mutates. Advances whatever skill action `actorId` is running by `dt` seconds. */
@@ -92,22 +104,32 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
     payCost(state, action.inputs, applied)
     grantAll(state, action.outputs, applied)
 
-    // Yield perks are a chance of a bonus haul per completion, rolled one at a time,
-    // rather than a multiplier on the total. A multiplier would round differently for
-    // one big step than for many small ones and break the offline guarantee.
-    const bonusChance = perkTotal(state.defeated, 'gatheringYield')
-    if (bonusChance > 0) {
-      const rng = new Rng(state.rngSeed)
-      let bonus = 0
-      for (let i = 0; i < applied; i++) if (rng.chance(bonusChance)) bonus++
-      state.rngSeed = rng.seed
-      if (bonus > 0) grantAll(state, action.outputs, bonus)
-    }
+    // Yield is a chance of a bonus haul per completion, rolled one at a time, rather
+    // than a multiplier on the total. A multiplier would round differently for one big
+    // step than for many small ones and break the offline guarantee.
+    //
+    // Two things feed it: boss perks, which are fixed for the whole step, and
+    // Cartography level, which is not - Cartography raises its own bonus as it levels.
+    // So the chance is recomputed per completion against the xp earned so far, which is
+    // what a hundred one-second ticks would have done anyway. Without that, one long
+    // offline stretch would roll the entire span at the level it started at, and the gap
+    // would grow with time away.
+    const xpEach = action.xp * (1 + perkTotal(state.defeated, 'xpBonus'))
+    const perk = perkTotal(state.defeated, 'gatheringYield')
+    const cartography = state.skills.cartography
+    const surveying = activity.skill === 'cartography'
 
-    rollDrops(state, action, applied)
+    const bonus = rollPerCompletion(state, action, applied, (i) => {
+      const xp = cartography + (surveying ? xpEach * i : 0)
+      // Level 1 pays nothing, so an untrained surveyor leaves every other skill's
+      // numbers exactly as they read on the action.
+      return perk + (levelFromXp(xp) - 1) * SURVEY_BONUS_PER_LEVEL
+    })
+    if (bonus > 0) grantAll(state, action.outputs, bonus)
+
     // Left unrounded on purpose: rounding here would also differ between one large
     // step and many small ones.
-    state.skills[activity.skill] += action.xp * applied * (1 + perkTotal(state.defeated, 'xpBonus'))
+    state.skills[activity.skill] += xpEach * applied
   }
 
   actor.progress -= applied * duration

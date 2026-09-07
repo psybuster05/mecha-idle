@@ -1,17 +1,20 @@
-import type { NodeId } from '../../sim/state'
 import type { SkillDef } from '../types'
 
 /**
  * Cartography - knowing the ground.
  *
- * Its original job in the design was unlocking zones, but bosses do that now, and a
- * skill that gated regions would break the rule that combat widens rather than blocks.
- * So it took the job the world map created instead: **travel**.
+ * This skill has now been given away twice. Unlocking zones was its first job, and
+ * bosses took that, because a skill that gated regions would break the rule that combat
+ * widens rather than blocks. Travel time was its second, and travel is gone.
  *
- * Twenty-four places and a long walk to the far ones makes journey time a real cost.
- * Levelling this establishes waypoints - places you can reach in a fixed short hop no
- * matter how far away they are - which is the teleport mechanic that inspired the world
- * map in the first place.
+ * What is left is the honest reading of what a surveyor is worth to a scavenger: knowing
+ * the ground means finding more in it. Levelling this raises the chance of a bonus haul
+ * on *every* gathering completion, in every skill - the same axis the boss yield perks
+ * sit on, so the two stack into one legible number.
+ *
+ * It is deliberately passive. There is nothing to remember to trigger, which suits a
+ * game played in glances, and it makes Cartography the skill you level to make the other
+ * skills worth more rather than one that competes with them.
  */
 export const CARTOGRAPHY: SkillDef = {
   id: 'cartography',
@@ -90,7 +93,8 @@ export const CARTOGRAPHY: SkillDef = {
     {
       id: 'fix_the_grid',
       name: 'Fix The Grid',
-      description: 'Everything, tied to one reference. You can find any point on it from any other.',
+      description:
+        'Everything, tied to one reference. You can find any point on it from any other.',
       levelRequired: 90,
       duration: 7,
       outputs: [
@@ -103,31 +107,14 @@ export const CARTOGRAPHY: SkillDef = {
 }
 
 /**
- * Waypoints, unlocked by Cartography level.
+ * Bonus-haul chance per level of Cartography.
  *
- * Reaching a waypoint takes a fixed short hop rather than the full walk, however far it
- * is. Ordered so the places that hurt most to reach open first: the camp early, then the
- * far corners of the island, then the mainland.
+ * Counted from level 1, so an untrained surveyor changes nothing at all. At 99 it is a
+ * +29.4% chance of a second haul on any gathering completion, in any skill.
  *
- * Deliberately data rather than a mechanic the player triggers - there is nothing to
- * remember to do, which suits a game played in glances.
+ * That is deliberately about two thirds of what beating every boss in the game is worth
+ * on the same axis. Levelling one skill to the top should be a serious reward and still
+ * lose to clearing the world - if it won, the fastest route through an idle game would
+ * be to ignore all of it except this.
  */
-export interface WaypointDef {
-  node: NodeId
-  level: number
-}
-
-export const WAYPOINTS: readonly WaypointDef[] = [
-  { node: 'the_hollow', level: 5 },
-  { node: 'checkpoint', level: 15 },
-  { node: 'slag_fields', level: 30 },
-  { node: 'vitrified_zone', level: 45 },
-  { node: 'deep_berths', level: 55 },
-  { node: 'approach_lights', level: 65 },
-  { node: 'north_gatehouse', level: 75 },
-  { node: 'census_hall', level: 85 },
-  { node: 'switch_room', level: 95 },
-] as const
-
-/** Fixed seconds to reach a waypoint, regardless of distance. */
-export const WAYPOINT_TRAVEL_SECONDS = 4
+export const SURVEY_BONUS_PER_LEVEL = 0.003

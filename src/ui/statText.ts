@@ -22,7 +22,6 @@ const FLAT_LABELS: Partial<Record<keyof EquipStats, string>> = {
   accuracy: 'accuracy',
   armour: 'armour',
   evasion: 'evasion',
-  moveSpeed: 'travel speed',
 }
 
 /** Short readable phrases, one per meaningful stat. */
