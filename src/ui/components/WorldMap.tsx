@@ -1,6 +1,8 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { WORLD_EDGES, WORLD_NODES, getNode } from '../../content/world'
+import { ADJACENCY, WORLD_EDGES, WORLD_NODES, getNode } from '../../content/world'
 import { actorPosition, isNodeOpen } from '../../sim/world'
+import type { WorldNodeDef } from '../../content/world'
+import { MECH_BASE } from '../../content/sprites'
 import type { GameState, NodeId } from '../../sim/state'
 
 /**
@@ -25,26 +27,41 @@ const PADDING_X = 80
 const PADDING_Y = 34
 
 const COLOURS = {
-  edge: '#263038',
-  edgeActive: '#7a5a26',
-  node: '#2a343c',
-  nodeStroke: '#3d4a55',
-  camp: '#3a4a3a',
-  combat: '#4a2f2a',
-  here: '#ffb648',
-  destination: '#ffb648',
-  label: '#8b9aa6',
-  locked: '#1a2026',
-  lockedStroke: '#2b343b',
-  lockedLabel: '#4a5760',
-  labelHere: '#c9d6de',
-  mech: '#ffb648',
-  mechDark: '#8a5f1f',
+  edge: '#1f3457',
+  edgeActive: '#4aa8ff',
+  node: '#16243d',
+  nodeStroke: '#2f4d7a',
+  camp: '#1d4a92',
+  combat: '#4a2a18',
+  here: '#4aa8ff',
+  destination: '#4aa8ff',
+  label: '#708db4',
+  locked: '#0c1526',
+  lockedStroke: '#1c2c46',
+  lockedLabel: '#41597c',
+  labelHere: '#dce8f5',
 }
 
-function bounds() {
-  const xs = WORLD_NODES.map((n) => n.x)
-  const ys = WORLD_NODES.map((n) => n.y)
+/**
+ * What the map shows: everywhere you can reach, plus its immediate frontier.
+ *
+ * The world is twenty-four places by the end and drawing all of them at once turned it
+ * into unreadable overlapping labels. Showing the frontier - the locked places one step
+ * beyond where you can go - keeps it legible while preserving the "there is more out
+ * there" hook, and the map visibly grows as regions open.
+ */
+function visibleNodes(state: GameState): WorldNodeDef[] {
+  const open = WORLD_NODES.filter((node) => isNodeOpen(state, node.id))
+  const frontier = new Set<string>()
+  for (const node of open) {
+    for (const edge of ADJACENCY.get(node.id) ?? []) frontier.add(edge.to)
+  }
+  return WORLD_NODES.filter((node) => isNodeOpen(state, node.id) || frontier.has(node.id))
+}
+
+function bounds(nodes: readonly WorldNodeDef[]) {
+  const xs = nodes.map((n) => n.x)
+  const ys = nodes.map((n) => n.y)
   return {
     minX: Math.min(...xs),
     maxX: Math.max(...xs),
@@ -53,9 +70,9 @@ function bounds() {
   }
 }
 
-/** Map units -> canvas pixels, fitting all nodes with padding. */
-function makeProjection() {
-  const { minX, maxX, minY, maxY } = bounds()
+/** Map units -> canvas pixels, fitting the visible nodes with padding. */
+function makeProjection(nodes: readonly WorldNodeDef[]) {
+  const { minX, maxX, minY, maxY } = bounds(nodes)
   const spanX = Math.max(1, maxX - minX)
   const spanY = Math.max(1, maxY - minY)
   const scale = Math.min(
@@ -71,25 +88,39 @@ function makeProjection() {
   })
 }
 
-const project = makeProjection()
-
+/**
+ * The mech, drawn from the same sprite data the Equipment panel uses.
+ *
+ * One source of art for both, so a change to the pixels shows up everywhere. Drawn at
+ * 1:1 here because a 16x16 sprite is already the right size against these nodes, and
+ * anything fractional would smear it.
+ */
 function drawMech(ctx: CanvasRenderingContext2D, x: number, y: number, walking: boolean, t: number) {
   // A two-frame bob while walking, so movement reads as movement and not as sliding.
-  const bob = walking ? Math.round(Math.sin(t / 120) * 2) : 0
-  const size = 14
+  const bob = walking ? Math.round(Math.sin(t / 150)) : 0
+  const rows = MECH_BASE.rows
+  const originX = Math.round(x - rows[0]!.length / 2)
+  const originY = Math.round(y - rows.length / 2) + bob
 
-  ctx.fillStyle = COLOURS.mechDark
-  ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2) + bob + 2, size, size)
-  ctx.fillStyle = COLOURS.mech
-  ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2) + bob, size, size - 3)
-
-  // A visor, so it reads as facing you rather than as a box.
-  ctx.fillStyle = '#1a1206'
-  ctx.fillRect(Math.round(x - 4), Math.round(y - 3) + bob, 8, 3)
+  for (let py = 0; py < rows.length; py++) {
+    const row = rows[py]!
+    for (let px = 0; px < row.length; px++) {
+      const char = row[px]
+      if (!char || char === ' ') continue
+      const colour = MECH_BASE.palette[char]
+      if (!colour) continue
+      ctx.fillStyle = colour
+      ctx.fillRect(originX + px, originY + py, 1, 1)
+    }
+  }
 }
 
 function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
   ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
+
+  const shown = visibleNodes(state)
+  const onScreen = new Set(shown.map((node) => node.id))
+  const project = makeProjection(shown)
 
   const mech = state.actors.mech
   const travellingTo: NodeId | null = mech.travel
@@ -100,6 +131,7 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
   // --- edges ---
   ctx.lineWidth = 2
   for (const edge of WORLD_EDGES) {
+    if (!onScreen.has(edge.a) || !onScreen.has(edge.b)) continue
     const a = getNode(edge.a)
     const b = getNode(edge.b)
     if (!a || !b) continue
@@ -121,7 +153,7 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, timeMs: number) {
   // --- nodes ---
   ctx.font = '11px ui-monospace, Consolas, monospace'
   ctx.textAlign = 'center'
-  for (const node of WORLD_NODES) {
+  for (const node of shown) {
     const p = project(node.x, node.y)
     const here = mech.at === node.id && !mech.travel
     const isDestination = travellingTo === node.id

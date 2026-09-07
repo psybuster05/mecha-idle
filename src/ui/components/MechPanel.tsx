@@ -3,7 +3,9 @@ import { earnedPerks } from '../../content/enemies'
 import { equip, unequip } from '../../sim/intents'
 import { EQUIP_SLOTS, type EquipSlot, type GameState } from '../../sim/state'
 import { derivedStats } from '../../sim/stats'
+import { MechPortrait } from './MechPortrait'
 import { formatNumber, formatSeconds } from '../format'
+import { statLine } from '../statText'
 
 interface Props {
   state: GameState
@@ -46,6 +48,10 @@ export function MechPanel({ state, dispatch }: Props) {
           </p>
         </div>
       </header>
+
+      <section className="chassis-head">
+        <MechPortrait state={state} />
+      </section>
 
       <section className="stat-grid">
         <StatLine label="Max HP" value={formatNumber(stats.maxHp)} />
@@ -95,11 +101,7 @@ export function MechPanel({ state, dispatch }: Props) {
               {item ? (
                 <>
                   <div className="slot-item">{item.name}</div>
-                  <div className="slot-stats dim">
-                    {Object.entries(item.stats ?? {})
-                      .map(([stat, value]) => `+${value} ${stat}`)
-                      .join(' · ')}
-                  </div>
+                  <div className="slot-stats dim">{statLine(item.stats)}</div>
                   <button onClick={() => dispatch((s) => unequip(s, slot))}>Unequip</button>
                 </>
               ) : (
@@ -124,10 +126,7 @@ export function MechPanel({ state, dispatch }: Props) {
                 <div>
                   <div className="slot-item">{itemName(item.id)}</div>
                   <div className="dim">
-                    {SLOT_LABELS[item.slot as EquipSlot]} &middot;{' '}
-                    {Object.entries(item.stats ?? {})
-                      .map(([stat, value]) => `+${value} ${stat}`)
-                      .join(' · ')}
+                    {SLOT_LABELS[item.slot as EquipSlot]} &middot; {statLine(item.stats)}
                   </div>
                   <div className="dim flavour">{item.description}</div>
                 </div>

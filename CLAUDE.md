@@ -209,3 +209,28 @@ Two consequences, both learned by shipping the mistake:
 
 Measure every boss before shipping it. Use **time to first kill**, never kills-per-hour -
 the latter measures death-and-recovery cycles rather than damage, and hides the design.
+
+## Art
+
+Sprites live in `src/content/sprites.ts` as **pixel data, not image files**: rows of
+characters indexed into a palette, space meaning transparent. Rendered by
+`PixelSprite` (React) and by `WorldMap`'s canvas, both at **integer scale with
+smoothing off** - a fractional scale turns pixel art to mush.
+
+Why data rather than PNGs: it diffs, it costs nothing to load, it carries no licence,
+and **replacing this art with a commissioned set means replacing the data, not the
+renderer**.
+
+Rules:
+- Authored at **16x16**. A test asserts every sprite is rectangular, 16x16, uses only
+  characters its palette defines, and is not blank.
+- **Colour is meaning.** Blue is yours, orange is hostile, cyan is a live readout. A
+  player should tell friend from enemy without reading a word.
+- Enemies use **archetype sprites** (skitter / flyer / bulwark / authority), not one per
+  enemy. Twenty enemies is more art than this project can carry, and at this size the
+  silhouette is what reads anyway. Bosses always get `authority`.
+- The mech is **layered** - base plus whatever is fitted - because "every part you install
+  is literally your own body" is the one visual idea the fiction demands.
+
+The map draws only what you can reach plus its immediate frontier. Drawing all
+twenty-four places at once was unreadable overlapping labels.

@@ -4,19 +4,24 @@
  * When it does, see the integer-scaling rule in CLAUDE.md.
  */
 
+/*
+ * Mega Man blues. Deep navy ground, armour blue for anything that is yours, cyan for
+ * live readouts, and orange reserved exclusively for the enemy - so hostile things read
+ * as hostile at a glance without needing a label.
+ */
 :root {
-  --bg: #0b0e11;
-  --panel: #141a1f;
-  --panel-2: #1a2229;
-  --line: #263038;
-  --line-bright: #35424c;
-  --text: #c9d6de;
-  --dim: #6b7d8a;
-  --accent: #ffb648;
-  --accent-dim: #7a5a26;
-  --good: #6fcf80;
-  --bad: #e2705f;
-  --enemy: #c8624f;
+  --bg: #070d1a;
+  --panel: #0f1a2e;
+  --panel-2: #16243d;
+  --line: #1f3457;
+  --line-bright: #2f4d7a;
+  --text: #dce8f5;
+  --dim: #708db4;
+  --accent: #4aa8ff;
+  --accent-dim: #27567f;
+  --good: #4fe0b0;
+  --bad: #ff6b6b;
+  --enemy: #ff8a3d;
   color-scheme: dark;
 }
 
@@ -39,8 +44,8 @@ button {
   border-radius: 2px;
 }
 button:hover { border-color: var(--accent-dim); color: #fff; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #1a1206; font-weight: 700; }
-button.primary:hover { background: #ffc76e; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #04101f; font-weight: 700; }
+button.primary:hover { background: #7cc3ff; }
 
 h1 { font-size: 15px; letter-spacing: 0.22em; margin: 0; }
 h2 { font-size: 16px; margin: 0 0 2px; letter-spacing: 0.06em; }
@@ -102,7 +107,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 .bar-wrap { display: flex; flex-direction: column; gap: 3px; width: 100%; }
 .bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
-.bar { height: 6px; background: #0a0d10; border: 1px solid var(--line); overflow: hidden; }
+.bar { height: 6px; background: #050a14; border: 1px solid var(--line); overflow: hidden; }
 .bar-fill { height: 100%; background: var(--accent); transition: width 90ms linear; }
 .bar-xp .bar-fill { background: var(--accent-dim); }
 .bar-hp .bar-fill { background: var(--good); }
@@ -176,7 +181,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 /* --- modal ------------------------------------------------------------- */
 
 .modal-backdrop {
-  position: fixed; inset: 0; background: rgba(4, 6, 8, 0.82);
+  position: fixed; inset: 0; background: rgba(3, 8, 18, 0.86);
   display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 10;
 }
 .modal {
@@ -202,7 +207,7 @@ img.sprite { image-rendering: pixelated; }
 .world-canvas {
   width: 100%;
   max-width: 740px;
-  background: #0a0d10;
+  background: #050b18;
   border: 1px solid var(--line);
   /* Pixel art, when it replaces the placeholder blocks: never smooth it. */
   image-rendering: pixelated;
@@ -226,7 +231,7 @@ img.sprite { image-rendering: pixelated; }
 .resists { display: flex; gap: 6px; flex-wrap: wrap; }
 .resist {
   display: flex; align-items: baseline; gap: 5px; font-size: 11px;
-  padding: 1px 7px; border: 1px solid var(--line); background: #0f1418;
+  padding: 1px 7px; border: 1px solid var(--line); background: #0a1526;
 }
 .resist-type { letter-spacing: 0.1em; color: var(--dim); }
 .resist.strong .resist-value { color: var(--good); }   /* they take less */
@@ -235,8 +240,8 @@ img.sprite { image-rendering: pixelated; }
 .resist.mine .resist-type { color: var(--accent); }
 
 .phase-banner {
-  padding: 6px 10px; border-left: 3px solid var(--accent);
-  background: rgba(255, 182, 72, 0.08); font-size: 12px;
+  padding: 6px 10px; border-left: 3px solid var(--enemy);
+  background: rgba(255, 138, 61, 0.1); font-size: 12px;
 }
 
 .zone { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
@@ -294,3 +299,20 @@ img.sprite { image-rendering: pixelated; }
 }
 .log-entry.interrupt { border-left-color: var(--accent); }
 .log-entry h3 { margin: 0 0 8px; color: var(--text); letter-spacing: 0.1em; }
+
+/* --- sprites ------------------------------------------------------------ */
+
+.portrait { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.portrait-caption { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+.chassis-head {
+  display: flex; justify-content: center; padding: 18px;
+  background: var(--panel); border: 1px solid var(--line);
+  background-image: radial-gradient(circle at 50% 40%, rgba(74, 168, 255, 0.09), transparent 62%);
+}
+
+.combatant-head { display: flex; align-items: center; gap: 12px; }
+.combatant-head .combatant-name { margin: 0; }
+
+.enemy-thumb { flex: none; align-self: flex-start; opacity: 0.9; }
+.enemy-row { align-items: flex-start; }

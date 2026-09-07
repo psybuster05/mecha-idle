@@ -6,6 +6,9 @@ import { DAMAGE_TYPES, type DamageType, type GameState } from '../../sim/state'
 import { combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
 import { formatNumber, formatSeconds } from '../format'
 import { Bar } from './Bar'
+import { PixelSprite } from './PixelSprite'
+import { MechPortrait } from './MechPortrait'
+import { ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 
 interface Props {
   state: GameState
@@ -63,6 +66,12 @@ function EnemyRow({
   const mine = derivedStats(state).damageType
   return (
     <li className={`enemy-row ${active ? 'active' : ''} ${enemy.isBoss ? 'boss' : ''}`}>
+      <PixelSprite
+        layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
+        scale={2}
+        className="enemy-thumb"
+        title={enemy.name}
+      />
       <div className="enemy-main">
         <div className="enemy-title">
           <strong>{enemy.name}</strong>
@@ -150,7 +159,14 @@ export function CombatPanel({ state, dispatch }: Props) {
           {enemy ? (
             <>
               <div className="combatant">
-                <div className="combatant-name">{enemy.name}</div>
+                <div className="combatant-head">
+                  <PixelSprite
+                    layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
+                    scale={3}
+                    title={enemy.name}
+                  />
+                  <div className="combatant-name">{enemy.name}</div>
+                </div>
                 {phase && (
                   <div className="phase-banner">
                     <strong>{phase.name}</strong>
@@ -180,7 +196,10 @@ export function CombatPanel({ state, dispatch }: Props) {
               <div className="versus">vs</div>
 
               <div className="combatant">
-                <div className="combatant-name">You</div>
+                <div className="combatant-head">
+                  <MechPortrait state={state} scale={3} />
+                  <div className="combatant-name">You</div>
+                </div>
                 <p className="dim flavour">
                   {formatNumber(stats.damage)} {TYPE_LABEL[stats.damageType]} &middot;{' '}
                   {formatNumber(stats.accuracy)} accuracy &middot; {formatNumber(stats.armour)} armour
