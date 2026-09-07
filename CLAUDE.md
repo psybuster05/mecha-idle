@@ -97,6 +97,23 @@ part of this game with the most in it - six regions, seven bosses, four skills o
 called **Fight** rather than Combat, because a section and its first child sharing a name
 reads as a mistake.
 
+**Attack styles decide which skill a fight trains, and every style pays the same total
+xp.** That constraint is load-bearing rather than cosmetic: before styles existed a kill
+paid the *full* xp to Attack, Strength and Defence at once, so routing that to one skill
+would have cut combat training to a third and silently re-gated every zone, since zone
+requirements read combat level. A focused style therefore hands one skill what the three
+would have shared, and Balanced is the old behaviour kept as the default.
+
+Specialising still costs something, and should: combat level is the average of four
+skills and the xp curve is exponential, so concentrated xp buys fewer total levels than
+spread xp. One number climbs fast, combat level climbs slower. Hitpoints sits outside the
+choice entirely - everything hitting you trains it.
+
+Two things measured rather than assumed there. The same *kill* pays an identical total
+under every style, asserted exactly. Over a long *fight* the totals drift under one
+percent apart, because a style that raises accuracy or damage kills marginally faster -
+earned by fighting better, not by being paid more.
+
 The four combat skills each get a page (`CombatSkillPanel`). They had levels and xp from
 the first commit and were shown *nowhere*: you could train Attack for hours and never
 learn it had a level. What a level buys is data in `content/skills/combat.ts`, and a test

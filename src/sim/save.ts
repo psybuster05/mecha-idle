@@ -6,6 +6,7 @@
  * rather than thrown away. Idle players do not forgive lost progress.
  */
 
+import { getCombatStyle } from '../content/skills/combat'
 import { newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
 
 export type LoadResult =
@@ -105,6 +106,9 @@ function withDefaults(raw: Record<string, unknown>): GameState {
     merged.actors[id] = { ...base.actors[id], ...(rawActors?.[id] ?? {}) }
   }
   merged.combat = { ...base.combat, ...(raw['combat'] as object | undefined) }
+  // An attack style the game does not have would route xp nowhere and lose it silently,
+  // which is the quietest possible way to break a save. Fall back rather than trust it.
+  if (!getCombatStyle(merged.combat.style)) merged.combat.style = base.combat.style
   merged.bank = { ...(raw['bank'] as object | undefined) }
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }

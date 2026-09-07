@@ -181,6 +181,17 @@ body:has(.app) > #root { display: contents; }
 .enemy-name { min-width: 160px; }
 .drops { font-style: italic; }
 
+/* --- attack styles ------------------------------------------------------ */
+
+.styles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.style {
+  width: 100%; height: 100%; text-align: left; padding: 9px 12px;
+  display: flex; flex-direction: column; gap: 3px;
+  background: var(--panel); border: 1px solid var(--line);
+}
+.style.active { border-color: var(--accent); background: var(--panel-2); }
+.style-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
 /* --- chassis ----------------------------------------------------------- */
 
 .stat-grid {

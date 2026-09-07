@@ -9,6 +9,7 @@
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
 import { removeItem } from './bank'
 import { getItem } from '../content'
+import { getCombatStyle, type CombatStyleId } from '../content/skills/combat'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { moveToAny, placeActor } from './world'
@@ -127,6 +128,20 @@ export function readAllStoryBeats(state: GameState, ids: readonly string[]): Gam
   if (unread.length === 0) return state
   const next = cloneState(state)
   for (const id of unread) markStorySeen(next, id)
+  return next
+}
+
+/**
+ * Choose which skill fights train.
+ *
+ * Allowed mid-fight on purpose: it changes nothing about the fight in progress, only
+ * where the next kill's xp lands, so there is no reason to make the player disengage.
+ */
+export function setCombatStyle(state: GameState, style: CombatStyleId): GameState {
+  if (state.combat.style === style) return state
+  if (!getCombatStyle(style)) return state
+  const next = cloneState(state)
+  next.combat.style = style
   return next
 }
 

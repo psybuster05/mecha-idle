@@ -9,6 +9,7 @@
  */
 
 import { getEnemy, getZone } from '../content'
+import { getCombatStyle, STYLE_SKILLS } from '../content/skills/combat'
 import { activePhase, effectiveResistances, perkTotal, type EnemyDef } from '../content/enemies'
 import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
@@ -110,9 +111,17 @@ function onKill(state: GameState, enemy: EnemyDef, stats: DerivedStats, rng: Rng
   if (enemy.isBoss) recordDefeat(state, enemy.id)
 
   const xp = enemy.xp * (1 + perkTotal(state.defeated, 'xpBonus'))
-  state.skills.attack += xp
-  state.skills.strength += xp
-  state.skills.defence += xp
+
+  // A focused style hands one skill what the three would have shared, so the total is
+  // identical whatever is picked. Routing without that multiplier would have cut combat
+  // training to a third and silently re-gated every zone, since zones read combat level.
+  const trains = getCombatStyle(state.combat.style)?.trains ?? null
+  if (trains) {
+    state.skills[trains] += xp * STYLE_SKILLS.length
+  } else {
+    for (const skill of STYLE_SKILLS) state.skills[skill] += xp
+  }
+  // Hitpoints is outside the choice: everything hitting you trains it.
   state.skills.hitpoints += Math.round(xp * 0.4)
 
   if (enemy.guaranteed) grantAll(state, enemy.guaranteed, 1)

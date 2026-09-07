@@ -1,3 +1,4 @@
+import type { CombatStyleId } from '../content/skills/combat'
 /**
  * The complete game state, and the rules for what a valid state looks like.
  *
@@ -140,6 +141,14 @@ export interface CombatState {
    * arrives. Bounded by a single hit, so it cannot accumulate.
    */
   carryOver: number
+  /**
+   * Which combat skill a fight trains. See `content/skills/combat.ts`.
+   *
+   * Every style pays the same total xp, so this changes where training lands and never
+   * how fast it arrives. Stored rather than derived because it is a standing preference,
+   * and it survives a save like any other choice.
+   */
+  style: CombatStyleId
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +274,7 @@ export function newGame(seed: number = 1): GameState {
       attackProgress: 0,
       respawnProgress: 0,
       carryOver: 0,
+      style: 'balanced',
     },
   }
 }

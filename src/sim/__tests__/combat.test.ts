@@ -1,7 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { tick } from '../tick'
-import { COMBAT_SKILLS, newGame, setActivity, type GameState } from '../state'
-import { COMBAT_SKILL_DEFS } from '../../content/skills/combat'
+import {
+  COMBAT_SKILLS,
+  newGame,
+  setActivity,
+  type CombatSkillId,
+  type GameState,
+} from '../state'
+import {
+  COMBAT_SKILL_DEFS,
+  COMBAT_STYLES,
+  STYLE_SKILLS,
+  type CombatStyleId,
+} from '../../content/skills/combat'
+import { setCombatStyle } from '../intents'
+import { deserialize, serialize } from '../save'
+import { levelFromXp } from '../xp'
 import { count } from '../bank'
 import { equipItem, unequipSlot } from '../equipment'
 import { combatLevel, derivedStats, RESPAWN_DELAY } from '../stats'
@@ -229,5 +243,117 @@ describe('combat skill descriptions match what the levels actually do', () => {
 
   it('covers every combat skill, so none is left without a page', () => {
     expect(COMBAT_SKILL_DEFS.map((s) => s.id).sort()).toEqual([...COMBAT_SKILLS].sort())
+  })
+})
+
+/**
+ * Attack styles.
+ *
+ * The rule that matters is that **no style is faster than another**. Styles decide where
+ * combat xp lands, never how much arrives - because zone requirements read combat level,
+ * and a style that trained more slowly would have re-gated the whole game by the back
+ * door.
+ */
+describe('attack styles', () => {
+  const fought = (style: CombatStyleId, seconds = 1800) => {
+    let state = newGame(31337)
+    for (const skill of COMBAT_SKILLS) state.skills[skill] = xpForLevel(30)
+    state = setCombatStyle(state, style)
+    setActivity(state, 'mech', { kind: 'combat', zone: 'rustbelt' })
+    return tickBy(state, seconds, 0.5)
+  }
+
+  const combatXp = (s: GameState) =>
+    ['attack', 'strength', 'defence'].reduce((sum, k) => sum + s.skills[k as CombatSkillId], 0)
+
+  it('defaults to balanced, which is what the game always did', () => {
+    expect(newGame().combat.style).toBe('balanced')
+  })
+
+  /** Ticks until exactly one kill has landed. Hitpoints xp is the tell: it is paid on
+   *  every kill and is the one thing no style changes. */
+  const untilFirstKill = (style: CombatStyleId) => {
+    let state = newGame(31337)
+    for (const skill of COMBAT_SKILLS) state.skills[skill] = xpForLevel(30)
+    state = setCombatStyle(state, style)
+    setActivity(state, 'mech', { kind: 'combat', zone: 'rustbelt' })
+    const startHp = state.skills.hitpoints
+    for (let i = 0; i < 4000 && state.skills.hitpoints === startHp; i++) state = tick(state, 0.5)
+    return state
+  }
+
+  it('pays exactly the same total xp for the same kill, whichever style is chosen', () => {
+    const balanced = combatXp(untilFirstKill('balanced'))
+    for (const style of ['accurate', 'aggressive', 'defensive'] as const) {
+      expect(combatXp(untilFirstKill(style)), `${style} pays a different total`).toBe(balanced)
+    }
+  })
+
+  /**
+   * Over a long fight the totals drift slightly apart, and that is correct rather than a
+   * leak. Concentrating xp raises one skill faster, which changes accuracy or damage,
+   * which changes how quickly things die - so a style earns marginally more or less by
+   * *fighting better*, not by being paid differently. Measured at well under one percent
+   * over half an hour; the assertion is here to catch it becoming a real advantage.
+   */
+  it('stays within a whisker of the others over a long fight', () => {
+    const balanced = combatXp(fought('balanced'))
+    for (const style of ['accurate', 'aggressive', 'defensive'] as const) {
+      const drift = Math.abs(combatXp(fought(style)) - balanced) / balanced
+      expect(drift, `${style} drifted ${(drift * 100).toFixed(2)}%`).toBeLessThan(0.03)
+    }
+  })
+
+  it('puts all of it in the skill the style names, and nothing in the others', () => {
+    for (const style of COMBAT_STYLES) {
+      if (!style.trains) continue
+      const after = fought(style.id)
+      for (const skill of STYLE_SKILLS) {
+        const gained = after.skills[skill] - xpForLevel(30)
+        if (skill === style.trains) expect(gained, `${style.id} trains ${skill}`).toBeGreaterThan(0)
+        else expect(gained, `${style.id} should not train ${skill}`).toBe(0)
+      }
+    }
+  })
+
+  it('trains Hitpoints whatever you pick, because everything hitting you trains it', () => {
+    for (const style of COMBAT_STYLES) {
+      const after = fought(style.id)
+      expect(after.skills.hitpoints, `${style.id}`).toBeGreaterThan(xpForLevel(30))
+    }
+  })
+
+  /**
+   * The cost of specialising, measured rather than assumed.
+   *
+   * Combat level is the average of four skills and the xp curve is exponential, so the
+   * same xp concentrated into one skill buys fewer levels than spread across three.
+   * Specialising should therefore make one number climb fast and combat level climb
+   * slower. If that ever inverts, the styles have stopped being a trade-off.
+   */
+  it('costs combat level to specialise, and buys a higher single skill', () => {
+    const balanced = fought('balanced', 3600)
+    const focused = fought('aggressive', 3600)
+
+    expect(levelFromXp(focused.skills.strength)).toBeGreaterThan(
+      levelFromXp(balanced.skills.strength),
+    )
+    expect(combatLevel(focused)).toBeLessThanOrEqual(combatLevel(balanced))
+  })
+
+  it('refuses a style that does not exist rather than losing the xp', () => {
+    const state = newGame()
+    expect(setCombatStyle(state, 'nonsense' as CombatStyleId)).toBe(state)
+  })
+
+  it('survives a save, and a corrupt one falls back instead of routing nowhere', () => {
+    const chosen = setCombatStyle(newGame(), 'defensive')
+    const reloaded = deserialize(serialize(chosen, Date.now()))
+    expect(reloaded.ok && reloaded.state.combat.style).toBe('defensive')
+
+    const corrupt = deserialize(
+      JSON.stringify({ ...newGame(), combat: { ...newGame().combat, style: 'bogus' } }),
+    )
+    expect(corrupt.ok && corrupt.state.combat.style).toBe('balanced')
   })
 })

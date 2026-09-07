@@ -1,7 +1,8 @@
 import { getEnemy, itemName, ZONES } from '../../content'
 import { activePhase, effectiveResistances, type EnemyDef } from '../../content/enemies'
 import { hasDefeated } from '../../sim/state'
-import { startCombat, stopActivity } from '../../sim/intents'
+import { setCombatStyle, startCombat, stopActivity } from '../../sim/intents'
+import { COMBAT_STYLES, getCombatSkill } from '../../content/skills/combat'
 import { DAMAGE_TYPES, type DamageType, type GameState } from '../../sim/state'
 import { combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
 import { formatNumber, formatSeconds } from '../format'
@@ -139,6 +140,36 @@ export function CombatPanel({ state, dispatch }: Props) {
           <div className="dim">level</div>
         </div>
       </header>
+
+      {/* Sits above the engagement because it is a standing decision, not something you
+          do to the fight in front of you - and it can be changed mid-fight, since it
+          only decides where the next kill's xp lands. */}
+      <h3>Attack style</h3>
+      <ul className="styles">
+        {COMBAT_STYLES.map((style) => {
+          const active = state.combat.style === style.id
+          const trains = style.trains ? getCombatSkill(style.trains)?.name : 'All three'
+          return (
+            <li key={style.id}>
+              <button
+                className={`style ${active ? 'active' : ''}`}
+                onClick={() => dispatch((s) => setCombatStyle(s, style.id))}
+                aria-pressed={active}
+              >
+                <span className="style-head">
+                  <strong>{style.name}</strong>
+                  <span className="xp-tag">{trains}</span>
+                </span>
+                <span className="dim">{style.description}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="dim">
+        Every style pays the same xp - it only decides which skill gets it. Hitpoints
+        trains either way.
+      </p>
 
       <div className="loadout">
         <span className="dim">Dealing</span>
