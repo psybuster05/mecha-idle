@@ -62,8 +62,35 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 /* --- shell ------------------------------------------------------------- */
 
-.app { min-height: 100vh; display: flex; flex-direction: column; }
-.app.booting { padding: 40px; gap: 4px; }
+/*
+ * A 16:9 stage, centred and letterboxed.
+ *
+ * This is a web page shown to people, not a desktop app that owns the screen, so it is
+ * framed rather than sprawling: on a wide monitor the game sits in a fixed pane instead
+ * of stretching a 900px panel across 2500px of glass. `min()` keeps it bounded by
+ * whichever of width or height runs out first, so it never overflows the viewport.
+ *
+ * Everything inside must therefore scroll rather than grow - see .content and .stage.
+ */
+body { background: var(--bg-deep, #05080f); }
+
+.app {
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+/* #root sits between body and .app, so it would otherwise be the flex item and the
+   frame would have nothing to centre against. display:contents lifts .app up to be
+   body's child directly. */
+body:has(.app) { min-height: 100vh; display: flex; }
+body:has(.app) > #root { display: contents; }
+
+.app.booting { padding: 40px; gap: 4px; display: flex; }
 
 .topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
@@ -72,11 +99,12 @@ ul { list-style: none; margin: 0; padding: 0; }
 .brand { display: flex; align-items: baseline; gap: 14px; }
 .topbar-stats { flex: 0 1 320px; min-width: 180px; }
 
-.layout { display: flex; flex: 1; align-items: flex-start; }
+.layout { display: flex; flex: 1; align-items: stretch; min-height: 0; }
 
 .rail {
   width: 240px; flex: none; padding: 16px 12px; border-right: 1px solid var(--line);
-  background: var(--panel); align-self: stretch; display: flex; flex-direction: column; gap: 22px;
+  background: var(--panel); display: flex; flex-direction: column; gap: 22px;
+  overflow-y: auto;
 }
 .rail-group { display: flex; flex-direction: column; gap: 4px; }
 .rail-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; padding: 0 6px 4px; }
@@ -97,7 +125,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
-.content { flex: 1; padding: 20px 24px; min-width: 0; }
+.content { flex: 1; padding: 20px 24px; min-width: 0; overflow-y: auto; }
 .panel { max-width: 900px; display: flex; flex-direction: column; gap: 10px; }
 .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .level-block { text-align: center; flex: none; }
@@ -350,3 +378,60 @@ img.sprite { image-rendering: pixelated; }
 .bank-item { flex-wrap: wrap; }
 .bank-item .burn { flex-basis: 100%; margin-top: 6px; padding: 3px 8px; font-size: 11px; }
 .bank-item .burn:disabled { opacity: 0.45; cursor: default; }
+
+/* --- the stage ---------------------------------------------------------- */
+
+/*
+ * The visual column, always on screen.
+ *
+ * It replaced the World tab. A tab can only show you one thing at a time, and what a
+ * player wants permanently visible is not a page - it is what they are made of and what
+ * they are doing. So the picture stopped being somewhere you navigate to.
+ */
+.stage {
+  width: 300px; flex: none; border-left: 1px solid var(--line);
+  background: var(--panel); padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+
+.stage-portrait { display: flex; justify-content: center; padding: 6px 0; }
+
+/* Fixed height so the column does not jump every time the mech starts or stops. */
+.stage-now {
+  min-height: 74px; display: flex; flex-direction: column; gap: 7px; justify-content: center;
+  padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--line);
+}
+.stage-action { display: flex; flex-direction: column; gap: 2px; font-weight: 700; }
+.stage-action .dim { font-weight: 400; font-size: 12px; }
+.stage-enemy { display: flex; align-items: center; gap: 9px; }
+.stage-enemy-name { font-weight: 700; }
+
+.stage-map { display: flex; flex-direction: column; gap: 5px; }
+.stage-caption { font-size: 11px; text-align: center; }
+
+@media (max-width: 720px) {
+  /* No aspect frame on a phone - the screen is the frame. */
+  .app { width: 100%; height: auto; min-height: 100vh; overflow: visible; border: none; }
+  .layout { flex-direction: column; }
+  .content, .rail, .stage { overflow: visible; }
+  /*
+   * There is no "side" on a phone, so the stage becomes a strip above the content.
+   *
+   * Below the content was the first attempt and it was wrong: with a full enemy list in
+   * front of it, your own mech ended up a thousand pixels down and nobody would ever
+   * see it. Above, compact, it costs about 90px and is the first thing you look at.
+   *
+   * The map is dropped rather than shrunk. At this width it is either unreadable or it
+   * eats the screen, and of the three things here it is the one you need least while
+   * actually playing.
+   */
+  .stage {
+    order: -1;
+    width: 100%; border-left: none; border-bottom: 1px solid var(--line); border-top: none;
+    flex-direction: row; align-items: center; gap: 14px; padding: 10px 14px;
+  }
+  .stage-portrait { padding: 0; flex: none; }
+  .stage-now { flex: 1; min-width: 0; min-height: 0; }
+  .stage-map { display: none; }
+}

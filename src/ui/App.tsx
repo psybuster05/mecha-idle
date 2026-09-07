@@ -15,12 +15,12 @@ import { OfflineDialog } from './components/OfflineDialog'
 import { LogPanel } from './components/LogPanel'
 import { SkillPanel } from './components/SkillPanel'
 import { StoryDialog } from './components/StoryDialog'
-import { WorldPanel } from './components/WorldPanel'
+import { Stage } from './components/Stage'
 import { getStoryBeat } from '../content/story'
 import { nextInterrupt, unreadLogCount } from '../sim/story'
 import { readStoryBeat } from '../sim/intents'
 
-type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
+type Tab = GatheringSkillId | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
@@ -37,9 +37,9 @@ export function App() {
   // One adapter for the life of the app; swapping this line is the whole desktop port.
   const adapter = useMemo(() => new LocalStorageAdapter(), [])
   const { state, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
-  // The world opens first: it is the one panel that says this is a place rather than a
-  // spreadsheet, and it is where the locks you have not opened yet are visible.
-  const [tab, setTab] = useState<Tab>('world')
+  // Scavenging opens first: it is the first thing a new mech can actually do, and with
+  // the World tab gone there is no longer a panel whose job is to be looked at.
+  const [tab, setTab] = useState<Tab>('scavenging')
 
   if (!ready) {
     return (
@@ -83,15 +83,6 @@ export function App() {
 
       <div className="layout">
         <nav className="rail">
-          <div className="rail-group">
-            <button
-              className={`rail-item ${tab === 'world' ? 'selected' : ''}`}
-              onClick={() => setTab('world')}
-            >
-              <span className="rail-name">World</span>
-            </button>
-          </div>
-
           <div className="rail-group">
             <div className="rail-heading dim">Skills</div>
             {GATHERING_SKILLS.map((id) => {
@@ -176,9 +167,7 @@ export function App() {
         </nav>
 
         <main className="content">
-          {tab === 'world' ? (
-            <WorldPanel state={state} dispatch={dispatch} />
-          ) : tab === 'combat' ? (
+          {tab === 'combat' ? (
             <CombatPanel state={state} dispatch={dispatch} />
           ) : tab === 'mech' ? (
             <MechPanel state={state} dispatch={dispatch} />
@@ -192,6 +181,8 @@ export function App() {
             <SkillPanel state={state} skillId={tab} dispatch={dispatch} />
           )}
         </main>
+
+        <Stage state={state} />
       </div>
 
       {offlineReport && <OfflineDialog report={offlineReport} onDismiss={dismissOffline} />}

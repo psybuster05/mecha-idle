@@ -118,12 +118,25 @@ What survived is the part that was never about distance:
   offers the job (`moveToAny`), instantly. If every such place is sealed the activity
   halts as `unreachable` rather than looking active and producing nothing.
 - **The map draws the graph.** Edges are what make the frontier legible, so a node with
-  no edges would be invisible. `visibleNodes` in `content/world.ts` is the single answer
-  to "where is there" - the canvas and the World panel's list both call it, because two
-  different answers would read as a bug.
+  no edges would be invisible. `visibleNodes` in `content/world.ts` decides what is
+  drawn: everywhere open, plus the locked places one step beyond it.
 
 Nothing on the map moves between player decisions, so `WorldMap` redraws from the
 throttled React snapshot. It has no animation-frame loop of its own any more.
+
+**The World tab was deleted too.** Once travel was gone it was a map plus two lists, and
+both lists were dead weight: its action list duplicated the skill panels with less
+information, and its "go here" buttons changed nothing the simulation reads - `at` is
+read only by `moveToAny`'s already-here check and by where the crawler wakes up.
+
+The one thing that could have made location matter was checked rather than assumed: nine
+story beats trigger on visiting a place, and all nine are reached by starting actions
+normally. A test asserts it (`story is not missable by playing normally`), because that
+is the mirror of the story rule - skipping every word must leave the game playable, and
+playing normally must not skip the story.
+
+What the tab did have was the only picture in the game, so the picture became `Stage` -
+a column that is always on screen. See the art section.
 
 ## Gating: combat widens, it never unblocks
 
@@ -261,7 +274,26 @@ Rules:
   enemy. Twenty enemies is more art than this project can carry, and at this size the
   silhouette is what reads anyway. Bosses always get `authority`.
 - The mech is **layered** - base plus whatever is fitted - because "every part you install
-  is literally your own body" is the one visual idea the fiction demands.
+  is literally your own body" is the one visual idea the fiction demands. `MechPortrait`
+  picks leg sprites off **evasion**, not a movement stat; that check silently broke once
+  when travel was removed and nothing caught it, because it was dead data rather than a
+  type error.
+
+## The stage
+
+The right-hand column (`Stage.tsx`) is where the art actually lives, and it is permanent
+rather than a tab. A tab can only show one thing; what a player wants visible at all
+times is not a page, it is **what they are made of and what they are doing**.
+
+It holds three things: the layered portrait, a live readout of the current job (enemy
+sprite and its HP when fighting, action and progress bar when skilling, what it is short
+of when waiting), and the map.
+
+The shell is a **16:9 frame**, centred and letterboxed, because this is a web page shown
+to people rather than an app that owns the screen. Everything inside scrolls; nothing
+grows. On a phone there is no side, so the stage becomes a compact strip *above* the
+content - below it was tried first and buried the mech under a full enemy list - and the
+map drops out, being the one part that is unreadable at that width.
 
 The map draws only what you can reach plus its immediate frontier. Drawing all
 twenty-four places at once was unreadable overlapping labels.

@@ -545,8 +545,8 @@ export function nodesForZone(zone: ZoneId): WorldNodeDef[] {
  * both legible, preserves the "there is more out there" hook, and makes the world
  * visibly grow each time a boss falls.
  *
- * Lives here rather than in the map because the World panel's list has to agree with
- * what is drawn above it - two different answers to "where is there" would read as a bug.
+ * Lives here rather than inside the map component so that anything else which needs to
+ * ask "what can the player see of the world" gets the same answer.
  */
 export function visibleNodes(isOpen: (id: NodeId) => boolean): WorldNodeDef[] {
   const frontier = new Set<string>()
