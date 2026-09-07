@@ -159,6 +159,19 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
       remaining -= step
       if (combat.respawnProgress >= RESPAWN_DELAY - EPS) {
         spawnEnemy(state, zone.enemies, rng, activity.enemy)
+
+        const arrived = combat.enemyId ? getEnemy(combat.enemyId) : undefined
+        if (arrived && combat.carryOver > 0) {
+          combat.enemyHp -= combat.carryOver
+          combat.carryOver = 0
+          if (combat.enemyHp <= 0) {
+            if (stats.cleave > 0) {
+              combat.carryOver = Math.max(0, -combat.enemyHp) * stats.cleave
+            }
+            onKill(state, arrived, stats, rng)
+            stats = derivedStats(state)
+          }
+        }
       }
       continue
     }
@@ -189,6 +202,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     // Ours resolves first on a tie. A deliberate sliver of player advantage.
     if (combat.attackProgress >= stats.attackInterval - EPS) {
       combat.attackProgress = 0
+
       combat.enemyHp -= swing(
         rng,
         stats.accuracy,
@@ -199,6 +213,12 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         effectiveResistances(enemy, combat.enemyHp),
       )
       if (combat.enemyHp <= 0) {
+        // Everything past zero is waste unless the weapon cleaves, in which case it
+        // is banked and spent on whatever arrives next.
+        if (stats.cleave > 0) {
+          combat.carryOver += Math.max(0, -combat.enemyHp) * stats.cleave
+        }
+
         onKill(state, enemy, stats, rng)
         stats = derivedStats(state)
         continue
@@ -225,6 +245,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         combat.enemyAttackProgress = 0
         combat.attackProgress = 0
         combat.respawnProgress = 0
+        combat.carryOver = 0
         haltActivity(state, actorId, 'destroyed')
         break
       }

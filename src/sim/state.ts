@@ -144,6 +144,11 @@ export interface CombatState {
   attackProgress: number
   /** Seconds remaining before the next enemy spawns, after a kill. */
   respawnProgress: number
+  /**
+   * Overkill banked by a cleaving weapon, spent on the next enemy the moment it
+   * arrives. Bounded by a single hit, so it cannot accumulate.
+   */
+  carryOver: number
 }
 
 // ---------------------------------------------------------------------------
@@ -225,6 +230,7 @@ export function newGame(seed: number = 1): GameState {
       hp: 0,
       attackProgress: 0,
       respawnProgress: 0,
+      carryOver: 0,
     },
   }
 }

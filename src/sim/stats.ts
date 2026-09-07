@@ -39,6 +39,8 @@ export interface DerivedStats {
   attackInterval: number
   /** Map units per second. Better legs raise this. */
   moveSpeed: number
+  /** Fraction of overkill carried to the next enemy, 0..1. */
+  cleave: number
   /** Multiplier on non-combat action duration. Below 1 means faster. */
   skillDurationScale: number
   /** What our attacks deal, from the fitted weapon. */
@@ -122,6 +124,7 @@ export function derivedStats(state: GameState): DerivedStats {
       BASE_MOVE_SPEED + equippedTotal(state, 'moveSpeed') + perkTotal(state.defeated, 'moveSpeed'),
     // Expressed as a duration multiplier rather than a speed bonus so stacking is
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
+    cleave: Math.min(1, Math.max(0, equippedTotal(state, 'cleave'))),
     skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),
     damageType: equippedDamageType(state),
     resistances: equippedResistances(state),

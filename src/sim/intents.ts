@@ -54,6 +54,7 @@ export function startCombat(
   next.combat.enemyAttackProgress = 0
   next.combat.attackProgress = 0
   next.combat.respawnProgress = 0
+  next.combat.carryOver = 0
   return next
 }
 

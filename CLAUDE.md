@@ -142,3 +142,25 @@ It is the first persistent progress that is neither a level nor an item. Region 
 
 A perk is recorded *before* the kill's own xp is awarded, so the fight that earns a perk
 is not itself boosted by it. That keeps the first kill reproducible.
+
+## Weapon archetypes
+
+Weapon damage is a **multiplier** (`damageMultiplier`), never a flat bonus. Flat weapon
+damage is swamped by level scaling - +34 is +45% at level 60 and +28% at 99 - while
+`attackSpeed` is a share of a fixed 3s base and never decays. Flat bonuses made cadence
+the only weapon stat that mattered and turned slow weapons into traps.
+
+Archetypes, all measured rather than assumed:
+
+- **Fast** (Arc Repeater): low multiplier, big `attackSpeed`, high accuracy. Best on
+  large single targets, where every point of damage lands somewhere.
+- **Slow and heavy** (Harpoon Launcher): high multiplier, negative `attackSpeed`,
+  `cleave: 1`. Best on small enemies, because overkill carries instead of evaporating.
+- **Balanced** (Pulse, Arc): middling everything; chosen for their damage *type*.
+
+Cleave self-balances - the advantage shrinks as target HP grows - so it needs no cap
+beyond the two rules in the code: a carried kill still costs the respawn delay, and
+banked overkill is spent immediately so it cannot be stockpiled.
+
+When adding a weapon, measure it against the existing ones before shipping. Both traps
+found so far looked entirely reasonable in the content table.

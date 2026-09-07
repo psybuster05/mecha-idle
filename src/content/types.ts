@@ -63,6 +63,15 @@ export interface EquipStats {
   damageType?: DamageType
   /** Incoming damage multipliers this part grants. Armour pieces carry these. */
   resist?: Resistances
+  /**
+   * Fraction of overkill damage carried to the next enemy. 1 wastes nothing.
+   *
+   * This is what makes a slow heavy weapon an archetype rather than a trap. Enemies
+   * mostly die in one to three hits, so a big swing throws away most of itself - a
+   * 255-damage hit into a 130 HP drone wasted half. Cleave turns that waste into the
+   * weapon's identity: nothing is lost, so weight competes with cadence.
+   */
+  cleave?: number
   /** Seconds shaved off our attack interval. Negative values would slow us down. */
   attackSpeed?: number
 }

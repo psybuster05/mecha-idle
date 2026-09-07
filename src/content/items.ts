@@ -298,7 +298,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'One shot, and a long wait. Everything it hits stays hit.',
     category: 'part',
     slot: 'weapon',
-    stats: { accuracy: 6, damageType: 'kinetic', damageMultiplier: 2.25, attackSpeed: -1.0 },
+    stats: { accuracy: 6, damageType: 'kinetic', damageMultiplier: 2.25, attackSpeed: -1.0, cleave: 1 },
   },
   // Airfield parts: the light build. Low HP and thin armour, bought back with evasion,
   // speed and accuracy. Against anything that hits hard and rarely, being missed beats
