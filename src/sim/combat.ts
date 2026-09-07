@@ -9,7 +9,8 @@
  */
 
 import { getEnemy, getZone } from '../content'
-import { getCombatStyle, STYLE_SKILLS } from '../content/skills/combat'
+import { getCombatStyle, styleShare } from '../content/skills/combat'
+import { combatBranch } from './stats'
 import { activePhase, effectiveResistances, perkTotal, type EnemyDef } from '../content/enemies'
 import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
@@ -112,14 +113,15 @@ function onKill(state: GameState, enemy: EnemyDef, stats: DerivedStats, rng: Rng
 
   const xp = enemy.xp * (1 + perkTotal(state.defeated, 'xpBonus'))
 
-  // A focused style hands one skill what the three would have shared, so the total is
-  // identical whatever is picked. Routing without that multiplier would have cut combat
-  // training to a third and silently re-gated every zone, since zones read combat level.
-  const trains = getCombatStyle(state.combat.style)?.trains ?? null
-  if (trains) {
-    state.skills[trains] += xp * STYLE_SKILLS.length
-  } else {
-    for (const skill of STYLE_SKILLS) state.skills[skill] += xp
+  // A focused style hands one skill what the branch's set would have shared, so the
+  // total is identical whatever is picked and whichever branch is fighting. Routing
+  // without that would have cut combat training and silently re-gated every zone,
+  // since zones read combat level.
+  const style = getCombatStyle(state.combat.style)
+  if (style) {
+    for (const { skill, amount } of styleShare(style, combatBranch(state), xp)) {
+      state.skills[skill] += amount
+    }
   }
   // Hitpoints is outside the choice: everything hitting you trains it.
   state.skills.hitpoints += Math.round(xp * 0.4)

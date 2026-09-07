@@ -15,7 +15,7 @@ const EARLIER_BOSSES = ['overseer', 'quartermaster', 'tower_actual', 'registrar'
 
 function kitted(weapon: string, level: number, extraBosses: string[] = []): GameState {
   const state = newGame(99)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(level)
   }
   for (const boss of [...EARLIER_BOSSES, ...extraBosses]) recordDefeat(state, boss)
@@ -119,7 +119,7 @@ describe('The Colonel', () => {
 
   it('destroys one that turned up without a weapon', () => {
     const state = newGame(99)
-    for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+    for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
       state.skills[skill] = xpForLevel(95)
     }
     for (const boss of [...EARLIER_BOSSES, 'adjutant']) recordDefeat(state, boss)

@@ -2,9 +2,9 @@ import { getEnemy, itemName, ZONES } from '../../content'
 import { activePhase, effectiveResistances, type EnemyDef } from '../../content/enemies'
 import { hasDefeated } from '../../sim/state'
 import { setCombatStyle, startCombat, stopActivity } from '../../sim/intents'
-import { COMBAT_STYLES, getCombatSkill } from '../../content/skills/combat'
+import { BRANCH_SKILLS, COMBAT_STYLES, getCombatSkill } from '../../content/skills/combat'
 import { DAMAGE_TYPES, type DamageType, type GameState } from '../../sim/state'
-import { combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
+import { combatBranch, combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
 import { formatNumber, formatSeconds } from '../format'
 import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
@@ -117,6 +117,7 @@ function EnemyRow({
 export function CombatPanel({ state, dispatch }: Props) {
   const stats = derivedStats(state)
   const level = combatLevel(state)
+  const branch = combatBranch(state)
   const activity = state.actors.mech.activity
   const deployed = activity?.kind === 'combat' ? activity.zone : null
   const target = activity?.kind === 'combat' ? activity.enemy : undefined
@@ -145,10 +146,18 @@ export function CombatPanel({ state, dispatch }: Props) {
           do to the fight in front of you - and it can be changed mid-fight, since it
           only decides where the next kill's xp lands. */}
       <h3>Attack style</h3>
+      <p className="dim">
+        Fighting as <strong className="my-type">{branch}</strong>, from the weapon you have
+        fitted. {branch === 'ranged' ? 'Ranged' : 'Attack and Strength'} supplies your
+        accuracy and damage.
+      </p>
       <ul className="styles">
         {COMBAT_STYLES.map((style) => {
           const active = state.combat.style === style.id
-          const trains = style.trains ? getCombatSkill(style.trains)?.name : 'All three'
+          const focus = style.trains[branch]
+          const trains = focus
+            ? getCombatSkill(focus)?.name
+            : BRANCH_SKILLS[branch].map((s) => getCombatSkill(s)?.name).join(' + ')
           return (
             <li key={style.id}>
               <button

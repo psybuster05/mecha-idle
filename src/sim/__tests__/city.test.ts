@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { killsSince } from './combatXp'
 import { getEnemy, activePhase } from '../../content/enemies'
 import { getZone } from '../../content'
 import { getNode } from '../../content/world'
@@ -12,7 +13,7 @@ import { xpForLevel } from '../xp'
 
 function kitted(weapon: string, level: number): GameState {
   const state = newGame(99)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(level)
   }
   state.actors.mech.at = 'the_works'
@@ -34,7 +35,7 @@ function tickBy(state: GameState, total: number, step: number): GameState {
 
 function killsIn(weapon: string, target: string, seconds: number, level = 90): number {
   const state = tickBy(startCombat(kitted(weapon, level), 'the_city', target), seconds, 0.5)
-  return (state.skills.attack - xpForLevel(level)) / getEnemy(target)!.xp
+  return killsSince(state, level, getEnemy(target)!.xp)
 }
 
 describe('the chain reaches the mainland', () => {

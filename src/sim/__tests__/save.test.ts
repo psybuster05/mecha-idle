@@ -242,3 +242,23 @@ describe('save repair: fields added inside an actor', () => {
     expect(result.migratedFrom).toBe(2)
   })
 })
+
+describe('migration 4 -> 5: Ranged', () => {
+  it('seeds Ranged from the better melee skill', () => {
+    const old = { ...newGame(), version: 4 } as Record<string, unknown>
+    old['skills'] = { ...(old['skills'] as object), attack: 5000, strength: 9000 }
+    delete (old['skills'] as Record<string, number>)['ranged']
+
+    const result = deserialize(JSON.stringify(old))
+    expect(result.ok && result.state.skills.ranged).toBe(9000)
+  })
+
+  it('seeds it even when a stray zero is already present', () => {
+    // A guard on "is it already a number" skipped exactly this case.
+    const old = { ...newGame(), version: 4 } as Record<string, unknown>
+    old['skills'] = { ...(old['skills'] as object), attack: 5000, strength: 0, ranged: 0 }
+
+    const result = deserialize(JSON.stringify(old))
+    expect(result.ok && result.state.skills.ranged).toBe(5000)
+  })
+})

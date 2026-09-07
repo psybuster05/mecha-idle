@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { killsSince } from './combatXp'
 import { getEnemy, activePhase } from '../../content/enemies'
 import { getNode } from '../../content/world'
 import { newGame, recordDefeat, type GameState } from '../state'
@@ -11,7 +12,7 @@ import { xpForLevel } from '../xp'
 
 function kitted(weapon: string, level: number): GameState {
   const state = newGame(99)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(level)
   }
   state.actors.mech.at = 'the_span'
@@ -67,7 +68,7 @@ describe('armour penetration', () => {
     const LEVEL = 90
     const kills = (weapon: string, zone: string, target: string) => {
       const state = tickBy(startCombat(kitted(weapon, LEVEL), zone, target), 1800, 0.5)
-      return (state.skills.attack - xpForLevel(LEVEL)) / getEnemy(target)!.xp
+      return killsSince(state, LEVEL, getEnemy(target)!.xp)
     }
 
     // Riot Column carries 145 armour; a Scrap Crawler carries none.

@@ -35,6 +35,28 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   /**
+   * 4 -> 5: Ranged became a skill of its own.
+   *
+   * Most existing weapons are ranged - the Harpoon Launcher, the Arc Repeater, the
+   * Pulse Emitter - and accuracy and damage now come from Ranged when one is fitted.
+   * Left alone, everyone who had been fighting with a launcher would have loaded into a
+   * level-1 Ranged and watched their damage collapse for a change they did not make.
+   *
+   * So Ranged starts at whichever of Attack or Strength was higher. In fiction it is
+   * the honest reading: you already knew how to shoot, the skill simply was not being
+   * recorded separately. Mechanically it is deliberately generous, because the
+   * alternative is punishing people for an update.
+   */
+  4: (raw) => {
+    // Unconditional: a version 4 save cannot have had a Ranged skill, so there is
+    // nothing here to preserve. Guarding on "is it already a number" looked safer and
+    // was not - it silently skipped a save that carried a stray zero, which is exactly
+    // the case that needs seeding most.
+    const skills = { ...(raw['skills'] as Record<string, number> | undefined) }
+    skills['ranged'] = Math.max(skills['attack'] ?? 0, skills['strength'] ?? 0)
+    return { ...raw, version: 5, skills }
+  },
+  /**
    * 3 -> 4: travel was removed.
    *
    * Actors keep their position - places still gate content - but they no longer walk

@@ -97,12 +97,38 @@ part of this game with the most in it - six regions, seven bosses, four skills o
 called **Fight** rather than Combat, because a section and its first child sharing a name
 reads as a mistake.
 
+## Melee and Ranged
+
+Weapons declare a `combatClass`. **Ranged is one skill doing the work of two** - it
+supplies both the accuracy Attack would give and the damage Strength would give - while
+melee keeps them separate. That is the actual difference between the branches, not a
+numbers tweak. Absent means melee, so a weapon added carelessly lands in the branch that
+cannot silently borrow Ranged levels; `'any'` follows whichever branch you trained higher.
+
+**Combat level takes your best branch, never the average of all.** Averaging a fifth
+skill in was measured to drop existing saves by 7-19 levels and would have shut zones
+people had already opened. Offence is `max(melee average, ranged)`, weighted double to
+stand in for the two skills it replaces - which makes the formula a strict generalisation
+of the old one, identical while Ranged trails. A test asserts that across five save
+shapes.
+
+Two traps this created, both fixed:
+
+- **Every fabrication tier that makes a weapon must make one each branch can use**, or a
+  branch is stranded. Melee briefly had nothing between fabrication 30 and 75. A test
+  guards it now, the same way one guards actions having somewhere to be performed.
+- **Existing saves needed seeding.** Most weapons are ranged, so a v4 save would have
+  loaded with a launcher fitted and Ranged at level 1. The 4 -> 5 migration starts Ranged
+  at the better of Attack or Strength.
+
 **Attack styles decide which skill a fight trains, and every style pays the same total
 xp.** That constraint is load-bearing rather than cosmetic: before styles existed a kill
 paid the *full* xp to Attack, Strength and Defence at once, so routing that to one skill
 would have cut combat training to a third and silently re-gated every zone, since zone
-requirements read combat level. A focused style therefore hands one skill what the three
-would have shared, and Balanced is the old behaviour kept as the default.
+requirements read combat level. A focused style therefore hands one skill what its branch's set
+would have shared, and Balanced is the old behaviour kept as the default. The sets are
+different sizes - melee routes between three skills, ranged between two - so it is the
+total that is held constant, never the per-skill amount.
 
 Specialising still costs something, and should: combat level is the average of four
 skills and the xp curve is exponential, so concentrated xp buys fewer total levels than

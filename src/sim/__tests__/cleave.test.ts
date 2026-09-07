@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { killsSince } from './combatXp'
 import { newGame, recordDefeat, type GameState } from '../state'
 import { equipItem } from '../equipment'
 import { derivedStats } from '../stats'
@@ -9,7 +10,7 @@ import { xpForLevel } from '../xp'
 
 function kitted(weapon: string, level = 90): GameState {
   const state = newGame(99)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(level)
   }
   state.actors.mech.at = 'checkpoint'
@@ -29,7 +30,7 @@ function tickBy(state: GameState, total: number, step: number): GameState {
 }
 
 function killsOf(state: GameState, enemyId: string, level: number): number {
-  return (state.skills.attack - xpForLevel(level)) / getEnemy(enemyId)!.xp
+  return killsSince(state, level, getEnemy(enemyId)!.xp)
 }
 
 describe('the cleave stat', () => {

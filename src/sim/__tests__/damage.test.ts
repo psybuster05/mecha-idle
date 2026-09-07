@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { combatXpSince } from './combatXp'
 import { activePhase, effectiveResistances, ENEMIES, getEnemy } from '../../content/enemies'
 import { DAMAGE_TYPES, newGame, type GameState } from '../state'
 import { equipItem } from '../equipment'
@@ -9,7 +10,7 @@ import { xpForLevel } from '../xp'
 
 function veteran(seed = 7): GameState {
   const state = newGame(seed)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(60)
   }
   return state
@@ -18,7 +19,7 @@ function veteran(seed = 7): GameState {
 /** Low enough that a single hit does not simply delete the target. */
 function novice(seed = 7): GameState {
   const state = newGame(seed)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(20)
   }
   return state
@@ -85,8 +86,8 @@ describe('matchups decide fights', () => {
     const kinetic = tickBy(startCombat(withWeapon('weapon_rivet', 99), 'rustbelt', 'reclaimer'), 900, 0.5)
     const energy = tickBy(startCombat(withWeapon('weapon_arc', 99), 'rustbelt', 'reclaimer'), 900, 0.5)
 
-    const kineticXp = kinetic.skills.attack - xpForLevel(60)
-    const energyXp = energy.skills.attack - xpForLevel(60)
+    const kineticXp = combatXpSince(kinetic, 60)
+    const energyXp = combatXpSince(energy, 60)
     expect(energyXp).toBeGreaterThan(kineticXp)
   })
 
@@ -97,14 +98,14 @@ describe('matchups decide fights', () => {
     const emp = tickBy(startCombat(withWeapon('weapon_pulse', 5, novice), 'rustbelt', 'sentry_drone'), 600, 0.5)
     const energy = tickBy(startCombat(withWeapon('weapon_arc', 5, novice), 'rustbelt', 'sentry_drone'), 600, 0.5)
 
-    expect(emp.skills.attack - xpForLevel(20)).toBeGreaterThan(energy.skills.attack - xpForLevel(20))
+    expect(combatXpSince(emp, 20)).toBeGreaterThan(combatXpSince(energy, 20))
   })
 
   it('never reduces a landed hit below 1, so no matchup is unwinnable', () => {
     // A bare-handed mech against the most kinetic-resistant thing in the game still
     // makes progress - slowly. Bad matchups should be discouraging, not impossible.
     const state = tickBy(startCombat(veteran(3), 'rustbelt', 'reclaimer'), 600, 0.5)
-    expect(state.skills.attack).toBeGreaterThan(xpForLevel(60))
+    expect(combatXpSince(state, 60)).toBeGreaterThan(0)
   })
 })
 
@@ -183,7 +184,7 @@ describe('boss phases', () => {
     // level 60 no longer is, because reactor regeneration now outlasts the Overseer's
     // quieter phases. That is the intended effect of regeneration, not a regression.
     const green = newGame(11)
-    for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+    for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
       green.skills[skill] = xpForLevel(25)
     }
     const state = tickBy(startCombat(green, 'rustbelt', 'overseer'), 1800, 0.5)

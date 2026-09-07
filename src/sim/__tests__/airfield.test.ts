@@ -11,7 +11,7 @@ import { xpForLevel } from '../xp'
 
 function kitted(weapon: string, level: number, frame = 'frame_titanium'): GameState {
   const state = newGame(99)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(level)
   }
   state.actors.mech.at = 'terminal_c'
@@ -87,7 +87,7 @@ describe('equipment evasion', () => {
 describe('weapon damage holds its value at every level', () => {
   const damageWith = (weapon: string, level: number) => {
     const s = newGame()
-    for (const k of ['attack', 'strength', 'defence', 'hitpoints'] as const) s.skills[k] = xpForLevel(level)
+    for (const k of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) s.skills[k] = xpForLevel(level)
     s.bank[weapon] = 1
     equipItem(s, weapon)
     return derivedStats(s).damage
@@ -96,7 +96,7 @@ describe('weapon damage holds its value at every level', () => {
   it('keeps the same proportional advantage at 20 as at 99', () => {
     const bare = (level: number) => {
       const s = newGame()
-      for (const k of ['attack', 'strength', 'defence', 'hitpoints'] as const) s.skills[k] = xpForLevel(level)
+      for (const k of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) s.skills[k] = xpForLevel(level)
       return derivedStats(s).damage
     }
     const lowRatio = damageWith('weapon_harpoon', 20) / bare(20)
@@ -106,7 +106,10 @@ describe('weapon damage holds its value at every level', () => {
 
   it('multiplies rather than adds', () => {
     const s = newGame()
+    // Both branches, because the Harpoon is ranged: fitting it moves damage from
+    // Strength to Ranged, and this test is about the multiplier, not the branch.
     s.skills.strength = xpForLevel(50)
+    s.skills.ranged = xpForLevel(50)
     const before = derivedStats(s).damage
     s.bank['weapon_harpoon'] = 1
     equipItem(s, 'weapon_harpoon')

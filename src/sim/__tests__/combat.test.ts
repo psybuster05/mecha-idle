@@ -4,13 +4,12 @@ import {
   COMBAT_SKILLS,
   newGame,
   setActivity,
-  type CombatSkillId,
   type GameState,
 } from '../state'
 import {
   COMBAT_SKILL_DEFS,
   COMBAT_STYLES,
-  STYLE_SKILLS,
+  BRANCH_SKILLS,
   getCombatStyle,
   type CombatStyleId,
 } from '../../content/skills/combat'
@@ -19,7 +18,7 @@ import { deserialize, serialize } from '../save'
 import { levelFromXp } from '../xp'
 import { count } from '../bank'
 import { equipItem, unequipSlot } from '../equipment'
-import { combatLevel, derivedStats, RESPAWN_DELAY } from '../stats'
+import { combatBranch, combatLevel, derivedStats, RESPAWN_DELAY } from '../stats'
 import { xpForLevel } from '../xp'
 
 function deployed(seed = 7): GameState {
@@ -31,7 +30,7 @@ function deployed(seed = 7): GameState {
 /** A mech levelled and kitted well enough to farm the Rustbelt indefinitely. */
 function veteran(seed = 7): GameState {
   const state = deployed(seed)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(40)
   }
   return state
@@ -223,6 +222,14 @@ describe('combat skill descriptions match what the levels actually do', () => {
     for (const skill of COMBAT_SKILL_DEFS) {
       const base = newGame()
       const raised = newGame()
+      // Ranged only supplies accuracy and damage while a ranged weapon is fitted, so
+      // measure it holding one. Melee skills are measured bare-handed, which is melee.
+      if (skill.id === 'ranged') {
+        for (const s of [base, raised]) {
+          s.bank['weapon_repeater'] = 1
+          equipItem(s, 'weapon_repeater')
+        }
+      }
       // 50 levels, so a small per-level coefficient is still measured well clear of
       // any rounding in the level curve.
       raised.skills[skill.id] = xpForLevel(51)
@@ -265,7 +272,7 @@ describe('attack styles', () => {
   }
 
   const combatXp = (s: GameState) =>
-    ['attack', 'strength', 'defence'].reduce((sum, k) => sum + s.skills[k as CombatSkillId], 0)
+    BRANCH_SKILLS.melee.reduce((sum, k) => sum + s.skills[k], 0)
 
   it('defaults to balanced, which is what the game always did', () => {
     expect(newGame().combat.style).toBe('balanced')
@@ -328,11 +335,12 @@ describe('attack styles', () => {
 
   it('puts all of it in the skill the style names, and nothing in the others', () => {
     for (const style of COMBAT_STYLES) {
-      if (!style.trains) continue
+      if (!style.trains.melee) continue
       const after = fought(style.id)
-      for (const skill of STYLE_SKILLS) {
+      for (const skill of BRANCH_SKILLS.melee) {
         const gained = after.skills[skill] - xpForLevel(30)
-        if (skill === style.trains) expect(gained, `${style.id} trains ${skill}`).toBeGreaterThan(0)
+        if (skill === style.trains.melee)
+          expect(gained, `${style.id} trains ${skill}`).toBeGreaterThan(0)
         else expect(gained, `${style.id} should not train ${skill}`).toBe(0)
       }
     }
@@ -377,5 +385,107 @@ describe('attack styles', () => {
       JSON.stringify({ ...newGame(), combat: { ...newGame().combat, style: 'bogus' } }),
     )
     expect(corrupt.ok && corrupt.state.combat.style).toBe('balanced')
+  })
+})
+
+/**
+ * Ranged as its own branch.
+ *
+ * The thing that had to be got right is that nobody loses anything. Averaging a fifth
+ * skill into combat level would have dropped existing saves by 7 to 19 levels and shut
+ * zones they had already opened, so combat level takes the best branch instead.
+ */
+describe('ranged', () => {
+  const withWeapon = (weapon: string, levels: Partial<Record<string, number>>) => {
+    const state = newGame()
+    for (const [skill, level] of Object.entries(levels)) {
+      state.skills[skill as keyof typeof state.skills] = xpForLevel(level!)
+    }
+    state.bank[weapon] = 1
+    equipItem(state, weapon)
+    return state
+  }
+
+  it('draws accuracy and damage from Ranged when a ranged weapon is fitted', () => {
+    // Attack and Strength are maxed and must count for nothing here.
+    const state = withWeapon('weapon_repeater', { attack: 99, strength: 99, ranged: 1 })
+    const bare = derivedStats(newGame())
+    const stats = derivedStats(state)
+    expect(stats.accuracy).toBe(bare.accuracy + 30) // the repeater's own +30, nothing else
+    expect(stats.damage).toBeCloseTo(bare.damage * 1.0, 6)
+  })
+
+  it('draws them from Attack and Strength when a melee weapon is fitted', () => {
+    const state = withWeapon('weapon_lance', { attack: 50, strength: 50, ranged: 99 })
+    expect(derivedStats(state).accuracy).toBe(10 + 50 * 2 + 12)
+  })
+
+  it('lets the endgame weapon follow whichever branch you actually trained', () => {
+    const melee = withWeapon('weapon_sentence', { attack: 80, strength: 80, ranged: 1 })
+    const ranged = withWeapon('weapon_sentence', { attack: 1, strength: 1, ranged: 80 })
+    expect(combatBranch(melee)).toBe('melee')
+    expect(combatBranch(ranged)).toBe('ranged')
+    expect(derivedStats(ranged).accuracy).toBe(derivedStats(melee).accuracy)
+  })
+
+  it('treats an unarmed mech, and a weapon that forgot to say, as melee', () => {
+    expect(combatBranch(newGame())).toBe('melee')
+  })
+
+  /** The regression this whole formula exists to prevent. */
+  it('never lowers the combat level of a save that has not trained it', () => {
+    for (const [a, s, d, h] of [
+      [40, 40, 40, 30],
+      [60, 60, 60, 45],
+      [80, 80, 80, 60],
+      [99, 99, 99, 80],
+      [20, 10, 1, 1],
+    ]) {
+      const state = newGame()
+      state.skills.attack = xpForLevel(a!)
+      state.skills.strength = xpForLevel(s!)
+      state.skills.defence = xpForLevel(d!)
+      state.skills.hitpoints = xpForLevel(h!)
+      // Exactly the pre-ranged formula.
+      const old = Math.floor((a! + s! + d! + h!) / 4)
+      expect(combatLevel(state), `${a}/${s}/${d}/${h}`).toBe(old)
+    }
+  })
+
+  it('lets a ranged specialist reach a combat level a melee one could', () => {
+    const state = newGame()
+    state.skills.ranged = xpForLevel(80)
+    state.skills.defence = xpForLevel(60)
+    state.skills.hitpoints = xpForLevel(60)
+    expect(combatLevel(state)).toBe(Math.floor((80 * 2 + 60 + 60) / 4))
+  })
+
+  it('pays the same total xp fighting ranged as fighting melee', () => {
+    const fightWith = (weapon: string) => {
+      const state = newGame(4242)
+      for (const skill of COMBAT_SKILLS) state.skills[skill] = xpForLevel(40)
+      state.bank[weapon] = 1
+      equipItem(state, weapon)
+      setActivity(state, 'mech', { kind: 'combat', zone: 'rustbelt' })
+      const before = state.skills.hitpoints
+      let after = state
+      for (let i = 0; i < 4000 && after.skills.hitpoints === before; i++) after = tick(after, 0.5)
+      return BRANCH_SKILLS.melee
+        .concat('ranged')
+        .reduce((sum, k) => sum + after.skills[k] - xpForLevel(40), 0)
+    }
+    // One kill each. Branch must not change what a kill is worth.
+    expect(fightWith('weapon_repeater')).toBeCloseTo(fightWith('weapon_lance'), 6)
+  })
+
+  it('seeds Ranged from melee on an old save, so nobody loads in crippled', () => {
+    const old = { ...newGame(), version: 4 } as Record<string, unknown>
+    old['skills'] = { ...(old['skills'] as object), attack: xpForLevel(70), strength: xpForLevel(60) }
+    delete (old['skills'] as Record<string, number>)['ranged']
+
+    const result = deserialize(JSON.stringify(old))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(levelFromXp(result.state.skills.ranged)).toBe(70)
   })
 })

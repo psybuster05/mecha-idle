@@ -372,6 +372,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'A construction tool. It was never meant for this, and neither were you.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'any',
     stats: { accuracy: 3, damageType: 'kinetic', damageMultiplier: 1.15 },
   },
   {
@@ -380,6 +381,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Cuts rather than strikes. Plate that laughs at impacts runs like wax.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'any',
     stats: { accuracy: 8, damageType: 'energy', damageMultiplier: 1.35 },
   },
   {
@@ -388,6 +390,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'No hole, no scorch. Whatever was thinking in there simply stops.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'any',
     stats: { accuracy: 14, damageType: 'emp', damageMultiplier: 1.3 },
   },
   {
@@ -438,6 +441,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'One shot, and a long wait. Everything it hits stays hit.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'ranged',
     stats: { accuracy: 6, damageType: 'kinetic', damageMultiplier: 2.25, attackSpeed: -1.0, cleave: 1 },
   },
   // Airfield parts: the light build. Low HP and thin armour, bought back with evasion,
@@ -465,6 +469,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Barely a weapon on its own. It simply does not stop, and it does not miss.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'ranged',
     stats: { accuracy: 30, damageType: 'energy', damageMultiplier: 1.0, attackSpeed: 0.9 },
   },
   // Bridge parts: the armour question, and its answer.
@@ -474,6 +479,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'It does not hit armour. It finds the seam, and goes through it.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'melee',
     stats: { accuracy: 12, damageType: 'kinetic', damageMultiplier: 1.25, armourPierce: 0.75 },
   },
   {
@@ -492,6 +498,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'Built to move a queue along. It does not have to be aimed especially well.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'ranged',
     stats: { accuracy: 20, damageType: 'energy', damageMultiplier: 1.4, attackSpeed: 0.3, cleave: 0.6 },
   },
   {
@@ -527,6 +534,7 @@ export const ITEMS: readonly ItemDef[] = [
     description: 'It goes through armour and it does not waste what is left over. You did not design it that way. You just needed both.',
     category: 'part',
     slot: 'weapon',
+    combatClass: 'any',
     stats: {
       accuracy: 24,
       damageType: 'kinetic',

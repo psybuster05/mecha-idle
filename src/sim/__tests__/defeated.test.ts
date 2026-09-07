@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { combatXpSince } from './combatXp'
 import { WORLD_NODES } from '../../content/world'
 import { earnedPerks, getEnemy, perkTotal } from '../../content/enemies'
 import { hasDefeated, newGame, recordDefeat, type GameState } from '../state'
@@ -11,7 +12,7 @@ import { xpForLevel } from '../xp'
 /** Strong enough, and armed correctly, to actually finish the Overseer. */
 function championed(seed = 4242): GameState {
   const state = newGame(seed)
-  for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+  for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
     state.skills[skill] = xpForLevel(99)
   }
   state.bank['weapon_pulse'] = 1
@@ -129,7 +130,8 @@ describe('perks', () => {
     // base rate. Keeps the moment reproducible and easy to reason about.
     const state = tickBy(startCombat(championed(), 'rustbelt', 'overseer'), 600, 0.5)
     const overseerXp = getEnemy('overseer')!.xp
-    expect(state.skills.attack - xpForLevel(99)).toBeGreaterThanOrEqual(overseerXp)
+    // Branch-neutral: the champion fights ranged, so Attack alone reads as zero.
+    expect(combatXpSince(state, 99)).toBeGreaterThanOrEqual(overseerXp)
   })
 })
 

@@ -107,6 +107,12 @@ export interface ItemDef {
   fuel?: FuelDef
   /** Present only on equippable parts. */
   slot?: EquipSlot
+  /**
+   * Which branch a weapon fights with. Absent means melee, so a weapon added without
+   * thinking about it lands in the branch that cannot silently borrow Ranged levels.
+   * 'any' is for the endgame weapon, which should not be locked to one ladder.
+   */
+  combatClass?: 'melee' | 'ranged' | 'any'
   stats?: EquipStats
   /** Level in the relevant combat skill needed to equip. */
   equipLevel?: number

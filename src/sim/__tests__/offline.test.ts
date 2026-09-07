@@ -66,7 +66,7 @@ describe('offline - matches having actually played', () => {
 
   it('matches for eight hours of combat', () => {
     const build = (s: GameState) => {
-      for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+      for (const skill of ['attack', 'strength', 'defence', 'hitpoints', 'ranged'] as const) {
         s.skills[skill] = xpForLevel(40)
       }
       setActivity(s, 'mech', { kind: 'combat', zone: 'rustbelt' })

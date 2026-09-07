@@ -13,6 +13,7 @@ const SKILL_LABELS: Record<SkillId, string> = {
   strength: 'Strength',
   defence: 'Defence',
   hitpoints: 'Hitpoints',
+  ranged: 'Ranged',
 }
 
 const STOP_TEXT: Record<string, string> = {

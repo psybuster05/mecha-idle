@@ -47,6 +47,16 @@ export const COMBAT_SKILL_DEFS: readonly CombatSkillDef[] = [
     ],
   },
   {
+    id: 'ranged',
+    name: 'Ranged',
+    description:
+      'Standoff gunnery. One discipline doing the work of two - where to put it, and how hard it arrives.',
+    grants: [
+      { stat: 'Accuracy', perLevel: 2 },
+      { stat: 'Damage', perLevel: 1.2 },
+    ],
+  },
+  {
     id: 'hitpoints',
     name: 'Hitpoints',
     description:
@@ -86,8 +96,13 @@ export interface CombatStyleDef {
   id: CombatStyleId
   name: string
   description: string
-  /** Which skill takes the whole share. Null means split it, as it always was. */
-  trains: CombatSkillId | null
+  /**
+   * Which skill takes the whole share, per branch. Null means split across that
+   * branch's set. Two entries because the same style means different things depending
+   * on what you are holding: Aggressive trains Strength with a lance and Ranged with a
+   * launcher, since Ranged is one skill doing both jobs.
+   */
+  trains: Record<CombatClass, CombatSkillId | null>
   /**
    * Multipliers on derived stats. Absent means unchanged.
    *
@@ -98,15 +113,47 @@ export interface CombatStyleDef {
   effects?: { accuracy?: number; damage?: number; evasion?: number; armour?: number }
 }
 
-/** The skills a style routes between. Hitpoints is deliberately not one of them. */
-export const STYLE_SKILLS: readonly CombatSkillId[] = ['attack', 'strength', 'defence']
+export type CombatClass = 'melee' | 'ranged'
+
+/**
+ * The skills each branch routes xp between. Hitpoints is deliberately in neither - it
+ * always earns its own share, whatever you are holding.
+ *
+ * The sets are different sizes, and that is fine: the *total* is what is held constant,
+ * not the per-skill amount. See `styleShare`.
+ */
+export const BRANCH_SKILLS: Record<CombatClass, readonly CombatSkillId[]> = {
+  melee: ['attack', 'strength', 'defence'],
+  ranged: ['ranged', 'defence'],
+}
+
+/**
+ * Total combat xp a kill pays, as a multiple of the enemy's xp value.
+ *
+ * Fixed at 3 because that is what melee paid before styles existed - full xp to Attack,
+ * Strength and Defence at once. Every style and every branch pays exactly this, so no
+ * choice is faster than another and zone gating never moves as a side effect.
+ */
+export const STYLE_SHARE = 3
+
+/** How a kill's xp divides, given a branch and a style. */
+export function styleShare(
+  style: CombatStyleDef,
+  branch: CombatClass,
+  xp: number,
+): { skill: CombatSkillId; amount: number }[] {
+  const focus = style.trains[branch]
+  if (focus) return [{ skill: focus, amount: xp * STYLE_SHARE }]
+  const set = BRANCH_SKILLS[branch]
+  return set.map((skill) => ({ skill, amount: (xp * STYLE_SHARE) / set.length }))
+}
 
 export const COMBAT_STYLES: readonly CombatStyleDef[] = [
   {
     id: 'balanced',
     name: 'Balanced',
     description: 'Split evenly. Nothing improves quickly and nothing is neglected.',
-    trains: null,
+    trains: { melee: null, ranged: null },
     // No combat bonus, on purpose. Balanced buys *breadth*: spread xp keeps all three
     // skills climbing, and combat level is their average, which is what gates zones.
     // Focused styles buy depth instead. Giving Balanced a consolation multiplier as
@@ -118,21 +165,21 @@ export const COMBAT_STYLES: readonly CombatStyleDef[] = [
     id: 'accurate',
     name: 'Accurate',
     description: 'Take the shot you are sure of. Everything into Attack, and you land more of them.',
-    trains: 'attack',
+    trains: { melee: 'attack', ranged: 'ranged' },
     effects: { accuracy: 1.12 },
   },
   {
     id: 'aggressive',
     name: 'Aggressive',
     description: 'Commit to every hit and let the plating take what it takes. Everything into Strength, and it hurts more.',
-    trains: 'strength',
+    trains: { melee: 'strength', ranged: 'ranged' },
     effects: { damage: 1.12 },
   },
   {
     id: 'defensive',
     name: 'Defensive',
     description: 'Fight to still be standing afterwards. Everything into Defence, and less of it reaches you.',
-    trains: 'defence',
+    trains: { melee: 'defence', ranged: 'defence' },
     effects: { evasion: 1.12, armour: 1.12 },
   },
 ]

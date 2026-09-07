@@ -126,3 +126,52 @@ describe('content integrity', () => {
     }
   })
 })
+
+/**
+ * Both combat branches need somewhere to go.
+ *
+ * Splitting weapons into melee and ranged created a way to strand a whole branch without
+ * noticing: melee briefly had the Rivet Driver at fabrication 30 and then nothing until
+ * the Breaching Lance at 75, which is most of the game with no upgrade. A branch with a
+ * hole in its ladder is content nobody can use, the same failure the world-node test
+ * catches for skill actions.
+ */
+describe('every combat branch has a weapon ladder', () => {
+  const weaponTiers = () => {
+    const fab = SKILLS.find((s) => s.id === 'fabrication')!
+    const tiers: { level: number; classes: string[] }[] = []
+    for (const action of fab.actions) {
+      const made = action.outputs.map((o) => getItem(o.item)).filter((i) => i?.slot === 'weapon')
+      if (!made.length) continue
+      tiers.push({
+        level: action.levelRequired,
+        classes: made.map((i) => i!.combatClass ?? 'melee'),
+      })
+    }
+    return tiers
+  }
+
+  it('offers each branch a weapon at the first tier that has any', () => {
+    const tiers = weaponTiers().sort((a, b) => a.level - b.level)
+    expect(tiers.length).toBeGreaterThan(0)
+    const first = tiers[0]!
+    for (const branch of ['melee', 'ranged'] as const) {
+      expect(
+        first.classes.some((c) => c === branch || c === 'any'),
+        `${branch} has no weapon at fabrication ${first.level}, the first tier that makes one`,
+      ).toBe(true)
+    }
+  })
+
+  it('never leaves a branch more than one tier without an upgrade', () => {
+    const tiers = weaponTiers().sort((a, b) => a.level - b.level)
+    const levels = [...new Set(tiers.map((t) => t.level))]
+    for (const branch of ['melee', 'ranged'] as const) {
+      const usable = levels.filter((level) =>
+        tiers.some((t) => t.level === level && t.classes.some((c) => c === branch || c === 'any')),
+      )
+      const gaps = levels.filter((l) => !usable.includes(l))
+      expect(gaps, `${branch} has no weapon at fabrication ${gaps.join(', ')}`).toEqual([])
+    }
+  })
+})

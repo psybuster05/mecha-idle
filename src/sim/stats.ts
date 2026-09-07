@@ -8,7 +8,7 @@
 
 import { getItem } from '../content'
 import { perkTotal } from '../content/enemies'
-import { getCombatStyle } from '../content/skills/combat'
+import { getCombatStyle, type CombatClass } from '../content/skills/combat'
 import type { EquipStats } from '../content/types'
 import {
   DAMAGE_TYPES,
@@ -124,15 +124,36 @@ function equippedResistances(state: GameState): Required<Resistances> {
   return total
 }
 
+/**
+ * Which branch the equipped weapon fights with.
+ *
+ * Bare-handed counts as melee, and so does a weapon that forgot to say - the branch that
+ * cannot borrow Ranged levels is the safe default for a content mistake. 'any' follows
+ * whichever branch you have trained higher, so the endgame weapon never punishes the
+ * ladder you chose.
+ */
+export function combatBranch(state: GameState): CombatClass {
+  const weapon = state.equipment.weapon ? getItem(state.equipment.weapon) : undefined
+  const declared = weapon?.combatClass ?? 'melee'
+  if (declared !== 'any') return declared
+  const melee = (levelFromXp(state.skills.attack) + levelFromXp(state.skills.strength)) / 2
+  return levelFromXp(state.skills.ranged) > melee ? 'ranged' : 'melee'
+}
+
 export function derivedStats(state: GameState): DerivedStats {
   // The attack style leans the same totals one way or another. Multiplicative so the
   // lean does not decay as levels climb - the same reason weapons multiply.
   const style = getCombatStyle(state.combat.style)?.effects ?? {}
 
-  const attack = levelFromXp(state.skills.attack)
-  const strength = levelFromXp(state.skills.strength)
   const defence = levelFromXp(state.skills.defence)
   const hitpoints = levelFromXp(state.skills.hitpoints)
+
+  // Ranged is one skill doing the work of two: it supplies both the accuracy Attack
+  // would have and the damage Strength would have. Melee keeps them separate, which is
+  // the actual difference between the branches rather than a numbers tweak.
+  const ranged = combatBranch(state) === 'ranged'
+  const attack = ranged ? levelFromXp(state.skills.ranged) : levelFromXp(state.skills.attack)
+  const strength = ranged ? levelFromXp(state.skills.ranged) : levelFromXp(state.skills.strength)
 
   return {
     maxHp: 50 + hitpoints * 8 + equippedTotal(state, 'hp'),
@@ -164,12 +185,23 @@ export function derivedStats(state: GameState): DerivedStats {
 }
 
 /** Mean of the four combat skill levels. Gates zone entry. */
+/**
+ * Combat level, from your **best** offensive branch rather than the average of all.
+ *
+ * Averaging a fifth skill in would have dropped every existing save by 7 to 19 levels
+ * and locked people out of zones they had already opened - measured, not guessed. So
+ * offence is whichever branch you have actually trained, and it is weighted double to
+ * stand in for the two melee skills it replaces.
+ *
+ * That makes this a strict generalisation of the old formula: while Ranged trails your
+ * melee average, `2 * (attack + strength) / 2 + defence + hitpoints` over 4 is exactly
+ * `(attack + strength + defence + hitpoints) / 4`. Nobody's combat level moves unless
+ * Ranged overtakes, in which case it can only go up.
+ */
 export function combatLevel(state: GameState): number {
-  const levels = [
-    levelFromXp(state.skills.attack),
-    levelFromXp(state.skills.strength),
-    levelFromXp(state.skills.defence),
-    levelFromXp(state.skills.hitpoints),
-  ]
-  return Math.floor(levels.reduce((a, b) => a + b, 0) / levels.length)
+  const melee = (levelFromXp(state.skills.attack) + levelFromXp(state.skills.strength)) / 2
+  const offence = Math.max(melee, levelFromXp(state.skills.ranged))
+  const defence = levelFromXp(state.skills.defence)
+  const hitpoints = levelFromXp(state.skills.hitpoints)
+  return Math.floor((offence * 2 + defence + hitpoints) / 4)
 }
