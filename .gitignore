@@ -5,3 +5,8 @@ release
 *.local
 .DS_Store
 .vite
+
+# The design document is ours, not the public repo's. It quotes conversations
+# verbatim and is where decisions get argued out before they are true in code.
+# Purged from history when the repo was made public - do not commit it back.
+docs/GDD.md

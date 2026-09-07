@@ -76,6 +76,5 @@ who never fights still has a complete idle game.
 316 tests, most of them about the things that actually break idle games: xp curves,
 action rates, offline catch-up, and save migrations.
 
-- [Game Design Document](docs/GDD.md) - the design, with every decision and the reasoning
-  behind it, including the ones that got reversed.
-- [CLAUDE.md](CLAUDE.md) - the architecture rules and why each one exists.
+- [CLAUDE.md](CLAUDE.md) - the architecture rules and why each one exists, including the
+  ones that were reversed and why.

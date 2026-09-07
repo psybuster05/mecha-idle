@@ -77,9 +77,13 @@ file, not writing engine code. "Make tier 3 parts stronger" should be a number e
 
 ## Design intent
 
-The living design lives in `docs/GDD.md`. Items tagged BUILT are true in code; PROPOSED
-is a suggestion; OPEN is waiting on the user. Check it before inventing new mechanics,
-and when a question there gets answered, update the tag rather than leaving it stale.
+The living design lives in `docs/GDD.md`, which is **deliberately untracked** - it is a
+working document that quotes conversations verbatim, and it stayed private when the repo
+went public. It is on disk; it is not in the repo, and it must not be committed back.
+
+Items tagged BUILT are true in code; PROPOSED is a suggestion; OPEN is waiting on the
+user. Check it before inventing new mechanics, and when a question there gets answered,
+update the tag rather than leaving it stale.
 
 ## Naming: standard RPG terms, not mecha jargon
 
