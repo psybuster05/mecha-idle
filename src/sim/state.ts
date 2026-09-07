@@ -155,6 +155,20 @@ export interface CombatState {
 // Game state
 // ---------------------------------------------------------------------------
 
+/**
+ * Narrative progress.
+ *
+ * `pending` is what has fired but not yet been read; `seen` is what has. The
+ * simulation only ever moves ids from nothing into `pending` - the UI decides when
+ * something has been read, because that is a presentation question.
+ */
+export interface StoryState {
+  /** Fired, not yet shown. In the order they fired. */
+  pending: string[]
+  /** Already delivered. */
+  seen: string[]
+}
+
 export const SAVE_VERSION = 3
 
 export interface GameState {
@@ -174,6 +188,17 @@ export interface GameState {
   bank: Partial<Record<ItemId, number>>
   equipment: Partial<Record<EquipSlot, ItemId>>
   combat: CombatState
+  /**
+   * Every place ever reached.
+   *
+   * Recorded on arrival inside the travel step rather than derived from where you are
+   * now, because "where you are" is not monotonic: one large offline step could walk
+   * you through somewhere and out the other side, and a story beat keyed on the visit
+   * would never fire. Monotonic facts are the only safe triggers.
+   */
+  visited: NodeId[]
+  /** Narrative progress. Reads from the world; the world never reads from it. */
+  story: StoryState
   /**
    * Bosses beaten, and how many times.
    *
@@ -222,6 +247,8 @@ export function newGame(seed: number = 1): GameState {
     skills,
     bank: {},
     equipment: {},
+    visited: [DEFAULT_START_NODE],
+    story: { pending: [], seen: [] },
     defeated: {},
     combat: {
       enemyId: null,
@@ -270,6 +297,24 @@ export function canStartActivity(state: GameState, actor: ActorId): boolean {
 }
 
 export const ACTOR_IDS: readonly ActorId[] = ['mech', 'crawler']
+
+/** Mutates. Records arriving somewhere, if it is the first time. */
+export function recordVisit(state: GameState, node: NodeId): void {
+  if (!state.visited.includes(node)) state.visited.push(node)
+}
+
+/** Mutates. Queues a story beat, unless it has already fired or been read. */
+export function queueStoryBeat(state: GameState, id: string): boolean {
+  if (state.story.seen.includes(id) || state.story.pending.includes(id)) return false
+  state.story.pending.push(id)
+  return true
+}
+
+/** Mutates. Marks a queued beat as read. */
+export function markStorySeen(state: GameState, id: string): void {
+  state.story.pending = state.story.pending.filter((pending) => pending !== id)
+  if (!state.story.seen.includes(id)) state.story.seen.push(id)
+}
 
 /** Whether a boss has ever been beaten. */
 export function hasDefeated(state: GameState, bossId: string): boolean {

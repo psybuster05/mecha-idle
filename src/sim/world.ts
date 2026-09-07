@@ -7,7 +7,14 @@
  */
 
 import { ADJACENCY, getNode, nodeDistance } from '../content/world'
-import { hasDefeated, type ActorId, type GameState, type NodeId, type TravelState } from './state'
+import {
+  hasDefeated,
+  recordVisit,
+  type ActorId,
+  type GameState,
+  type NodeId,
+  type TravelState,
+} from './state'
 import { derivedStats } from './stats'
 
 export { BASE_MOVE_SPEED } from './stats'
@@ -114,6 +121,7 @@ export function advanceTravel(state: GameState, actorId: ActorId, dt: number): n
     // Zero-length or malformed hop: arrive immediately rather than spinning.
     if (!(travel.legSeconds > 0)) {
       actor.at = travel.to
+      recordVisit(state, travel.to)
       actor.travel = beginTravel(travel.to, travel.remaining, speed)
       continue
     }
@@ -126,6 +134,7 @@ export function advanceTravel(state: GameState, actorId: ActorId, dt: number): n
 
     remainingDt -= needed
     actor.at = travel.to
+    recordVisit(state, travel.to)
     actor.travel = beginTravel(travel.to, travel.remaining, speed)
   }
 

@@ -10,6 +10,7 @@ import { advanceCombatActivity } from './combat'
 import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
 import { derivedStats, HP_REGEN_PER_SECOND } from './stats'
+import { advanceStory } from './story'
 import { advanceTravel } from './world'
 
 /** Pure. Returns a new state advanced by `dtSeconds`. */
@@ -37,6 +38,8 @@ export function advance(state: GameState, dt: number): void {
     }
   }
 
+  // Evaluated after the world has moved, so a beat keyed on arriving somewhere or
+  // beating something fires in the same step that made it true.
   for (const actorId of ACTOR_IDS) {
     const actor = state.actors[actorId]
     if (!actor.unlocked) continue
@@ -57,4 +60,6 @@ export function advance(state: GameState, dt: number): void {
         break
     }
   }
+
+  advanceStory(state)
 }

@@ -11,10 +11,15 @@ import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
 import { MechPanel } from './components/MechPanel'
 import { OfflineDialog } from './components/OfflineDialog'
+import { LogPanel } from './components/LogPanel'
 import { SkillPanel } from './components/SkillPanel'
+import { StoryDialog } from './components/StoryDialog'
 import { WorldPanel } from './components/WorldPanel'
+import { getStoryBeat } from '../content/story'
+import { nextInterrupt, unreadLogCount } from '../sim/story'
+import { readStoryBeat } from '../sim/intents'
 
-type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank'
+type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank' | 'log'
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
@@ -45,6 +50,8 @@ export function App() {
   }
 
   const stats = derivedStats(state)
+  const interruptId = nextInterrupt(state)
+  const interrupt = interruptId ? getStoryBeat(interruptId) : undefined
   const activity = state.actors.mech.activity
   const busy = activity !== null
 
@@ -135,6 +142,18 @@ export function App() {
               <span className="rail-name">Bank</span>
               <span className="rail-level">{Object.keys(state.bank).length}</span>
             </button>
+            <button
+              className={`rail-item ${tab === 'log' ? 'selected' : ''}`}
+              onClick={() => setTab('log')}
+            >
+              <span className="rail-name">
+                Recovered
+                {unreadLogCount(state) > 0 && (
+                  <span className="unread-dot" aria-label="unread entries" />
+                )}
+              </span>
+              <span className="rail-level">{state.story.seen.length}</span>
+            </button>
           </div>
 
           {!busy && (
@@ -153,6 +172,8 @@ export function App() {
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
             <BankPanel state={state} />
+          ) : tab === 'log' ? (
+            <LogPanel state={state} dispatch={dispatch} />
           ) : (
             <SkillPanel state={state} skillId={tab} dispatch={dispatch} />
           )}
@@ -160,6 +181,12 @@ export function App() {
       </div>
 
       {offlineReport && <OfflineDialog report={offlineReport} onDismiss={dismissOffline} />}
+
+      {/* Story waits behind the offline summary, so returning players read what they
+          earned before being told what they remembered. */}
+      {!offlineReport && interrupt && (
+        <StoryDialog beat={interrupt} onDismiss={() => dispatch((s) => readStoryBeat(s, interrupt.id))} />
+      )}
     </div>
   )
 }

@@ -164,3 +164,29 @@ banked overkill is spent immediately so it cannot be stockpiled.
 
 When adding a weapon, measure it against the existing ones before shipping. Both traps
 found so far looked entirely reasonable in the content table.
+
+## Story
+
+Delivered as recovered memory: first person, fragmentary, out of order. Content lives in
+`src/content/story.ts`; evaluation in `src/sim/story.ts`, called from `tick`.
+
+Two rules, both load-bearing:
+
+- **Story reads from the world; the world never reads from story.** No beat may gate a
+  region, item or level. Skipping every word must leave the game fully playable - the
+  same no-gating rule as combat, from the other side.
+- **Triggers must be monotonic.** Once true, true forever. `tick` evaluates them once per
+  step, so a condition that can flip back could be missed entirely by one large offline
+  step while many small ones caught it. Bosses defeated, places visited and levels
+  reached qualify; "currently holding an item" does not, which is why there is no item
+  trigger. Visits are recorded on arrival into `state.visited` for exactly this reason.
+
+Interrupts are rationed to the waking, each boss and the ending - under ten in the whole
+game. A test enforces that nothing minor interrupts.
+
+## When the browser disagrees with the tests
+
+Vite caches transformed modules in `node_modules/.vite`, and that cache **survives a dev
+server restart**. If behaviour in the browser contradicts a passing test, run the exact
+state through the real code in a scratch test first; if Node is right and the browser is
+wrong, delete `node_modules/.vite` and restart. This has now cost time twice.

@@ -85,6 +85,12 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.bank = { ...(raw['bank'] as object | undefined) }
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
+  merged.visited = Array.isArray(raw['visited']) ? (raw['visited'] as string[]) : base.visited
+  const rawStory = raw['story'] as { pending?: unknown; seen?: unknown } | undefined
+  merged.story = {
+    pending: Array.isArray(rawStory?.pending) ? (rawStory.pending as string[]) : [],
+    seen: Array.isArray(rawStory?.seen) ? (rawStory.seen as string[]) : [],
+  }
 
   // Guard against a hand-edited or corrupted save producing NaN, which would
   // silently poison every number downstream of it.

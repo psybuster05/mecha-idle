@@ -8,7 +8,7 @@
 
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
 import { nodesForAction, nodesForZone } from '../content/world'
-import { cloneState, haltActivity, setActivity } from './state'
+import { cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { routeTo } from './world'
 import type { ActionId, ActorId, EquipSlot, GameState, GatheringSkillId, ItemId, ZoneId } from './state'
 
@@ -93,5 +93,22 @@ export function unequip(state: GameState, slot: EquipSlot): GameState {
 export function halt(state: GameState, actor: ActorId, reason: 'destroyed'): GameState {
   const next = cloneState(state)
   haltActivity(next, actor, reason)
+  return next
+}
+
+/** Mark one story beat as read. */
+export function readStoryBeat(state: GameState, id: string): GameState {
+  if (!state.story.pending.includes(id)) return state
+  const next = cloneState(state)
+  markStorySeen(next, id)
+  return next
+}
+
+/** Mark every waiting beat as read. Used when the Log is opened. */
+export function readAllStoryBeats(state: GameState, ids: readonly string[]): GameState {
+  const unread = ids.filter((id) => state.story.pending.includes(id))
+  if (unread.length === 0) return state
+  const next = cloneState(state)
+  for (const id of unread) markStorySeen(next, id)
   return next
 }
