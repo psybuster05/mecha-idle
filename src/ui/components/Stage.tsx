@@ -24,11 +24,15 @@ import { WorldMap } from './WorldMap'
 export function Stage({ state }: { state: GameState }) {
   return (
     <aside className="stage">
-      <div className="stage-portrait">
-        <MechPortrait state={state} scale={6} />
-      </div>
+      {/* Scrolls on its own so the map below can hold the corner. Without this split
+          the pinned map simply covered whatever it overlapped. */}
+      <div className="stage-body">
+        <div className="stage-portrait">
+          <MechPortrait state={state} scale={6} />
+        </div>
 
-      <NowPlaying state={state} />
+        <NowPlaying state={state} />
+      </div>
 
       <div className="stage-map">
         <WorldMap state={state} />

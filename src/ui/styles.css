@@ -392,7 +392,13 @@ img.sprite { image-rendering: pixelated; }
   width: 300px; flex: none; border-left: 1px solid var(--line);
   background: var(--panel); padding: 16px 14px;
   display: flex; flex-direction: column; gap: 16px;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+/* Takes the slack and scrolls, so the map keeps the corner on any frame height. */
+.stage-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
 }
 
 .stage-portrait { display: flex; justify-content: center; padding: 6px 0; }
@@ -407,7 +413,29 @@ img.sprite { image-rendering: pixelated; }
 .stage-enemy { display: flex; align-items: center; gap: 9px; }
 .stage-enemy-name { font-weight: 700; }
 
-.stage-map { display: flex; flex-direction: column; gap: 5px; }
+/*
+ * The map, pinned to the bottom-right corner of the frame.
+ *
+ * It is a minimap, not a tool: without zoom it cannot show you anything you would act
+ * on, so it earns a corner rather than a place in the reading order.
+ *
+ * `flex: none` against a scrolling .stage-body, rather than sticky. Sticky was the first
+ * attempt and it was wrong: on a short frame the column overflowed, and a sticky element
+ * with an opaque background sat directly on top of the readout it shares a column with -
+ * measured at 3px apart. Reserving the space is the only version that cannot overlap.
+ */
+.stage-map {
+  flex: none;
+  display: flex; flex-direction: column; gap: 5px;
+  padding-top: 12px; border-top: 1px solid var(--line);
+}
+/*
+ * Capped rather than filling the column width. At full width the three stage pieces
+ * overflowed a 16:9 frame and put a scrollbar down the side of the art; and since this
+ * is a landmark rather than something you read, the height is what should give.
+ * `width: auto` keeps the aspect honest so the pixel grid is not stretched.
+ */
+.stage-map .world-canvas { max-height: 158px; width: auto; margin: 0 auto; }
 .stage-caption { font-size: 11px; text-align: center; }
 
 @media (max-width: 720px) {
@@ -431,6 +459,7 @@ img.sprite { image-rendering: pixelated; }
     width: 100%; border-left: none; border-bottom: 1px solid var(--line); border-top: none;
     flex-direction: row; align-items: center; gap: 14px; padding: 10px 14px;
   }
+  .stage-body { display: contents; }
   .stage-portrait { padding: 0; flex: none; }
   .stage-now { flex: 1; min-width: 0; min-height: 0; }
   .stage-map { display: none; }
