@@ -89,7 +89,19 @@ update the tag rather than leaving it stale.
 
 Anything the player reads as a *label* uses the vocabulary idle-game players already
 know: **HP, Attack, Strength, Defence, Hitpoints, Damage, Accuracy, Armour, Evasion,
-Attack Speed, Bank, Equipment**. Panels are Skills / Combat / Equipment / Bank.
+Attack Speed, Bank, Equipment**.
+
+The rail is grouped **Combat / Non-combat / Character**, with Combat first. Combat is the
+part of this game with the most in it - six regions, seven bosses, four skills of its own
+- and listing it last among the gathering skills said the opposite. Its own entry is
+called **Fight** rather than Combat, because a section and its first child sharing a name
+reads as a mistake.
+
+The four combat skills each get a page (`CombatSkillPanel`). They had levels and xp from
+the first commit and were shown *nowhere*: you could train Attack for hours and never
+learn it had a level. What a level buys is data in `content/skills/combat.ts`, and a test
+measures those coefficients against `derivedStats` - two copies of a number drift, and a
+tooltip that lies is worse than no tooltip.
 
 The setting lives in flavour text, item names and enemy names - never in the words a
 player has to decode to read a stat. An earlier pass used Integrity / Targeting / Servos

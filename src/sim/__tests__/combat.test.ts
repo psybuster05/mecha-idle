@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { tick } from '../tick'
-import { newGame, setActivity, type GameState } from '../state'
+import { COMBAT_SKILLS, newGame, setActivity, type GameState } from '../state'
+import { COMBAT_SKILL_DEFS } from '../../content/skills/combat'
 import { count } from '../bank'
 import { equipItem, unequipSlot } from '../equipment'
 import { combatLevel, derivedStats, RESPAWN_DELAY } from '../stats'
@@ -182,5 +183,51 @@ describe('combat level', () => {
     state.skills.strength = xpForLevel(10)
     // (20 + 10 + 1 + 1) / 4 = 8
     expect(combatLevel(state)).toBe(8)
+  })
+})
+
+/**
+ * The combat skill panel tells the player what a level buys, using coefficients written
+ * down a second time in `content/skills/combat.ts`. Two copies of a number drift, and a
+ * tooltip that lies about the numbers is worse than no tooltip - so this measures the
+ * real thing rather than trusting either copy.
+ */
+describe('combat skill descriptions match what the levels actually do', () => {
+  // Narrowed to the numeric stats on purpose: DerivedStats also carries resistances and
+  // a damage type, which cannot be subtracted.
+  type NumericStat = 'accuracy' | 'damage' | 'evasion' | 'armour' | 'maxHp'
+  const STAT_KEYS: Record<string, NumericStat> = {
+    Accuracy: 'accuracy',
+    Damage: 'damage',
+    Evasion: 'evasion',
+    Armour: 'armour',
+    'Max HP': 'maxHp',
+  }
+
+  it('grants exactly what each table says, per level', () => {
+    for (const skill of COMBAT_SKILL_DEFS) {
+      const base = newGame()
+      const raised = newGame()
+      // 50 levels, so a small per-level coefficient is still measured well clear of
+      // any rounding in the level curve.
+      raised.skills[skill.id] = xpForLevel(51)
+      base.skills[skill.id] = xpForLevel(1)
+
+      const from = derivedStats(base)
+      const to = derivedStats(raised)
+
+      for (const grant of skill.grants) {
+        const key = STAT_KEYS[grant.stat]
+        expect(key, `"${grant.stat}" is not a stat the panel can show`).toBeDefined()
+        expect(
+          to[key!] - from[key!],
+          `${skill.name} claims ${grant.perLevel} ${grant.stat} per level`,
+        ).toBeCloseTo(grant.perLevel * 50, 6)
+      }
+    }
+  })
+
+  it('covers every combat skill, so none is left without a page', () => {
+    expect(COMBAT_SKILL_DEFS.map((s) => s.id).sort()).toEqual([...COMBAT_SKILLS].sort())
   })
 })

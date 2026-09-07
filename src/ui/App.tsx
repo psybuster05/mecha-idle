@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { LocalStorageAdapter } from '../platform/SaveAdapter'
 import { SKILLS, getSkill } from '../content'
-import { GATHERING_SKILLS, type GatheringSkillId, type GameState } from '../sim/state'
+import { getCombatSkill } from '../content/skills/combat'
+import {
+  COMBAT_SKILLS,
+  GATHERING_SKILLS,
+  type CombatSkillId,
+  type GatheringSkillId,
+  type GameState,
+} from '../sim/state'
 import { combatLevel, derivedStats } from '../sim/stats'
 import { levelFromXp, levelProgress } from '../sim/xp'
 import { formatNumber } from './format'
@@ -9,6 +16,7 @@ import { useGame } from './useGame'
 import { Bar } from './components/Bar'
 import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
+import { CombatSkillPanel } from './components/CombatSkillPanel'
 import { CrawlerPanel } from './components/CrawlerPanel'
 import { MechPanel } from './components/MechPanel'
 import { OfflineDialog } from './components/OfflineDialog'
@@ -20,7 +28,12 @@ import { getStoryBeat } from '../content/story'
 import { nextInterrupt, unreadLogCount } from '../sim/story'
 import { readStoryBeat } from '../sim/intents'
 
-type Tab = GatheringSkillId | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
+type Tab = GatheringSkillId | CombatSkillId | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
+
+/** Combat skills are a closed set, so this is how the router tells the two apart. */
+function isCombatSkill(tab: Tab): tab is CombatSkillId {
+  return (COMBAT_SKILLS as readonly string[]).includes(tab)
+}
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
@@ -83,8 +96,39 @@ export function App() {
 
       <div className="layout">
         <nav className="rail">
+          {/* Combat leads. It is the part of this game with the most in it - zones,
+              bosses, four skills of its own - and burying it at the bottom of a list of
+              gathering skills said the opposite. */}
           <div className="rail-group">
-            <div className="rail-heading dim">Skills</div>
+            <div className="rail-heading dim">Combat</div>
+            <button
+              className={`rail-item ${tab === 'combat' ? 'selected' : ''}`}
+              onClick={() => setTab('combat')}
+            >
+              <span className="rail-name">
+                {activity?.kind === 'combat' && <span className="running-dot" aria-label="running" />}
+                Fight
+              </span>
+              <span className="rail-level">{combatLevel(state)}</span>
+            </button>
+            {COMBAT_SKILLS.map((id) => {
+              const xp = state.skills[id]
+              return (
+                <button
+                  key={id}
+                  className={`rail-item ${tab === id ? 'selected' : ''}`}
+                  onClick={() => setTab(id)}
+                >
+                  <span className="rail-name">{getCombatSkill(id)?.name ?? id}</span>
+                  <span className="rail-level">{levelFromXp(xp)}</span>
+                  <Bar value={levelProgress(xp)} tone="xp" />
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="rail-group">
+            <div className="rail-heading dim">Non-combat</div>
             {GATHERING_SKILLS.map((id) => {
               const skill = SKILLS.find((s) => s.id === id)
               const xp = state.skills[id]
@@ -104,16 +148,6 @@ export function App() {
                 </button>
               )
             })}
-            <button
-              className={`rail-item ${tab === 'combat' ? 'selected' : ''}`}
-              onClick={() => setTab('combat')}
-            >
-              <span className="rail-name">
-                {activity?.kind === 'combat' && <span className="running-dot" aria-label="running" />}
-                Combat
-              </span>
-              <span className="rail-level">{combatLevel(state)}</span>
-            </button>
           </div>
 
           <div className="rail-group">
@@ -169,6 +203,8 @@ export function App() {
         <main className="content">
           {tab === 'combat' ? (
             <CombatPanel state={state} dispatch={dispatch} />
+          ) : isCombatSkill(tab) ? (
+            <CombatSkillPanel state={state} skillId={tab} />
           ) : tab === 'mech' ? (
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
