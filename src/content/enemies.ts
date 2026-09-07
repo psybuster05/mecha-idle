@@ -21,14 +21,6 @@ export interface BossPhase {
   damageMultiplier?: number
   /** Scales the boss's armour. Above 1 makes it turtle. */
   armourMultiplier?: number
-  /**
-   * Fraction of maximum HP the boss restores per second during this phase.
-   *
-   * A hard floor on damage rather than a longer fight: below the threshold you cannot
-   * finish it at all, however long you stay. Every other phase so far asks what to
-   * bring; this asks whether you brought enough.
-   */
-  regenPerSecond?: number
   /** Scales the boss's attack interval. Below 1 means it swings faster. */
   attackIntervalMultiplier?: number
   /** Changes what the boss deals. */
@@ -722,15 +714,11 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'control_collar', qty: 10, chance: 0.8 },
       { item: 'census_ledger', qty: 1, chance: 0.2 },
     ],
-    // Recount is a wall rather than a longer fight: below the damage threshold the
-    // boss heals faster than you hurt it and you can never finish, however long you
-    // stay. Every phase before this asked what to bring; this asks whether it is enough.
     phases: [
       {
         below: 0.55,
         name: 'Recount',
-        message: 'It stops fighting and starts counting again from the beginning. The damage begins undoing itself.',
-        regenPerSecond: 0.0009,
+        message: 'It stops fighting and starts counting again from the beginning. Nothing you have done to it has been entered yet.',
         damageMultiplier: 0.6,
         attackIntervalMultiplier: 1.2,
       },
@@ -738,7 +726,6 @@ export const ENEMIES: readonly EnemyDef[] = [
         below: 0.15,
         name: 'Final Tally',
         message: 'The figure will not reconcile. It stops trying to balance the ledger and starts closing it.',
-        regenPerSecond: 0,
         damageMultiplier: 2,
         attackIntervalMultiplier: 0.6,
         damageType: 'kinetic',
@@ -848,8 +835,7 @@ export const ENEMIES: readonly EnemyDef[] = [
       {
         below: 0.25,
         name: 'Continuity',
-        message: 'The damage starts undoing itself. He is not healing. He is being maintained, by the thing he has been holding, and it will not let him stop.',
-        regenPerSecond: 0.00025,
+        message: 'He is not fighting to win any more. He is being held upright by the thing he has been carrying, and it will not let him stop.',
         evasionMultiplier: 0.7,
         damageMultiplier: 1.3,
         attackIntervalMultiplier: 0.85,

@@ -95,17 +95,13 @@ describe('The Colonel', () => {
   const colonel = getEnemy('colonel')!
 
   it('runs every lesson the game has taught, in order', () => {
-    // Armour, then evasion, then a damage floor - the checkpoint, the tower, the census.
+    // Armour, then evasion, then everything at once - the checkpoint, the tower, and a
+    // last phase that simply hits harder and faster than anything before it.
     const phases = colonel.phases!
     expect(phases[0]!.armourMultiplier!).toBeGreaterThan(1)
     expect(phases[1]!.evasionMultiplier!).toBeGreaterThan(1)
-    expect(phases[2]!.regenPerSecond!).toBeGreaterThan(0)
-  })
-
-  it('sets its damage floor below reachable output', () => {
-    // The Census shipped at 120 HP/s against 30 achievable DPS once. Never again.
-    const recount = colonel.phases![2]!
-    expect(colonel.maxHp * recount.regenPerSecond!).toBeLessThan(10)
+    expect(phases[2]!.damageMultiplier!).toBeGreaterThan(1)
+    expect(phases[2]!.attackIntervalMultiplier!).toBeLessThan(1)
   })
 
   it('falls at level 99 to a properly equipped mech', () => {

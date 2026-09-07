@@ -296,11 +296,28 @@ Player DPS tops out near 25 and max HP near 1,100. **A boss is bounded by how lo
 player can stand in front of it, not by how much HP it has.** Inflating boss HP does not
 make a fight harder, it makes it longer, and length is what kills.
 
-Two consequences, both learned by shipping the mistake:
+**Enemies do not regenerate, and must not.** Two boss phases used to heal, and the whole
+idea is deleted. It was tuned twice and was wrong both times, for two different reasons:
 
-- **Damage floors must sit below reachable DPS.** The Census first shipped regenerating
-  120 HP/s against about 30 achievable - not a wall, a brick nobody could pass. Anything
-  using `regenPerSecond` needs measuring against real output first.
+- Set too high it is not a wall, it is a brick. The Census first shipped regenerating
+  120 HP/s against about 30 achievable DPS - unpassable at any level, and from the
+  player's side indistinguishable from a bug. You fight for ten minutes and the bar goes
+  *up*.
+- Set low enough to be fair it stops mattering. The Colonel's was 0.025%/s; removing it
+  moved his time-to-kill by three seconds in three hundred. It was paying nothing for the
+  confusion it caused.
+
+Between those two failure modes there is a band, but it is narrow and it buys a mechanic
+whose only expression is "you are not allowed to win yet". A damage check is better spent
+on armour, resistances or evasion, which say *what to bring* rather than *how much*.
+
+One measured surprise worth keeping in mind, because it is counterintuitive: removing
+boss healing made one low-DPS build **worse**. The fight got shorter, so the player's own
+0.4%/s regeneration had less time to accumulate, and the build reached the lethal final
+phase with less health banked. Shorter is not automatically easier.
+
+The other consequence, still true:
+
 - **Long fights need `PHASE_TRANSITION_HEAL`.** Regeneration alone is 0.4%/s, so a
   400-second boss could only ever deal ~2.6 net DPS. Healing 35% of max HP at each phase
   threshold turns one long fight into several short ones, which is the shape the budget

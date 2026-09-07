@@ -96,27 +96,22 @@ describe('the crowd', () => {
 describe('The Census', () => {
   const census = getEnemy('census')!
 
-  it('heals during Recount and stops for the tally', () => {
+  it('drops its guard to recount, then closes the ledger hard', () => {
+    // No healing any more: the shape of the fight is a lull and then a spike.
     const recount = activePhase(census, census.maxHp * 0.4)!
     const tally = activePhase(census, census.maxHp * 0.1)!
-    expect(recount.regenPerSecond!).toBeGreaterThan(0)
-    expect(tally.regenPerSecond).toBe(0)
+    expect(recount.damageMultiplier!).toBeLessThan(1)
     expect(tally.damageMultiplier!).toBeGreaterThan(recount.damageMultiplier!)
+    expect(tally.attackIntervalMultiplier!).toBeLessThan(1)
   })
 
-  it('sets the threshold below reachable damage, not above it', () => {
-    // 0.0075 of 16,000 was 120 hp/s against a realistic 30 - a brick no build could
-    // pass. A wall has to be climbable by someone.
-    const healPerSecond = census.maxHp * activePhase(census, census.maxHp * 0.4)!.regenPerSecond!
-    expect(healPerSecond).toBeLessThan(20)
-    expect(healPerSecond).toBeGreaterThan(5)
-  })
-
-  it('actually regenerates mid-fight', () => {
-    let state = startCombat(kitted('weapon_pulse', 80), 'the_city', 'census')
-    state = tickBy(state, 600, 0.5)
-    // A level 80 mech cannot out-damage the recount, so it stalls above zero forever.
-    expect(state.defeated['census'] ?? 0).toBe(0)
+  it('no longer heals at all, on any phase', () => {
+    // Enemy regeneration was removed outright. It made one boss a damage check that
+    // could not be passed at all below a threshold, which reads as broken rather than
+    // hard - you fight for ten minutes and the bar goes back up.
+    for (const phase of census.phases ?? []) {
+      expect(phase).not.toHaveProperty('regenPerSecond')
+    }
   })
 
   it('falls at level 90 to the right weapon', () => {

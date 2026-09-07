@@ -225,14 +225,6 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     combat.enemyAttackProgress += step
     remaining -= step
 
-    // Enemy regeneration, applied per step so it competes with incoming damage in
-    // real time rather than arriving in a lump.
-    if (phase?.regenPerSecond) {
-      combat.enemyHp = Math.min(
-        enemy.maxHp,
-        combat.enemyHp + enemy.maxHp * phase.regenPerSecond * step,
-      )
-    }
     // Regenerate inside the loop rather than once per call, so healing interleaves
     // with incoming hits exactly as it would in live play.
     combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * HP_REGEN_PER_SECOND * step)
