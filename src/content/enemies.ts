@@ -215,7 +215,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'hull_plate', qty: 4 },
       { item: 'hydraulic_ram', qty: 1 },
     ],
-    drops: [{ item: 'sonar_array', qty: 1, chance: 0.25 }],
+    drops: [
+      { item: 'sonar_array', qty: 1, chance: 0.25 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.02 },
+    ],
   },
 
   // --- Abandoned Airfield --------------------------------------------------
@@ -330,7 +333,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'barrier_segment', qty: 5 },
       { item: 'ceramic_composite', qty: 2 },
     ],
-    drops: [{ item: 'security_core', qty: 2, chance: 0.3 }],
+    drops: [
+      { item: 'security_core', qty: 2, chance: 0.3 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.03 },
+    ],
   },
 
   // --- The City ------------------------------------------------------------

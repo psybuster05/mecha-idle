@@ -205,6 +205,25 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- Fuel ------------------------------------------------------------------
+  //
+  // Never crafted, only found, and always rare. Burning one is a small event rather
+  // than a routine, which is why there is no recipe and no reason to stockpile.
+  {
+    id: 'catalyst_flask',
+    name: 'Catalyst Flask',
+    description: 'Something volatile that survived thirty-one years in a sealed case. It will not survive you.',
+    category: 'fuel',
+    fuel: { multiplier: 2, seconds: 600 },
+  },
+  {
+    id: 'overcharge_cell',
+    name: 'Overcharge Cell',
+    description: 'Rated well past anything you should put through yourself. You are going to anyway.',
+    category: 'fuel',
+    fuel: { multiplier: 3, seconds: 420 },
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',

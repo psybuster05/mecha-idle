@@ -153,7 +153,11 @@ export function derivedStats(state: GameState): DerivedStats {
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
     cleave: Math.min(1, Math.max(0, equippedTotal(state, 'cleave'))),
     armourPierce: Math.min(0.9, Math.max(0, equippedTotal(state, 'armourPierce'))),
-    skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),
+    // Fuel multiplies on top of equipment, so a good build and a burning cell compound.
+    skillDurationScale:
+      1 /
+      ((1 + Math.max(0, equippedTotal(state, 'skillSpeed'))) *
+        (state.boost && state.boost.secondsRemaining > 0 ? state.boost.multiplier : 1)),
     damageType: equippedDamageType(state),
     resistances: equippedResistances(state),
   }

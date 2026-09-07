@@ -7,6 +7,8 @@
  */
 
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
+import { removeItem } from './bank'
+import { getItem } from '../content'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { routeTo } from './world'
@@ -111,4 +113,34 @@ export function readAllStoryBeats(state: GameState, ids: readonly string[]): Gam
   const next = cloneState(state)
   for (const id of unread) markStorySeen(next, id)
   return next
+}
+
+export type BurnFailure = 'not-fuel' | 'not-in-bank' | 'already-burning'
+
+/**
+ * Burn one fuel item.
+ *
+ * Refuses while something is already burning rather than stacking or extending -
+ * stacking would make hoarding correct, and the whole point is that fuel is spent the
+ * moment you find it.
+ */
+export function burnFuel(
+  state: GameState,
+  itemId: ItemId,
+): { state: GameState; error: BurnFailure | null } {
+  const fuel = getItem(itemId)?.fuel
+  if (!fuel) return { state, error: 'not-fuel' }
+  if ((state.bank[itemId] ?? 0) < 1) return { state, error: 'not-in-bank' }
+  if (state.boost && state.boost.secondsRemaining > 0) {
+    return { state, error: 'already-burning' }
+  }
+
+  const next = cloneState(state)
+  removeItem(next, itemId, 1)
+  next.boost = {
+    multiplier: fuel.multiplier,
+    secondsRemaining: fuel.seconds,
+    source: itemId,
+  }
+  return { state: next, error: null }
 }

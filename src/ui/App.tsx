@@ -171,7 +171,7 @@ export function App() {
           ) : tab === 'mech' ? (
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
-            <BankPanel state={state} />
+            <BankPanel state={state} dispatch={dispatch} />
           ) : tab === 'log' ? (
             <LogPanel state={state} dispatch={dispatch} />
           ) : (

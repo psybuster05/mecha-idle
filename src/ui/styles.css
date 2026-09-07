@@ -316,3 +316,14 @@ img.sprite { image-rendering: pixelated; }
 
 .enemy-thumb { flex: none; align-self: flex-start; opacity: 0.9; }
 .enemy-row { align-items: flex-start; }
+
+/* --- fuel --------------------------------------------------------------- */
+
+.burning {
+  padding: 8px 12px; border-left: 3px solid var(--good);
+  background: rgba(79, 224, 176, 0.08); font-size: 12px;
+}
+.burning strong { color: var(--good); }
+.bank-item { flex-wrap: wrap; }
+.bank-item .burn { flex-basis: 100%; margin-top: 6px; padding: 3px 8px; font-size: 11px; }
+.bank-item .burn:disabled { opacity: 0.45; cursor: default; }

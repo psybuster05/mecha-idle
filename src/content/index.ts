@@ -7,8 +7,16 @@ import type { SkillAction, SkillDef } from './types'
 import { SCAVENGING } from './skills/scavenging'
 import { REFINING } from './skills/refining'
 import { FABRICATION } from './skills/fabrication'
+import { SALVAGING } from './skills/salvaging'
+import { CARTOGRAPHY } from './skills/cartography'
 
-export const SKILLS: readonly SkillDef[] = [SCAVENGING, REFINING, FABRICATION]
+export const SKILLS: readonly SkillDef[] = [
+  SCAVENGING,
+  REFINING,
+  FABRICATION,
+  SALVAGING,
+  CARTOGRAPHY,
+]
 
 const skillsById = new Map<GatheringSkillId, SkillDef>(SKILLS.map((s) => [s.id, s]))
 
@@ -35,3 +43,5 @@ export { ENEMIES, getEnemy } from './enemies'
 export type { EnemyDef } from './enemies'
 export { ZONES, getZone } from './zones'
 export type { ZoneDef } from './zones'
+
+export { WAYPOINTS, WAYPOINT_TRAVEL_SECONDS } from './skills/cartography'

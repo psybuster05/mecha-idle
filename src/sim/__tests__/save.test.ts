@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deserialize, runMigrations, serialize, type Migration } from '../save'
-import { newGame, SAVE_VERSION, setActivity } from '../state'
+import { ALL_SKILLS, newGame, SAVE_VERSION, setActivity } from '../state'
 import { tick } from '../tick'
 
 function populated() {
@@ -164,15 +164,7 @@ describe('migration v1 -> v2: combat skill rename', () => {
     const result = deserialize(v1Save({ targeting: 1000 }))
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(Object.keys(result.state.skills).sort()).toEqual([
-      'attack',
-      'defence',
-      'fabrication',
-      'hitpoints',
-      'refining',
-      'scavenging',
-      'strength',
-    ])
+    expect(Object.keys(result.state.skills).sort()).toEqual([...ALL_SKILLS].sort())
   })
 
   it('is a no-op on a save that never had the old names', () => {

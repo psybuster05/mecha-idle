@@ -58,7 +58,10 @@ export const SCAVENGING: SkillDef = {
         { item: 'scrap_steel', qty: 3 },
         { item: 'titanium_shard', qty: 1 },
       ],
-      drops: [{ item: 'power_cell', qty: 1, chance: 0.12 }],
+      drops: [
+        { item: 'power_cell', qty: 1, chance: 0.12 },
+        { item: 'catalyst_flask', qty: 1, chance: 0.01 },
+      ],
       xp: 12,
     },
     {
@@ -71,7 +74,10 @@ export const SCAVENGING: SkillDef = {
         { item: 'titanium_shard', qty: 2 },
         { item: 'copper_wiring', qty: 2 },
       ],
-      drops: [{ item: 'sealed_bearing', qty: 1, chance: 0.2 }],
+      drops: [
+        { item: 'sealed_bearing', qty: 1, chance: 0.2 },
+        { item: 'catalyst_flask', qty: 1, chance: 0.012 },
+      ],
       xp: 16,
     },
     {
@@ -100,7 +106,10 @@ export const SCAVENGING: SkillDef = {
         { item: 'carbon_weave', qty: 2 },
         { item: 'optic_lens', qty: 1 },
       ],
-      drops: [{ item: 'fused_core', qty: 1, chance: 0.1 }],
+      drops: [
+        { item: 'fused_core', qty: 1, chance: 0.1 },
+        { item: 'overcharge_cell', qty: 1, chance: 0.008 },
+      ],
       xp: 38,
     },
     {
@@ -214,7 +223,10 @@ export const SCAVENGING: SkillDef = {
         { item: 'avionics_board', qty: 3 },
         { item: 'turbine_blade', qty: 2 },
       ],
-      drops: [{ item: 'airframe_spar', qty: 4, chance: 0.35 }],
+      drops: [
+        { item: 'airframe_spar', qty: 4, chance: 0.35 },
+        { item: 'overcharge_cell', qty: 1, chance: 0.01 },
+      ],
       xp: 63,
     },
 

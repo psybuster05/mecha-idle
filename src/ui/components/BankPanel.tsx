@@ -1,15 +1,24 @@
 import { getItem } from '../../content'
+import { burnFuel } from '../../sim/intents'
 import type { GameState } from '../../sim/state'
-import { formatNumber } from '../format'
+import { formatNumber, formatDuration } from '../format'
 
-const CATEGORY_ORDER = ['material', 'component', 'part'] as const
+const CATEGORY_ORDER = ['fuel', 'material', 'component', 'part'] as const
 const CATEGORY_LABELS: Record<string, string> = {
+  fuel: 'Fuel',
   material: 'Materials',
   component: 'Components',
   part: 'Parts',
 }
 
-export function BankPanel({ state }: { state: GameState }) {
+export function BankPanel({
+  state,
+  dispatch,
+}: {
+  state: GameState
+  dispatch: (transform: (s: GameState) => GameState) => void
+}) {
+  const burning = state.boost && state.boost.secondsRemaining > 0 ? state.boost : null
   const held = Object.entries(state.bank).filter(
     (entry): entry is [string, number] => (entry[1] ?? 0) > 0,
   )
@@ -24,6 +33,14 @@ export function BankPanel({ state }: { state: GameState }) {
           </p>
         </div>
       </header>
+
+      {burning && (
+        <p className="burning">
+          Burning {getItem(burning.source)?.name ?? burning.source} &mdash;{' '}
+          <strong>&times;{burning.multiplier} work speed</strong> for{' '}
+          {formatDuration(burning.secondsRemaining)}
+        </p>
+      )}
 
       {held.length === 0 ? (
         <p className="dim">Empty. Go and take something apart.</p>
@@ -41,6 +58,15 @@ export function BankPanel({ state }: { state: GameState }) {
                     <li key={id} className="bank-item" title={item?.description}>
                       <div className="bank-name">{item?.name ?? id}</div>
                       <div className="bank-qty">{formatNumber(qty)}</div>
+                      {item?.fuel && (
+                        <button
+                          className="primary burn"
+                          disabled={burning !== null}
+                          onClick={() => dispatch((s) => burnFuel(s, id).state)}
+                        >
+                          {burning ? 'Burning' : `Burn ×${item.fuel.multiplier}`}
+                        </button>
+                      )}
                     </li>
                   )
                 })}

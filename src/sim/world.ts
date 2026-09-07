@@ -7,6 +7,8 @@
  */
 
 import { ADJACENCY, getNode, nodeDistance } from '../content/world'
+import { WAYPOINTS, WAYPOINT_TRAVEL_SECONDS } from '../content/skills/cartography'
+import { levelFromXp } from './xp'
 import {
   hasDefeated,
   recordVisit,
@@ -207,6 +209,20 @@ export function routeTo(
     return true
   }
 
+  // A waypoint is a fixed short hop however far it is, which is the whole reward for
+  // levelling Cartography. Checked before pathfinding, because the point is not to walk.
+  const waypoint = candidates.find((id) => isNodeOpen(state, id) && isWaypoint(state, id))
+  if (waypoint) {
+    actor.travel = {
+      from: actor.at,
+      to: waypoint,
+      progress: 0,
+      legSeconds: WAYPOINT_TRAVEL_SECONDS,
+      remaining: [],
+    }
+    return false
+  }
+
   const route = findNearest(actor.at, candidates, (id) => isNodeOpen(state, id))
   if (!route) return null
 
@@ -225,4 +241,27 @@ export function isNodeOpen(state: GameState, id: NodeId): boolean {
   const node = getNode(id)
   if (!node) return false
   return !node.unlockedBy || hasDefeated(state, node.unlockedBy)
+}
+
+/** Whether Cartography has established a waypoint at this place. */
+export function isWaypoint(state: GameState, node: NodeId): boolean {
+  const waypoint = WAYPOINTS.find((w) => w.node === node)
+  if (!waypoint) return false
+  return levelFromXp(state.skills.cartography) >= waypoint.level
+}
+
+/**
+ * Seconds to reach a destination, accounting for waypoints.
+ *
+ * A waypoint is a fixed short hop however far away it is - that is the whole reward for
+ * levelling Cartography, and it is what makes the far corners of the map bearable once
+ * the world is twenty-four places wide.
+ */
+export function travelSecondsTo(state: GameState, from: NodeId, to: NodeId): number | null {
+  if (from === to) return 0
+  if (isWaypoint(state, to)) return WAYPOINT_TRAVEL_SECONDS
+
+  const route = findNearest(from, [to], (id) => isNodeOpen(state, id))
+  if (!route) return null
+  return route.length / Math.max(1, derivedStats(state).moveSpeed)
 }

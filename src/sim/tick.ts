@@ -20,9 +20,29 @@ export function tick(state: GameState, dtSeconds: number): GameState {
   return next
 }
 
-/** Mutates `state`. The in-place worker behind `tick`. */
+/**
+ * Mutates `state`. The in-place worker behind `tick`.
+ *
+ * Splits the step at a boost expiry before doing anything else. Action duration depends
+ * on whether fuel is burning, so a single large step spanning the moment it runs out
+ * would apply one rate to the whole span while many small steps applied both - exactly
+ * the divergence that would break offline progress. Splitting keeps them identical.
+ */
 export function advance(state: GameState, dt: number): void {
   if (!Number.isFinite(dt) || dt <= 0) return
+
+  const boost = state.boost
+  if (boost && boost.secondsRemaining > 0 && boost.secondsRemaining < dt) {
+    const boosted = boost.secondsRemaining
+    advanceStep(state, boosted)
+    advanceStep(state, dt - boosted)
+    return
+  }
+
+  advanceStep(state, dt)
+}
+
+function advanceStep(state: GameState, dt: number): void {
 
   state.elapsed += dt
 
@@ -62,4 +82,13 @@ export function advance(state: GameState, dt: number): void {
   }
 
   advanceStory(state)
+
+  // Burned down *after* the work, not before. Decrementing first meant the boosted half
+  // of a split step had already lost its boost by the time anything happened, which made
+  // one large step produce a third less than many small ones - precisely the divergence
+  // the split exists to prevent.
+  if (state.boost) {
+    state.boost.secondsRemaining -= dt
+    if (state.boost.secondsRemaining <= 0) state.boost = null
+  }
 }

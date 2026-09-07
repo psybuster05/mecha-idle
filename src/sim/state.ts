@@ -20,7 +20,12 @@
  */
 export type ActorId = 'mech' | 'crawler'
 
-export type GatheringSkillId = 'scavenging' | 'refining' | 'fabrication'
+export type GatheringSkillId =
+  | 'scavenging'
+  | 'refining'
+  | 'fabrication'
+  | 'salvaging'
+  | 'cartography'
 export type CombatSkillId = 'attack' | 'strength' | 'defence' | 'hitpoints'
 export type SkillId = GatheringSkillId | CombatSkillId
 
@@ -28,6 +33,8 @@ export const GATHERING_SKILLS: readonly GatheringSkillId[] = [
   'scavenging',
   'refining',
   'fabrication',
+  'salvaging',
+  'cartography',
 ]
 export const COMBAT_SKILLS: readonly CombatSkillId[] = [
   'attack',
@@ -169,6 +176,21 @@ export interface StoryState {
   seen: string[]
 }
 
+/**
+ * A burst of speed bought with a rare find.
+ *
+ * Fuel is a drop, not an economy: you stumble on it, you burn it, non-combat work runs
+ * two or three times faster until it is gone. Nothing to manage between sessions, which
+ * is the point - a treat rather than a chore.
+ */
+export interface BoostState {
+  /** How much faster work runs. 2 means twice. */
+  multiplier: number
+  secondsRemaining: number
+  /** Item that started it, for the read-out. */
+  source: ItemId
+}
+
 export const SAVE_VERSION = 3
 
 export interface GameState {
@@ -199,6 +221,8 @@ export interface GameState {
   visited: NodeId[]
   /** Narrative progress. Reads from the world; the world never reads from it. */
   story: StoryState
+  /** Burning fuel, or null. */
+  boost: BoostState | null
   /**
    * Bosses beaten, and how many times.
    *
@@ -249,6 +273,7 @@ export function newGame(seed: number = 1): GameState {
     equipment: {},
     visited: [DEFAULT_START_NODE],
     story: { pending: [], seen: [] },
+    boost: null,
     defeated: {},
     combat: {
       enemyId: null,

@@ -27,7 +27,20 @@ export interface DropChance {
   chance: number
 }
 
-export type ItemCategory = 'material' | 'component' | 'part'
+export type ItemCategory = 'material' | 'component' | 'part' | 'fuel'
+
+/**
+ * What burning this does. Present only on fuel.
+ *
+ * Fuel is a rare find rather than a managed resource: you stumble on it, burn it, and
+ * work runs faster until it is gone. Nothing to plan around between sessions.
+ */
+export interface FuelDef {
+  /** How much faster non-combat work runs. */
+  multiplier: number
+  /** How long it lasts. */
+  seconds: number
+}
 
 export interface EquipStats {
   /** Improves the chance our attacks land. */
@@ -92,6 +105,8 @@ export interface ItemDef {
   category: ItemCategory
   /** Sprite key resolved by the UI layer. Art lands later; absent means placeholder. */
   sprite?: string
+  /** Present only on fuel. */
+  fuel?: FuelDef
   /** Present only on equippable parts. */
   slot?: EquipSlot
   stats?: EquipStats

@@ -86,6 +86,15 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
   merged.visited = Array.isArray(raw['visited']) ? (raw['visited'] as string[]) : base.visited
+  // A malformed boost must never leave work permanently accelerated.
+  const rawBoost = raw['boost'] as { multiplier?: unknown; secondsRemaining?: unknown } | null
+  merged.boost =
+    rawBoost &&
+    typeof rawBoost.multiplier === 'number' &&
+    typeof rawBoost.secondsRemaining === 'number' &&
+    rawBoost.secondsRemaining > 0
+      ? (rawBoost as GameState['boost'])
+      : null
   const rawStory = raw['story'] as { pending?: unknown; seen?: unknown } | undefined
   merged.story = {
     pending: Array.isArray(rawStory?.pending) ? (rawStory.pending as string[]) : [],
