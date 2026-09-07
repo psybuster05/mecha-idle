@@ -51,6 +51,14 @@ export const PHASE_TRANSITION_HEAL = 0.35
 export const HEAL_ON_KILL = 0.08
 /** Map units walked per second with nothing fitted. */
 export const BASE_MOVE_SPEED = 30
+
+/**
+ * The crawler's speed. Slower than you on foot, and never upgraded by your legs.
+ *
+ * It is a building that happens to have tracks. Moving it is a decision rather than a
+ * convenience, which is what stops it simply shadowing you around the map.
+ */
+export const CRAWLER_MOVE_SPEED = 12
 /** Seconds between one enemy dying and the next arriving. */
 export const RESPAWN_DELAY = 2
 

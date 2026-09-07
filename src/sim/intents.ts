@@ -10,9 +10,18 @@ import { equipItem, unequipSlot, type EquipFailure } from './equipment'
 import { removeItem } from './bank'
 import { getItem } from '../content'
 import { nodesForAction, nodesForZone } from '../content/world'
-import { cloneState, haltActivity, markStorySeen, setActivity } from './state'
+import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { routeTo } from './world'
-import type { ActionId, ActorId, EquipSlot, GameState, GatheringSkillId, ItemId, ZoneId } from './state'
+import type {
+  ActionId,
+  ActorId,
+  EquipSlot,
+  GameState,
+  GatheringSkillId,
+  ItemId,
+  NodeId,
+  ZoneId,
+} from './state'
 
 /** Point the mech at a gathering action. Returns the same state if it is not allowed. */
 export function startSkillAction(
@@ -21,8 +30,22 @@ export function startSkillAction(
   action: ActionId,
   actor: ActorId = 'mech',
 ): GameState {
+  // The crawler is a workshop on tracks and only ever runs industry, so it never has to
+  // go anywhere to work - it carries the furnace with it.
+  if (actor === 'crawler' && !canCrawlerRun(skill)) return state
+
   const next = cloneState(state)
+
+  // setActivity clears travel, which is right for the mech - its activity is what
+  // decides where it goes. The crawler works wherever it is, so new orders must not
+  // cancel a drive already under way. It simply produces nothing until it parks.
+  const keptTravel = actor === 'crawler' ? next.actors.crawler.travel : null
   if (!setActivity(next, actor, { kind: 'skill', skill, action })) return state
+
+  if (actor === 'crawler') {
+    next.actors.crawler.travel = keptTravel
+    return next
+  }
 
   // Actions happen somewhere. Walk there first; the activity is the intent until we
   // arrive, and the tick loop will not start producing until travel finishes.
@@ -143,4 +166,36 @@ export function burnFuel(
     source: itemId,
   }
   return { state: next, error: null }
+}
+
+export type CrawlerFailure = 'no-core' | 'already-running'
+
+/**
+ * Wire the traction core in and wake the crawler up.
+ *
+ * Shaped like equipping deliberately: it consumes the part, it is explicit, and it is
+ * the single moment the concurrency rule changes from one action at a time to two.
+ */
+export function installCrawler(
+  state: GameState,
+): { state: GameState; error: CrawlerFailure | null } {
+  if (state.actors.crawler.unlocked) return { state, error: 'already-running' }
+  if ((state.bank['crawler_core'] ?? 0) < 1) return { state, error: 'no-core' }
+
+  const next = cloneState(state)
+  removeItem(next, 'crawler_core', 1)
+  next.actors.crawler.unlocked = true
+  // It wakes where you are, not where it was parked in the save's defaults.
+  next.actors.crawler.at = next.actors.mech.at
+  return { state: next, error: null }
+}
+
+/** Send the crawler somewhere. It drives; it does not use your waypoints. */
+export function moveCrawler(state: GameState, node: NodeId): GameState {
+  if (!state.actors.crawler.unlocked) return state
+  if (state.actors.crawler.at === node && !state.actors.crawler.travel) return state
+
+  const next = cloneState(state)
+  if (routeTo(next, 'crawler', [node]) === null) return state
+  return next
 }

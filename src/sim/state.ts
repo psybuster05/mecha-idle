@@ -44,6 +44,19 @@ export const COMBAT_SKILLS: readonly CombatSkillId[] = [
 ]
 export const ALL_SKILLS: readonly SkillId[] = [...GATHERING_SKILLS, ...COMBAT_SKILLS]
 
+/**
+ * What the crawler can run.
+ *
+ * Industry only. It is a workshop on tracks - it carries the furnace and the press with
+ * it, so it never has to travel to reach them - and keeping it to these three means the
+ * two actors are never competing for the same job. The mech goes out; the crawler works.
+ */
+export const CRAWLER_SKILLS: readonly GatheringSkillId[] = ['refining', 'fabrication', 'salvaging']
+
+export function canCrawlerRun(skill: GatheringSkillId): boolean {
+  return CRAWLER_SKILLS.includes(skill)
+}
+
 export type ItemId = string
 export type NodeId = string
 

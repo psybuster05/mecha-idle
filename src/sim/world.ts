@@ -17,9 +17,14 @@ import {
   type NodeId,
   type TravelState,
 } from './state'
-import { derivedStats } from './stats'
+import { CRAWLER_MOVE_SPEED, derivedStats } from './stats'
 
 export { BASE_MOVE_SPEED } from './stats'
+
+/** How fast an actor crosses the map. The crawler has its own, fixed. */
+export function moveSpeedOf(state: GameState, actorId: ActorId): number {
+  return actorId === 'crawler' ? CRAWLER_MOVE_SPEED : derivedStats(state).moveSpeed
+}
 
 /**
  * Cheapest route from `from` to `to`, as the hops to walk in order (excluding `from`).
@@ -115,7 +120,7 @@ export function beginTravel(
 export function advanceTravel(state: GameState, actorId: ActorId, dt: number): number {
   const actor = state.actors[actorId]
   let remainingDt = dt
-  const speed = derivedStats(state).moveSpeed
+  const speed = moveSpeedOf(state, actorId)
 
   while (actor.travel && remainingDt > 0) {
     const travel = actor.travel
@@ -211,7 +216,11 @@ export function routeTo(
 
   // A waypoint is a fixed short hop however far it is, which is the whole reward for
   // levelling Cartography. Checked before pathfinding, because the point is not to walk.
-  const waypoint = candidates.find((id) => isNodeOpen(state, id) && isWaypoint(state, id))
+  // Waypoints are your surveying, not the crawler's. It has to drive.
+  const waypoint =
+    actorId === 'mech'
+      ? candidates.find((id) => isNodeOpen(state, id) && isWaypoint(state, id))
+      : undefined
   if (waypoint) {
     actor.travel = {
       from: actor.at,
@@ -226,7 +235,7 @@ export function routeTo(
   const route = findNearest(actor.at, candidates, (id) => isNodeOpen(state, id))
   if (!route) return null
 
-  actor.travel = beginTravel(actor.at, route.path, derivedStats(state).moveSpeed)
+  actor.travel = beginTravel(actor.at, route.path, moveSpeedOf(state, actorId))
   return actor.travel === null
 }
 

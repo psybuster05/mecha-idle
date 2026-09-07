@@ -234,3 +234,21 @@ Rules:
 
 The map draws only what you can reach plus its immediate frontier. Drawing all
 twenty-four places at once was unreadable overlapping labels.
+
+## The crawler
+
+The second actor, unlocked by wiring in a Traction Core. `maxConcurrentActivities` goes
+from 1 to 2 at that moment - the rule has always been a function over `actors` rather
+than a hardcoded shape, which is why unlocking it needed no restructuring.
+
+Rules that keep the two actors distinct:
+
+- **Industry only** (`CRAWLER_SKILLS`). You gather and fight; it refines, fabricates and
+  salvages. They never compete for the same job.
+- **It never travels to work.** It carries the workshop, so `startSkillAction` skips
+  routing entirely for the crawler.
+- **New orders do not cancel a drive.** `setActivity` clears travel, which is right for
+  the mech - its activity is what decides where it goes - and wrong for the crawler,
+  which works anywhere. The intent restores the kept travel.
+- **It drives slowly and ignores waypoints.** Waypoints are your surveying, not its.
+  `moveSpeedOf` returns a fixed `CRAWLER_MOVE_SPEED` for it.

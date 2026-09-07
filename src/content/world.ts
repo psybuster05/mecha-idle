@@ -98,6 +98,7 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'cartography', action: 'fix_the_grid' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
+      { skill: 'fabrication', action: 'fab_crawler_core' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
       { skill: 'fabrication', action: 'fab_weapon_rivet' },
       { skill: 'fabrication', action: 'fab_reactor_cell' },

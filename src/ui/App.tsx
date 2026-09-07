@@ -9,6 +9,7 @@ import { useGame } from './useGame'
 import { Bar } from './components/Bar'
 import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
+import { CrawlerPanel } from './components/CrawlerPanel'
 import { MechPanel } from './components/MechPanel'
 import { OfflineDialog } from './components/OfflineDialog'
 import { LogPanel } from './components/LogPanel'
@@ -19,17 +20,18 @@ import { getStoryBeat } from '../content/story'
 import { nextInterrupt, unreadLogCount } from '../sim/story'
 import { readStoryBeat } from '../sim/intents'
 
-type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank' | 'log'
+type Tab = GatheringSkillId | 'world' | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
 
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
   if (state.actors.mech.travel) return 'Travelling'
   const activity = state.actors.mech.activity
-  if (!activity) return 'Idle'
+  if (!activity) return state.actors.crawler.activity ? 'Idle · crawler working' : 'Idle'
   if (activity.kind === 'combat') return 'Fighting'
   const skill = getSkill(activity.skill)
   const action = skill?.actions.find((a) => a.id === activity.action)
-  return action ? action.name : skill?.name ?? 'Working'
+  const own = action ? action.name : (skill?.name ?? 'Working')
+  return state.actors.crawler.activity ? `${own} · crawler working` : own
 }
 
 export function App() {
@@ -136,6 +138,18 @@ export function App() {
               <span className="rail-name">Equipment</span>
             </button>
             <button
+              className={`rail-item ${tab === 'crawler' ? 'selected' : ''}`}
+              onClick={() => setTab('crawler')}
+            >
+              <span className="rail-name">
+                {state.actors.crawler.activity && (
+                  <span className="running-dot" aria-label="working" />
+                )}
+                Crawler
+              </span>
+              {!state.actors.crawler.unlocked && <span className="dim">asleep</span>}
+            </button>
+            <button
               className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
               onClick={() => setTab('bank')}
             >
@@ -158,7 +172,9 @@ export function App() {
 
           {!busy && (
             <p className="rail-hint dim">
-              Nothing is running. Pick an action - you only have attention for one.
+              {state.actors.crawler.unlocked
+                ? 'You are not doing anything. The crawler works on its own.'
+                : 'Nothing is running. Pick an action - you only have attention for one.'}
             </p>
           )}
         </nav>
@@ -172,6 +188,8 @@ export function App() {
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
             <BankPanel state={state} dispatch={dispatch} />
+          ) : tab === 'crawler' ? (
+            <CrawlerPanel state={state} dispatch={dispatch} />
           ) : tab === 'log' ? (
             <LogPanel state={state} dispatch={dispatch} />
           ) : (

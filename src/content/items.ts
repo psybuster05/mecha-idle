@@ -224,6 +224,15 @@ export const ITEMS: readonly ItemDef[] = [
     fuel: { multiplier: 3, seconds: 420 },
   },
 
+  // --- The crawler --------------------------------------------------------
+  {
+    id: 'crawler_core',
+    name: 'Traction Core',
+    description:
+      'The drive unit out of a hauler that never finished its run. Wire it into the shell in the Hollow and the whole thing will move again, which is more than you could do for a while.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
