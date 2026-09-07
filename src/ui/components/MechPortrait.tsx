@@ -26,8 +26,8 @@ export function MechPortrait({ state, scale = 5 }: { state: GameState; scale?: n
   const legs = state.equipment.legs
   if (legs) {
     // Thrusters read differently from tracks, which is the point of fitting them.
-    const speed = getItem(legs)?.stats?.moveSpeed ?? 0
-    layers.push(speed >= 40 ? MECH_LEGS_THRUSTER : MECH_LEGS_HEAVY)
+    const nimble = (getItem(legs)?.stats?.evasion ?? 0) >= 18
+    layers.push(nimble ? MECH_LEGS_THRUSTER : MECH_LEGS_HEAVY)
   }
 
   const weapon = state.equipment.weapon

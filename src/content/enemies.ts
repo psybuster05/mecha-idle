@@ -55,8 +55,6 @@ export interface BossPerk {
   description: string
   /** Chance per gathering completion of a bonus haul. 0.08 = 8%. */
   gatheringYield?: number
-  /** Flat map units per second added to travel. */
-  moveSpeed?: number
   /** Fractional bonus to all xp earned. 0.05 = +5%. */
   xpBonus?: number
   /** Fractional bonus to damage dealt. 0.08 = +8%. */
@@ -498,9 +496,8 @@ export const ENEMIES: readonly EnemyDef[] = [
       id: 'district_override',
       name: 'District Override',
       description:
-        'Its authority codes are yours now. The district answers when you ask, and it is quicker to cross.',
-      gatheringYield: 0.08,
-      moveSpeed: 10,
+        'Its authority codes are yours now. The district answers when you ask, and it shows you where it has been keeping things.',
+      gatheringYield: 0.1,
     },
     guaranteed: [
       { item: 'titanium_shard', qty: 12 },
@@ -605,8 +602,8 @@ export const ENEMIES: readonly EnemyDef[] = [
       name: 'Clearance',
       description:
         'You are on the sequence now. Every route you take is the one it would have given you, and nothing questions where you are going.',
-      moveSpeed: 25,
       xpBonus: 0.05,
+      gatheringYield: 0.06,
     },
     guaranteed: [
       { item: 'beacon_core', qty: 1 },
@@ -660,7 +657,7 @@ export const ENEMIES: readonly EnemyDef[] = [
       description:
         'You are on the register now, in handwriting that is almost certainly yours. Nothing stops you, and you have learned exactly where their plating joins.',
       damageBonus: 0.08,
-      moveSpeed: 15,
+      xpBonus: 0.04,
     },
     guaranteed: [
       { item: 'crossing_writ', qty: 1 },
@@ -817,10 +814,9 @@ export const ENEMIES: readonly EnemyDef[] = [
       name: 'Relieved',
       description:
         'The switch is yours, or it is nobody. Either way nothing is holding it but you now, and everything that answered to him answers to that.',
-      damageBonus: 0.15,
+      damageBonus: 0.18,
       xpBonus: 0.1,
       gatheringYield: 0.1,
-      moveSpeed: 30,
     },
     guaranteed: [
       { item: 'continuity_core', qty: 5 },

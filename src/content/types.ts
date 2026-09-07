@@ -70,8 +70,6 @@ export interface EquipStats {
    * Lives on Arms: your hands do the work, so better hands do it sooner.
    */
   skillSpeed?: number
-  /** Map units per second added to movement. Thrusters, tracks, better legs. */
-  moveSpeed?: number
   /** What this weapon deals. Only meaningful on the weapon slot. */
   damageType?: DamageType
   /** Incoming damage multipliers this part grants. Armour pieces carry these. */

@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { STORY_BEATS, getStoryBeat } from '../../content/story'
-import { getEnemy } from '../../content/enemies'
-import { getNode } from '../../content/world'
+import { SKILLS } from '../../content'
+import { ENEMIES, getEnemy } from '../../content/enemies'
+import { getNode, WORLD_NODES } from '../../content/world'
 import { ALL_SKILLS, newGame, recordDefeat, type GameState } from '../state'
 import { advanceStory, nextInterrupt, unreadLogCount } from '../story'
-import { readAllStoryBeats, readStoryBeat, startSkillAction } from '../intents'
+import { readAllStoryBeats, readStoryBeat, startCombat, startSkillAction } from '../intents'
 import { applyOffline } from '../offline'
 import { tick } from '../tick'
 import { deserialize, serialize } from '../save'
@@ -201,5 +202,48 @@ describe('story gates nothing', () => {
     )
     expect(ignored.bank).toEqual(read.bank)
     expect(ignored.skills).toEqual(read.skills)
+  })
+})
+
+/**
+ * The mirror of "story gates nothing".
+ *
+ * That rule says skipping every word must leave the game playable. This is the other
+ * direction: **playing normally must not skip the story.** Nine beats trigger on
+ * visiting a place, and nothing in the game requires you to stand anywhere - starting an
+ * action moves you to the *first* open node that offers it, so a beat keyed on a node
+ * that is merely an alternate door to the same work would never fire for most players.
+ *
+ * This walks every action and every combat zone, records where each one actually puts
+ * the mech, and asserts that covers every visit trigger. It is what says the World
+ * panel's place list is optional rather than load-bearing.
+ */
+describe('story is not missable by playing normally', () => {
+  it('reaches every visit-triggered beat without visiting anywhere on purpose', () => {
+    const champion = () => {
+      const state = newGame()
+      for (const enemy of ENEMIES) if (enemy.isBoss) recordDefeat(state, enemy.id)
+      return state
+    }
+
+    const reached = new Set<string>()
+    for (const skill of SKILLS) {
+      for (const action of skill.actions) {
+        const state = champion()
+        state.skills[skill.id] = Number.MAX_SAFE_INTEGER
+        reached.add(startSkillAction(state, skill.id, action.id).actors.mech.at)
+      }
+    }
+    for (const zone of new Set(WORLD_NODES.map((n) => n.combat).filter(Boolean))) {
+      reached.add(startCombat(champion(), zone!).actors.mech.at)
+    }
+
+    for (const beat of STORY_BEATS) {
+      if (beat.when.kind !== 'visit') continue
+      expect(
+        reached.has(beat.when.node),
+        `"${beat.id}" only fires if the player goes to ${beat.when.node} deliberately`,
+      ).toBe(true)
+    }
   })
 })

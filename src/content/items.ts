@@ -339,9 +339,9 @@ export const ITEMS: readonly ItemDef[] = [
 
   // --- Equippable parts (Fabrication) --------------------------------------
   //
-  // Arms carry skillSpeed and legs carry moveSpeed. That is the whole "unlockable
-  // speed-up" axis: your arms do the work, your legs do the walking, and upgrading
-  // them is how you buy back time.
+  // Arms carry skillSpeed and legs carry evasion. Your arms are the "unlockable
+  // speed-up" axis - upgrading them is how you buy back time - and your legs are how
+  // you are not where the shot went.
   {
     id: 'frame_steel',
     name: 'Welded Steel Frame',
