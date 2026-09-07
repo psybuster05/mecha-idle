@@ -11,6 +11,7 @@ import {
   COMBAT_SKILL_DEFS,
   COMBAT_STYLES,
   STYLE_SKILLS,
+  getCombatStyle,
   type CombatStyleId,
 } from '../../content/skills/combat'
 import { setCombatStyle } from '../intents'
@@ -289,18 +290,39 @@ describe('attack styles', () => {
     }
   })
 
+  it('leans the stats the way the style says', () => {
+    const base = derivedStats(fought('balanced', 0))
+    expect(derivedStats(fought('accurate', 0)).accuracy).toBeCloseTo(base.accuracy * 1.12, 6)
+    expect(derivedStats(fought('aggressive', 0)).damage).toBeCloseTo(base.damage * 1.12, 6)
+    expect(derivedStats(fought('defensive', 0)).evasion).toBeCloseTo(base.evasion * 1.12, 6)
+    expect(derivedStats(fought('defensive', 0)).armour).toBeCloseTo(base.armour * 1.12, 6)
+  })
+
+  it('leaves Balanced neutral, so every existing save fights exactly as it did', () => {
+    // Balanced is what every save is on. A consolation bonus here would have shifted
+    // every boss budget and pacing number already measured.
+    expect(getCombatStyle('balanced')?.effects).toBeUndefined()
+
+    // And the formula it produces is the untouched one: 10 + attack * 2.
+    const state = fought('balanced', 0)
+    const attack = levelFromXp(state.skills.attack)
+    expect(derivedStats(state).accuracy).toBe(10 + attack * 2)
+  })
+
   /**
-   * Over a long fight the totals drift slightly apart, and that is correct rather than a
-   * leak. Concentrating xp raises one skill faster, which changes accuracy or damage,
-   * which changes how quickly things die - so a style earns marginally more or less by
-   * *fighting better*, not by being paid differently. Measured at well under one percent
-   * over half an hour; the assertion is here to catch it becoming a real advantage.
+   * A focused style earns a bit more per hour, and now that is the point rather than a
+   * leak: +12% damage kills faster, so the same xp-per-kill arrives more often. What
+   * must not happen is that turning into a dominant advantage - the trade is supposed to
+   * be power against combat level, not free throughput.
+   *
+   * Measured at ~3.7% over half an hour for Aggressive. The ceiling is where that stops
+   * being a lean and starts being the only correct choice.
    */
-  it('stays within a whisker of the others over a long fight', () => {
+  it('turns its stat bonus into a modest throughput edge, not a dominant one', () => {
     const balanced = combatXp(fought('balanced'))
     for (const style of ['accurate', 'aggressive', 'defensive'] as const) {
       const drift = Math.abs(combatXp(fought(style)) - balanced) / balanced
-      expect(drift, `${style} drifted ${(drift * 100).toFixed(2)}%`).toBeLessThan(0.03)
+      expect(drift, `${style} drifted ${(drift * 100).toFixed(2)}%`).toBeLessThan(0.08)
     }
   })
 

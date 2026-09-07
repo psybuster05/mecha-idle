@@ -8,6 +8,7 @@
 
 import { getItem } from '../content'
 import { perkTotal } from '../content/enemies'
+import { getCombatStyle } from '../content/skills/combat'
 import type { EquipStats } from '../content/types'
 import {
   DAMAGE_TYPES,
@@ -124,6 +125,10 @@ function equippedResistances(state: GameState): Required<Resistances> {
 }
 
 export function derivedStats(state: GameState): DerivedStats {
+  // The attack style leans the same totals one way or another. Multiplicative so the
+  // lean does not decay as levels climb - the same reason weapons multiply.
+  const style = getCombatStyle(state.combat.style)?.effects ?? {}
+
   const attack = levelFromXp(state.skills.attack)
   const strength = levelFromXp(state.skills.strength)
   const defence = levelFromXp(state.skills.defence)
@@ -131,14 +136,15 @@ export function derivedStats(state: GameState): DerivedStats {
 
   return {
     maxHp: 50 + hitpoints * 8 + equippedTotal(state, 'hp'),
-    accuracy: 10 + attack * 2 + equippedTotal(state, 'accuracy'),
+    accuracy: (10 + attack * 2 + equippedTotal(state, 'accuracy')) * (style.accuracy ?? 1),
     // Evasion rides on Defence too: heavier armour makes you harder to meaningfully hit.
-    evasion: 8 + defence * 1.5 + equippedTotal(state, 'evasion'),
+    evasion: (8 + defence * 1.5 + equippedTotal(state, 'evasion')) * (style.evasion ?? 1),
     damage:
       (3 + strength * 1.2 + equippedTotal(state, 'damage')) *
       equippedProduct(state, 'damageMultiplier') *
-      (1 + perkTotal(state.defeated, 'damageBonus')),
-    armour: defence * 0.8 + equippedTotal(state, 'armour'),
+      (1 + perkTotal(state.defeated, 'damageBonus')) *
+      (style.damage ?? 1),
+    armour: (defence * 0.8 + equippedTotal(state, 'armour')) * (style.armour ?? 1),
     attackInterval: Math.max(
       MIN_ATTACK_INTERVAL,
       BASE_ATTACK_INTERVAL - equippedTotal(state, 'attackSpeed'),

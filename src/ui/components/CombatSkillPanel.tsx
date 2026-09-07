@@ -98,8 +98,9 @@ export function CombatSkillPanel({
       </div>
 
       <p className="dim">
-        These are the totals after equipment. Combat level is the average of all four
-        combat skills, and it is what gates the zones.
+        The figures above are what this skill alone contributes; the totals below include
+        equipment and your attack style. Combat level is the average of all four combat
+        skills, and it is what gates the zones.
       </p>
     </div>
   )

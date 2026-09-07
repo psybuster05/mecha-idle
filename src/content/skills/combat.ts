@@ -88,6 +88,14 @@ export interface CombatStyleDef {
   description: string
   /** Which skill takes the whole share. Null means split it, as it always was. */
   trains: CombatSkillId | null
+  /**
+   * Multipliers on derived stats. Absent means unchanged.
+   *
+   * Multipliers, not flat bonuses, for the reason already learned on weapons: a flat
+   * bonus is swamped by level scaling. +3 accuracy is a lot at level 1 and nothing at
+   * 99, so a style would stop being a choice exactly when choices should matter.
+   */
+  effects?: { accuracy?: number; damage?: number; evasion?: number; armour?: number }
 }
 
 /** The skills a style routes between. Hitpoints is deliberately not one of them. */
@@ -99,24 +107,33 @@ export const COMBAT_STYLES: readonly CombatStyleDef[] = [
     name: 'Balanced',
     description: 'Split evenly. Nothing improves quickly and nothing is neglected.',
     trains: null,
+    // No combat bonus, on purpose. Balanced buys *breadth*: spread xp keeps all three
+    // skills climbing, and combat level is their average, which is what gates zones.
+    // Focused styles buy depth instead. Giving Balanced a consolation multiplier as
+    // well would have made it the safe default rather than a real choice - and it
+    // would have quietly shifted every balance number already measured, since this is
+    // the style every existing save is on.
   },
   {
     id: 'accurate',
     name: 'Accurate',
-    description: 'Take the shot you are sure of. Everything into Attack.',
+    description: 'Take the shot you are sure of. Everything into Attack, and you land more of them.',
     trains: 'attack',
+    effects: { accuracy: 1.12 },
   },
   {
     id: 'aggressive',
     name: 'Aggressive',
-    description: 'Commit to every hit and let the plating take what it takes. Everything into Strength.',
+    description: 'Commit to every hit and let the plating take what it takes. Everything into Strength, and it hurts more.',
     trains: 'strength',
+    effects: { damage: 1.12 },
   },
   {
     id: 'defensive',
     name: 'Defensive',
-    description: 'Fight to still be standing afterwards. Everything into Defence.',
+    description: 'Fight to still be standing afterwards. Everything into Defence, and less of it reaches you.',
     trains: 'defence',
+    effects: { evasion: 1.12, armour: 1.12 },
   },
 ]
 

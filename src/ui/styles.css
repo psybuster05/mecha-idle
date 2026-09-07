@@ -191,6 +191,8 @@ body:has(.app) > #root { display: contents; }
 }
 .style.active { border-color: var(--accent); background: var(--panel-2); }
 .style-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.style-effect { color: var(--good); font-size: 12px; }
+.style.active .style-effect { color: var(--good); }
 
 /* --- chassis ----------------------------------------------------------- */
 

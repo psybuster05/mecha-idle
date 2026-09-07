@@ -161,6 +161,13 @@ export function CombatPanel({ state, dispatch }: Props) {
                   <span className="xp-tag">{trains}</span>
                 </span>
                 <span className="dim">{style.description}</span>
+                <span className="style-effect">
+                  {style.effects
+                    ? Object.entries(style.effects)
+                        .map(([stat, mult]) => `+${Math.round((mult - 1) * 100)}% ${stat}`)
+                        .join(' · ')
+                    : 'No combat bonus - it buys combat level instead'}
+                </span>
               </button>
             </li>
           )
