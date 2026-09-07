@@ -4,6 +4,7 @@ import { newGame, setActivity, type GameState } from '../state'
 import { count } from '../bank'
 import { xpForLevel } from '../xp'
 import { getAction } from '../../content'
+import { waitingFor } from '../skillEngine'
 
 // Read the balance out of the content tables rather than hardcoding it, so a
 // deliberate rebalance does not read as a broken engine.
@@ -106,7 +107,7 @@ describe('skill engine - halting', () => {
     expect(count(state, 'scrap_steel')).toBe(0)
   })
 
-  it('halts when materials run out, after doing what it could afford', () => {
+  it('waits when materials run out, keeping the order standing', () => {
     const state = newGame()
     state.bank['scrap_steel'] = 3 // smelting costs 2, so exactly one is affordable
     setActivity(state, 'mech', { kind: 'skill', skill: 'refining', action: 'smelt_steel' })
@@ -116,8 +117,39 @@ describe('skill engine - halting', () => {
     expect(count(after, 'steel_ingot')).toBe(1)
     expect(count(after, 'scrap_steel')).toBe(1)
     expect(after.skills.refining).toBe(SMELT.xp)
-    expect(after.actors.mech.activity).toBeNull()
-    expect(after.actors.mech.stoppedReason).toBe('missing-inputs')
+
+    // Still on the job. Halting would mean the other actor could restock it and nothing
+    // would happen; waiting means it picks up the moment stock exists.
+    expect(after.actors.mech.activity).not.toBeNull()
+    expect(after.actors.mech.stoppedReason).toBeNull()
+    expect(waitingFor(after, 'mech').map((s) => s.item)).toEqual(['scrap_steel'])
+  })
+
+  it('banks no progress it could not have used', () => {
+    // Without a cap, a long wait would store hours of progress against an empty bank
+    // and spend it all the instant one input appeared.
+    const state = newGame()
+    setActivity(state, 'mech', { kind: 'skill', skill: 'refining', action: 'smelt_steel' })
+
+    let after = tick(state, 3600) // an hour with nothing to smelt
+    expect(after.actors.mech.progress).toBe(0)
+
+    after.bank['scrap_steel'] = 2
+    after = tick(after, SMELT.duration)
+    expect(count(after, 'steel_ingot')).toBe(1)
+  })
+
+  it('picks straight back up when stock arrives', () => {
+    const state = newGame()
+    state.bank['scrap_steel'] = 2
+    setActivity(state, 'mech', { kind: 'skill', skill: 'refining', action: 'smelt_steel' })
+
+    let after = tick(state, SMELT.duration * 5)
+    expect(count(after, 'steel_ingot')).toBe(1)
+
+    after.bank['scrap_steel'] = 10
+    after = tick(after, SMELT.duration * 5)
+    expect(count(after, 'steel_ingot')).toBe(6)
   })
 
   it('halts on an action id that is not in the content tables', () => {

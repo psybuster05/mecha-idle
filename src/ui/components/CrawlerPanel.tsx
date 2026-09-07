@@ -3,6 +3,8 @@ import { getNode, WORLD_NODES } from '../../content/world'
 import { installCrawler, moveCrawler, startSkillAction, stopActivity } from '../../sim/intents'
 import { CRAWLER_SKILLS, type GameState } from '../../sim/state'
 import { isNodeOpen } from '../../sim/world'
+import { waitingFor } from '../../sim/skillEngine'
+import { itemName } from '../../content'
 import { levelFromXp } from '../../sim/xp'
 import { formatSeconds } from '../format'
 import { Bar } from './Bar'
@@ -55,6 +57,7 @@ export function CrawlerPanel({ state, dispatch }: Props) {
     )
   }
 
+  const waiting = waitingFor(state, 'crawler')
   const here = getNode(crawler.at)
   const travel = crawler.travel
   const destination = travel ? getNode(travel.remaining.at(-1) ?? travel.to) : null
@@ -78,6 +81,13 @@ export function CrawlerPanel({ state, dispatch }: Props) {
           <span className="my-type">{destination?.name ?? '...'}</span>
           <Bar value={travel.progress / travel.legSeconds} tone="progress" />
         </div>
+      )}
+
+      {waiting.length > 0 && (
+        <p className="warn">
+          Out of {waiting.map((stack) => itemName(stack.item)).join(' and ')}. It is still
+          on the job and will pick up the moment you bring some back.
+        </p>
       )}
 
       <h3>Work</h3>

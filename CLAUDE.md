@@ -252,3 +252,30 @@ Rules that keep the two actors distinct:
   which works anywhere. The intent restores the kept travel.
 - **It drives slowly and ignores waypoints.** Waypoints are your surveying, not its.
   `moveSpeedOf` returns a fixed `CRAWLER_MOVE_SPEED` for it.
+
+## Waiting, not halting
+
+An action short of materials **waits**. It keeps the order, stops accumulating progress,
+and picks up the moment stock exists. `waitingFor(state, actor)` derives what it is
+short of; there is no stored waiting flag.
+
+This replaced halting when the crawler arrived. With one actor, halting loudly was right -
+spinning on an action that could never proceed was pure waste. With two, "the crawler is
+out of ingots while the mech refines more" is an ordinary temporary state, and a halted
+action never restarts on its own.
+
+**Progress is capped at `affordable * duration`.** Without that cap a long offline step
+would bank hours of progress against an empty bank and spend it all the instant one input
+appeared.
+
+### The one known step-size dependency
+
+`advance` runs each actor for the whole step in turn, so a single large offline step
+refines everything *before* the consumer eats any of it, where live play interleaves them.
+Measured with a producer/consumer pair, this is a **constant off-by-one** - one extra
+completion whether the span is ten minutes or eight hours - and it favours the player.
+Two small step sizes agree with each other exactly; only the giant step differs.
+
+Accepted rather than engineered away, and guarded: a test asserts the gap stays within one
+completion and, more importantly, that it does **not grow with the span**. Drift
+proportional to time away is the thing that would actually matter.

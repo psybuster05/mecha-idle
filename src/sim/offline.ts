@@ -11,6 +11,7 @@
  */
 
 import { tick } from './tick'
+import { waitingFor } from './skillEngine'
 import type { ActorId, GameState, ItemId, SkillId, StopReason } from './state'
 import { ACTOR_IDS, ALL_SKILLS } from './state'
 
@@ -36,6 +37,14 @@ export interface OfflineReport {
   items: Partial<Record<ItemId, number>>
   /** Set when an activity halted while away, so the UI can explain the silence. */
   stopped: { actor: ActorId; reason: StopReason } | null
+  /**
+   * Set when an actor is still on the job but out of materials.
+   *
+   * Waiting looks exactly like working from the outside, so a return that produced less
+   * than expected needs to say why. The order is still standing - it resumes the moment
+   * the inputs exist - which is the whole difference from halting.
+   */
+  waiting: { actor: ActorId; missing: ItemId[] } | null
 }
 
 function itemDelta(before: GameState, after: GameState): Partial<Record<ItemId, number>> {
@@ -46,6 +55,14 @@ function itemDelta(before: GameState, after: GameState): Partial<Record<ItemId, 
     if (change !== 0) delta[id] = change
   }
   return delta
+}
+
+function firstWaiting(state: GameState): { actor: ActorId; missing: ItemId[] } | null {
+  for (const actor of ACTOR_IDS) {
+    const missing = waitingFor(state, actor)
+    if (missing.length > 0) return { actor, missing: missing.map((stack) => stack.item) }
+  }
+  return null
 }
 
 function firstStop(state: GameState): { actor: ActorId; reason: StopReason } | null {
@@ -90,6 +107,7 @@ export function applyOffline(
       skillXp,
       items: itemDelta(state, after),
       stopped: firstStop(after),
+      waiting: firstWaiting(after),
     },
   }
 }

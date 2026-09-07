@@ -1,6 +1,7 @@
 import { getEnemy, getSkill, itemName } from '../../content'
 import { nodesForAction } from '../../content/world'
 import { isNodeOpen } from '../../sim/world'
+import { waitingFor } from '../../sim/skillEngine'
 import type { SkillAction } from '../../content/types'
 import { count } from '../../sim/bank'
 import { startSkillAction, stopActivity } from '../../sim/intents'
@@ -41,6 +42,7 @@ export function SkillPanel({ state, skillId, dispatch }: Props) {
   const level = levelFromXp(xp)
   const activity = state.actors.mech.activity
   const stopped = state.actors.mech.stoppedReason
+  const waiting = waitingFor(state, 'mech')
 
   const isActive = (action: SkillAction) =>
     activity?.kind === 'skill' && activity.skill === skillId && activity.action === action.id
@@ -70,6 +72,12 @@ export function SkillPanel({ state, skillId, dispatch }: Props) {
       )}
       {stopped === 'unreachable' && (
         <p className="warn">There is nowhere you can reach that does that yet.</p>
+      )}
+      {waiting.length > 0 && (
+        <p className="warn">
+          Waiting for {waiting.map((stack) => itemName(stack.item)).join(' and ')}. The
+          order stands - it picks up again the moment there is stock.
+        </p>
       )}
 
       <ul className="actions">

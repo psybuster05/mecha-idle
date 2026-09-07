@@ -119,13 +119,16 @@ describe('offline - the report', () => {
     expect(report?.items['steel_ingot']).toBeGreaterThan(0)
   })
 
-  it('explains why work stopped while away', () => {
+  it('says what you ran out of, since waiting looks like working', () => {
     const state = away(8 * 3600, (s) => {
       s.bank['scrap_steel'] = 10 // only five smelts' worth
       setActivity(s, 'mech', { kind: 'skill', skill: 'refining', action: 'smelt_steel' })
     })
     const { report } = applyOffline(state, NOW)
-    expect(report?.stopped).toEqual({ actor: 'mech', reason: 'missing-inputs' })
+
+    // Not stopped - still on the job, just out of stock. The order stands.
+    expect(report?.stopped).toBeNull()
+    expect(report?.waiting).toEqual({ actor: 'mech', missing: ['scrap_steel'] })
     expect(report?.items['steel_ingot']).toBe(5)
   })
 })

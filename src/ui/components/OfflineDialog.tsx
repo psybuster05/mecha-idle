@@ -53,6 +53,14 @@ export function OfflineDialog({
 
         {report.stopped && <p className="warn">{STOP_TEXT[report.stopped.reason] ?? 'Work stopped.'}</p>}
 
+        {report.waiting && (
+          <p className="warn">
+            {report.waiting.actor === 'crawler' ? 'The crawler is' : 'You are'} still on the
+            job but out of {report.waiting.missing.map(itemName).join(' and ')}. The order
+            stands - it picks up again the moment there is stock.
+          </p>
+        )}
+
         {nothingHappened && <p className="dim">Nothing was running. Nothing changed.</p>}
 
         {skills.length > 0 && (

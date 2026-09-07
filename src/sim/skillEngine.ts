@@ -8,8 +8,8 @@
 
 import { getAction } from '../content'
 import { perkTotal } from '../content/enemies'
-import type { SkillAction } from '../content/types'
-import { addItem, grantAll, maxCraftable, payCost } from './bank'
+import type { ItemStack, SkillAction } from '../content/types'
+import { addItem, count, grantAll, maxCraftable, payCost } from './bank'
 import { Rng } from './rng'
 import { haltActivity, type ActorId, type GameState } from './state'
 import { derivedStats } from './stats'
@@ -68,14 +68,25 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
   const duration = actionDuration(state, action)
   if (!(duration > 0)) return // bad data; refuse to divide by zero
 
-  actor.progress += dt
-  const wanted = Math.floor(actor.progress / duration)
-  if (wanted <= 0) return
-
-  // Inputs are consumed linearly, so checking affordability once against the
-  // starting bank gives the same answer as checking before each completion.
+  // Inputs are consumed linearly, so checking affordability once against the starting
+  // bank gives the same answer as checking before each completion.
   const affordable = maxCraftable(state, action.inputs)
+
+  // **Waiting, not halting.** Progress is capped at what the bank can actually pay for,
+  // so an actor short of materials simply stops accumulating rather than banking time it
+  // could not have used. That matters now there are two actors: the crawler running out
+  // of ingots while the mech is busy refining more is an ordinary, temporary state, not
+  // a failure - and a halted action never restarts on its own.
+  //
+  // The cap is also what keeps this honest across step sizes. Without it a large offline
+  // step would accumulate hours of progress against an empty bank and then spend it the
+  // instant a single input appeared.
+  const ceiling = affordable * duration
+  actor.progress = Math.min(actor.progress + dt, ceiling)
+
+  const wanted = Math.floor(actor.progress / duration)
   const applied = Math.min(wanted, affordable)
+  if (applied <= 0) return
 
   if (applied > 0) {
     payCost(state, action.inputs, applied)
@@ -99,12 +110,23 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
     state.skills[activity.skill] += action.xp * applied * (1 + perkTotal(state.defeated, 'xpBonus'))
   }
 
-  if (applied < wanted) {
-    // Ran out of materials partway through. Halt loudly instead of spinning on
-    // an action that can no longer produce anything.
-    haltActivity(state, actorId, 'missing-inputs')
-    return
-  }
-
   actor.progress -= applied * duration
+}
+
+/**
+ * What an actor is short of, if anything.
+ *
+ * Derived rather than stored: waiting is not a state the simulation records, it is
+ * simply what an actor with an unaffordable action looks like. The UI says so out loud
+ * so that "nothing is happening" always has a visible reason.
+ */
+export function waitingFor(state: GameState, actorId: ActorId): ItemStack[] {
+  const activity = state.actors[actorId].activity
+  if (activity?.kind !== 'skill') return []
+
+  const action = getAction(activity.skill, activity.action)
+  if (!action?.inputs) return []
+  if (maxCraftable(state, action.inputs) > 0) return []
+
+  return action.inputs.filter((stack) => count(state, stack.item) < stack.qty)
 }
