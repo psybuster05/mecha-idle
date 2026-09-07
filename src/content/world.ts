@@ -75,6 +75,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'seat_seal' },
       { skill: 'refining', action: 'roll_alumide' },
       { skill: 'refining', action: 'sync_guidance' },
+      { skill: 'refining', action: 'fire_ceramic' },
+      { skill: 'refining', action: 'draw_lattice' },
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
@@ -90,6 +92,8 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'fabrication', action: 'fab_weapon_repeater' },
       { skill: 'fabrication', action: 'fab_legs_vector' },
       { skill: 'fabrication', action: 'fab_frame_aeroshell' },
+      { skill: 'fabrication', action: 'fab_weapon_lance' },
+      { skill: 'fabrication', action: 'fab_frame_bulwark' },
     ],
   },
   {
@@ -258,6 +262,41 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     actions: [{ skill: 'scavenging', action: 'the_approach' }],
     combat: 'abandoned_airfield',
   },
+
+  // --- The Bridge Checkpoint, east: the way off the island -------------------
+  //
+  // Only three places, in a line. This is a crossing rather than a region, and its
+  // boss is the gate to the mainland. Locked behind Tower Actual, continuing the chain.
+  {
+    id: 'south_approach',
+    name: 'South Approach',
+    description: 'A mile of queue lanes, chicanes and dragon teeth, all of it facing inland.',
+    x: 1120,
+    y: 470,
+    unlockedBy: 'tower_actual',
+    actions: [{ skill: 'scavenging', action: 'south_approach' }],
+    combat: 'bridge_checkpoint',
+  },
+  {
+    id: 'the_span',
+    name: 'The Span',
+    description: 'Half a mile of deck over cold water. You can see the mainland from the middle of it.',
+    x: 1290,
+    y: 380,
+    unlockedBy: 'tower_actual',
+    actions: [{ skill: 'scavenging', action: 'the_span' }],
+    combat: 'bridge_checkpoint',
+  },
+  {
+    id: 'north_gatehouse',
+    name: 'North Gatehouse',
+    description: 'The last structure on the island. Everything in it is still facing the way you came from.',
+    x: 1440,
+    y: 290,
+    unlockedBy: 'tower_actual',
+    actions: [{ skill: 'scavenging', action: 'north_gatehouse' }],
+    combat: 'bridge_checkpoint',
+  },
 ] as const
 
 export const WORLD_EDGES: readonly WorldEdgeDef[] = [
@@ -292,6 +331,11 @@ export const WORLD_EDGES: readonly WorldEdgeDef[] = [
   { a: 'runway', b: 'terminal_c', difficulty: 1.2 },
   { a: 'terminal_c', b: 'approach_lights', difficulty: 1.2 },
   { a: 'runway', b: 'approach_lights', difficulty: 1.5 },
+
+  // East to the bridge. One road in, as a checkpoint should have.
+  { a: 'vitrified_zone', b: 'south_approach', difficulty: 1.3 },
+  { a: 'south_approach', b: 'the_span', difficulty: 1.1 },
+  { a: 'the_span', b: 'north_gatehouse', difficulty: 1.1 },
 ] as const
 
 const nodesById = new Map<NodeId, WorldNodeDef>(WORLD_NODES.map((n) => [n.id, n]))

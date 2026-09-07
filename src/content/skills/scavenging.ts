@@ -217,5 +217,43 @@ export const SCAVENGING: SkillDef = {
       drops: [{ item: 'airframe_spar', qty: 4, chance: 0.35 }],
       xp: 63,
     },
+
+    // --- Bridge Checkpoint. Levels 60/75/90, matching the rates already there. ---
+    {
+      id: 'south_approach',
+      name: 'South Approach',
+      description: 'A mile of queue lanes, chicanes and dragon teeth. Nothing queued here in thirty years.',
+      levelRequired: 60,
+      duration: 6,
+      outputs: [{ item: 'barrier_segment', qty: 2 }],
+      drops: [{ item: 'ceramic_composite', qty: 1, chance: 0.3 }],
+      xp: 27,
+    },
+    {
+      id: 'the_span',
+      name: 'The Span',
+      description: 'Half a mile of deck over cold water, and the mainland on the far side of it.',
+      levelRequired: 75,
+      duration: 6,
+      outputs: [
+        { item: 'ceramic_composite', qty: 2 },
+        { item: 'barrier_segment', qty: 1 },
+      ],
+      drops: [{ item: 'security_core', qty: 1, chance: 0.15 }],
+      xp: 38,
+    },
+    {
+      id: 'north_gatehouse',
+      name: 'North Gatehouse',
+      description: 'The last structure on the island. Everything in it is still facing the way you came from.',
+      levelRequired: 90,
+      duration: 7,
+      outputs: [
+        { item: 'ceramic_composite', qty: 3 },
+        { item: 'security_core', qty: 1 },
+      ],
+      drops: [{ item: 'barrier_segment', qty: 4, chance: 0.35 }],
+      xp: 63,
+    },
   ],
 }

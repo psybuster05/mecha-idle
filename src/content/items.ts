@@ -123,6 +123,35 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'component',
   },
 
+  // --- Bridge Checkpoint salvage ---------------------------------------------
+  //
+  // Military security materials. This is the armour line, and the line that answers
+  // armour - the checkpoint is where plate finally matters enough to need a reply.
+  {
+    id: 'ceramic_composite',
+    name: 'Ceramic Composite',
+    description: 'Shatters on purpose, one layer at a time, so that whatever is behind it does not.',
+    category: 'material',
+  },
+  {
+    id: 'barrier_segment',
+    name: 'Barrier Segment',
+    description: 'Poured to stop a vehicle at speed. It has never once been asked to.',
+    category: 'material',
+  },
+  {
+    id: 'security_core',
+    name: 'Security Core',
+    description: 'It holds a list of who may pass. Your designation is not on it, and never was.',
+    category: 'component',
+  },
+  {
+    id: 'crossing_writ',
+    name: 'Crossing Writ',
+    description: 'Cut from the Registrar. Authorisation to leave the island, thirty years after anyone needed it.',
+    category: 'component',
+  },
+
   // --- Refined stock (Refining) -------------------------------------------
   {
     id: 'steel_ingot',
@@ -189,6 +218,18 @@ export const ITEMS: readonly ItemDef[] = [
     name: 'Guidance Module',
     description: 'It knows exactly where it is at all times. You envy that.',
     category: 'component',
+  },
+  {
+    id: 'ablative_ceramic',
+    name: 'Ablative Ceramic',
+    description: 'Layered and fired. It gives itself up a sheet at a time so you do not have to.',
+    category: 'material',
+  },
+  {
+    id: 'hardened_lattice',
+    name: 'Hardened Lattice',
+    description: 'Dense enough to blunt anything, and sharp enough to go through anything blunted.',
+    category: 'material',
   },
   {
     id: 'core_matrix',
@@ -326,6 +367,23 @@ export const ITEMS: readonly ItemDef[] = [
     category: 'part',
     slot: 'weapon',
     stats: { accuracy: 30, damageType: 'energy', damageMultiplier: 1.0, attackSpeed: 0.9 },
+  },
+  // Bridge parts: the armour question, and its answer.
+  {
+    id: 'weapon_lance',
+    name: 'Breaching Lance',
+    description: 'It does not hit armour. It finds the seam, and goes through it.',
+    category: 'part',
+    slot: 'weapon',
+    stats: { accuracy: 12, damageType: 'kinetic', damageMultiplier: 1.25, armourPierce: 0.75 },
+  },
+  {
+    id: 'frame_bulwark',
+    name: 'Bulwark Frame',
+    description: 'Checkpoint plate, cut down to fit you. Slow, immovable, and very hard to convince.',
+    category: 'part',
+    slot: 'frame',
+    stats: { hp: 120, armour: 34, evasion: -18, resist: { kinetic: 0.7, energy: 0.85 } },
   },
 ] as const
 

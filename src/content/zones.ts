@@ -35,6 +35,14 @@ export const ZONES: readonly ZoneDef[] = [
     enemies: ['baggage_hauler', 'gate_sentry', 'approach_drone', 'tower_actual'],
     levelRequired: 45,
   },
+  {
+    id: 'bridge_checkpoint',
+    name: 'The Bridge Checkpoint',
+    description:
+      'The only way off the island. A crossing built to stop an army coming the other way, still manned, still refusing.',
+    enemies: ['barrier_drone', 'checkpoint_sentry', 'riot_column', 'registrar'],
+    levelRequired: 65,
+  },
 ] as const
 
 const byId = new Map(ZONES.map((z) => [z.id, z]))

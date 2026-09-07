@@ -19,6 +19,8 @@ export interface BossPhase {
   resistances?: Resistances
   /** Scales the boss's outgoing damage. */
   damageMultiplier?: number
+  /** Scales the boss's armour. Above 1 makes it turtle. */
+  armourMultiplier?: number
   /** Scales the boss's attack interval. Below 1 means it swings faster. */
   attackIntervalMultiplier?: number
   /** Changes what the boss deals. */
@@ -49,6 +51,8 @@ export interface BossPerk {
   moveSpeed?: number
   /** Fractional bonus to all xp earned. 0.05 = +5%. */
   xpBonus?: number
+  /** Fractional bonus to damage dealt. 0.08 = +8%. */
+  damageBonus?: number
 }
 
 export interface EnemyDef {
@@ -261,6 +265,66 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [{ item: 'turbine_blade', qty: 1, chance: 0.2 }],
   },
 
+  // --- Bridge Checkpoint ---------------------------------------------------
+  //
+  // The armour zone. These carry three to eight times the plate of anything so far,
+  // which finally makes armour a question rather than a rounding error - and makes
+  // penetration the only real answer, since mitigation is multiplicative and simply
+  // hitting harder scales alongside it.
+  //
+  // Few, tough defenders. Cleave has nothing to carry into here.
+  {
+    id: 'barrier_drone',
+    name: 'Barrier Drone',
+    description: 'It repositions the bollards. Every night, to the centimetre, against nothing.',
+    maxHp: 520,
+    accuracy: 92,
+    evasion: 30,
+    damage: 46,
+    armour: 70,
+    attackInterval: 2.8,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.85, energy: 1.1, emp: 1 },
+    xp: 480,
+    guaranteed: [{ item: 'barrier_segment', qty: 3 }],
+    drops: [{ item: 'ceramic_composite', qty: 2, chance: 0.4 }],
+  },
+  {
+    id: 'checkpoint_sentry',
+    name: 'Checkpoint Sentry',
+    description: 'It asks for your papers in four languages, waits the regulation interval, and opens fire.',
+    maxHp: 680,
+    accuracy: 108,
+    evasion: 38,
+    damage: 58,
+    armour: 100,
+    attackInterval: 2.6,
+    damageType: 'energy',
+    resistances: { kinetic: 0.8, energy: 0.9, emp: 1.15 },
+    xp: 620,
+    guaranteed: [{ item: 'ceramic_composite', qty: 3 }],
+    drops: [{ item: 'security_core', qty: 1, chance: 0.18 }],
+  },
+  {
+    id: 'riot_column',
+    name: 'Riot Column',
+    description: 'Six units that lock together into a wall. They still form up for a crowd that stopped existing.',
+    maxHp: 1100,
+    accuracy: 120,
+    evasion: 18,
+    damage: 76,
+    armour: 145,
+    attackInterval: 3.4,
+    damageType: 'kinetic',
+    resistances: { kinetic: 0.7, energy: 1.2, emp: 0.9 },
+    xp: 1000,
+    guaranteed: [
+      { item: 'barrier_segment', qty: 5 },
+      { item: 'ceramic_composite', qty: 2 },
+    ],
+    drops: [{ item: 'security_core', qty: 2, chance: 0.3 }],
+  },
+
   // --- Bosses --------------------------------------------------------------
   {
     id: 'overseer',
@@ -423,6 +487,60 @@ export const ENEMIES: readonly EnemyDef[] = [
       },
     ],
   },
+  {
+    id: 'registrar',
+    name: 'The Registrar',
+    description:
+      'It keeps the register of who may cross. The list has not been updated since the last convoy, your designation is not on it, and it has all the time in the world to explain this to you.',
+    maxHp: 8000,
+    accuracy: 165,
+    evasion: 52,
+    damage: 96,
+    armour: 170,
+    attackInterval: 2.7,
+    damageType: 'energy',
+    resistances: { kinetic: 0.85, energy: 0.95, emp: 1.05 },
+    xp: 26000,
+    isBoss: true,
+    perk: {
+      id: 'right_of_way',
+      name: 'Right of Way',
+      description:
+        'You are on the register now, in handwriting that is almost certainly yours. Nothing stops you, and you have learned exactly where their plating joins.',
+      damageBonus: 0.08,
+      moveSpeed: 15,
+    },
+    guaranteed: [
+      { item: 'crossing_writ', qty: 1 },
+      { item: 'security_core', qty: 8 },
+      { item: 'ceramic_composite', qty: 25 },
+    ],
+    drops: [
+      { item: 'barrier_segment', qty: 12, chance: 0.7 },
+      { item: 'crossing_writ', qty: 1, chance: 0.2 },
+    ],
+    // Phases move *armour*. Without penetration the middle phase is a wall you cannot
+    // meaningfully dent; with it, it is merely a long fight.
+    phases: [
+      {
+        below: 0.62,
+        name: 'Lockdown',
+        message: 'Every shutter on the gatehouse comes down at once. It stops arguing and starts refusing.',
+        armourMultiplier: 1.9,
+        damageMultiplier: 0.7,
+        attackIntervalMultiplier: 1.15,
+      },
+      {
+        below: 0.2,
+        name: 'Denial of Entry',
+        message: 'The shutters blow outward. It has decided you are not being processed after all.',
+        armourMultiplier: 0.35,
+        damageMultiplier: 1.7,
+        attackIntervalMultiplier: 0.7,
+        damageType: 'kinetic',
+      },
+    ],
+  },
 ] as const
 
 const byId = new Map(ENEMIES.map((e) => [e.id, e]))
@@ -460,7 +578,7 @@ export function earnedPerks(defeated: Partial<Record<string, number>>): BossPerk
 /** Sum of one numeric perk field across everything earned. */
 export function perkTotal(
   defeated: Partial<Record<string, number>>,
-  field: 'gatheringYield' | 'moveSpeed' | 'xpBonus',
+  field: 'gatheringYield' | 'moveSpeed' | 'xpBonus' | 'damageBonus',
 ): number {
   return earnedPerks(defeated).reduce((sum, perk) => sum + (perk[field] ?? 0), 0)
 }

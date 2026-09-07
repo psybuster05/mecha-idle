@@ -64,6 +64,15 @@ export interface EquipStats {
   /** Incoming damage multipliers this part grants. Armour pieces carry these. */
   resist?: Resistances
   /**
+   * Fraction of the target's armour ignored, 0..1.
+   *
+   * Armour mitigates multiplicatively, so more damage is no answer to it - a heavily
+   * plated enemy is simply an enemy with more effective HP. Penetration is the only
+   * thing that actually replies, which is what makes an armoured zone a real question
+   * rather than a slower one.
+   */
+  armourPierce?: number
+  /**
    * Fraction of overkill damage carried to the next enemy. 1 wastes nothing.
    *
    * This is what makes a slow heavy weapon an archetype rather than a trap. Enemies

@@ -14,7 +14,14 @@ import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
 import { Rng } from './rng'
 import { haltActivity, recordDefeat, type ActorId, type GameState } from './state'
-import { combatLevel, derivedStats, HEAL_ON_KILL, RESPAWN_DELAY, type DerivedStats } from './stats'
+import {
+  combatLevel,
+  derivedStats,
+  HEAL_ON_KILL,
+  HP_REGEN_PER_SECOND,
+  RESPAWN_DELAY,
+  type DerivedStats,
+} from './stats'
 
 /** Float slack when comparing accumulated progress against an interval. */
 const EPS = 1e-9
@@ -47,6 +54,7 @@ function swing(
   evasion: number,
   armour: number,
   resistances: Resistances,
+  pierce = 0,
 ): number {
   const hitChance = accuracy / (accuracy + evasion)
   if (!rng.chance(hitChance)) return 0
@@ -56,7 +64,8 @@ function swing(
   // Both are multiplicative, so a good matchup and heavy plate compound rather than
   // one washing the other out.
   const typed = damage * roll * (resistances[type] ?? 1)
-  const mitigation = 1 - armour / (armour + ARMOUR_SCALE)
+  const effectiveArmour = Math.max(0, armour * (1 - pierce))
+  const mitigation = 1 - effectiveArmour / (effectiveArmour + ARMOUR_SCALE)
 
   // A landed hit always does at least 1, so a bad matchup can never make a fight
   // literally unwinnable - only slow enough that you notice and go build an answer.
@@ -157,6 +166,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
       const step = Math.min(remaining, untilSpawn)
       combat.respawnProgress += step
       remaining -= step
+      combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * HP_REGEN_PER_SECOND * step)
       if (combat.respawnProgress >= RESPAWN_DELAY - EPS) {
         spawnEnemy(state, zone.enemies, rng, activity.enemy)
 
@@ -190,6 +200,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     const enemyDamage = enemy.damage * (phase?.damageMultiplier ?? 1)
     const enemyType = phase?.damageType ?? enemy.damageType
     const enemyEvasion = enemy.evasion * (phase?.evasionMultiplier ?? 1)
+    const enemyArmour = enemy.armour * (phase?.armourMultiplier ?? 1)
 
     const untilOurs = Math.max(0, stats.attackInterval - combat.attackProgress)
     const untilTheirs = Math.max(0, enemyInterval - combat.enemyAttackProgress)
@@ -198,6 +209,9 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
     combat.attackProgress += step
     combat.enemyAttackProgress += step
     remaining -= step
+    // Regenerate inside the loop rather than once per call, so healing interleaves
+    // with incoming hits exactly as it would in live play.
+    combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * HP_REGEN_PER_SECOND * step)
 
     // Ours resolves first on a tie. A deliberate sliver of player advantage.
     if (combat.attackProgress >= stats.attackInterval - EPS) {
@@ -209,8 +223,9 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         stats.damage,
         stats.damageType,
         enemyEvasion,
-        enemy.armour,
+        enemyArmour,
         effectiveResistances(enemy, combat.enemyHp),
+        stats.armourPierce,
       )
       if (combat.enemyHp <= 0) {
         // Everything past zero is waste unless the weapon cleaves, in which case it

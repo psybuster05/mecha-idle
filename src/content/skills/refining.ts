@@ -169,5 +169,33 @@ export const REFINING: SkillDef = {
       outputs: [{ item: 'guidance_module', qty: 1 }],
       xp: 44,
     },
+
+    // --- Bridge Checkpoint line ---
+    {
+      id: 'fire_ceramic',
+      name: 'Fire Ablative Ceramic',
+      description: 'Layer, fire, cool, repeat. Hurry any step and it comes out as gravel.',
+      levelRequired: 60,
+      duration: 7,
+      inputs: [
+        { item: 'ceramic_composite', qty: 3 },
+        { item: 'steel_ingot', qty: 2 },
+      ],
+      outputs: [{ item: 'ablative_ceramic', qty: 1 }],
+      xp: 32,
+    },
+    {
+      id: 'draw_lattice',
+      name: 'Draw Hardened Lattice',
+      description: 'The same structure that stops a round will part one, if you draw it to a point.',
+      levelRequired: 75,
+      duration: 7,
+      inputs: [
+        { item: 'barrier_segment', qty: 4 },
+        { item: 'titanium_plate', qty: 2 },
+      ],
+      outputs: [{ item: 'hardened_lattice', qty: 1 }],
+      xp: 44,
+    },
   ],
 }

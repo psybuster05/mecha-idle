@@ -23,6 +23,19 @@ import { levelFromXp } from './xp'
 export const BASE_ATTACK_INTERVAL = 3
 /** However much attack speed is stacked, swings never get faster than this. */
 export const MIN_ATTACK_INTERVAL = 1.2
+/**
+ * Fraction of maximum HP restored every second, always.
+ *
+ * Without this, any fight longer than (maxHP / incoming DPS) is unwinnable no matter
+ * how much damage you deal - and boss fights are exactly that, because the heal-on-kill
+ * never fires during one. At level 99 that put a hard ceiling of about 140 seconds on
+ * any single fight, which made an 11,000 HP boss impossible for every build.
+ *
+ * Deliberately small: it should sustain you through a long grind and a boss's quiet
+ * phases, never out-heal a phase that is actively trying to kill you.
+ */
+export const HP_REGEN_PER_SECOND = 0.004
+
 /** Fraction of maximum HP restored on each kill. */
 export const HEAL_ON_KILL = 0.08
 /** Map units walked per second with nothing fitted. */
@@ -41,6 +54,8 @@ export interface DerivedStats {
   moveSpeed: number
   /** Fraction of overkill carried to the next enemy, 0..1. */
   cleave: number
+  /** Fraction of enemy armour ignored, 0..1. */
+  armourPierce: number
   /** Multiplier on non-combat action duration. Below 1 means faster. */
   skillDurationScale: number
   /** What our attacks deal, from the fitted weapon. */
@@ -114,7 +129,8 @@ export function derivedStats(state: GameState): DerivedStats {
     evasion: 8 + defence * 1.5 + equippedTotal(state, 'evasion'),
     damage:
       (3 + strength * 1.2 + equippedTotal(state, 'damage')) *
-      equippedProduct(state, 'damageMultiplier'),
+      equippedProduct(state, 'damageMultiplier') *
+      (1 + perkTotal(state.defeated, 'damageBonus')),
     armour: defence * 0.8 + equippedTotal(state, 'armour'),
     attackInterval: Math.max(
       MIN_ATTACK_INTERVAL,
@@ -125,6 +141,7 @@ export function derivedStats(state: GameState): DerivedStats {
     // Expressed as a duration multiplier rather than a speed bonus so stacking is
     // sane: +25% and +25% gives 1/1.5, not a free ride to zero.
     cleave: Math.min(1, Math.max(0, equippedTotal(state, 'cleave'))),
+    armourPierce: Math.min(0.9, Math.max(0, equippedTotal(state, 'armourPierce'))),
     skillDurationScale: 1 / (1 + Math.max(0, equippedTotal(state, 'skillSpeed'))),
     damageType: equippedDamageType(state),
     resistances: equippedResistances(state),

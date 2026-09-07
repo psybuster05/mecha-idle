@@ -179,8 +179,14 @@ describe('boss phases', () => {
   })
 
   it('is genuinely hard for a mech that has not prepared', () => {
-    // 900 HP, and it accelerates. A level-60 mech with no weapon should lose.
-    const state = tickBy(startCombat(veteran(11), 'rustbelt', 'overseer'), 1800, 0.5)
+    // 900 HP, and it accelerates. Level 25 and bare-handed is genuinely unprepared -
+    // level 60 no longer is, because reactor regeneration now outlasts the Overseer's
+    // quieter phases. That is the intended effect of regeneration, not a regression.
+    const green = newGame(11)
+    for (const skill of ['attack', 'strength', 'defence', 'hitpoints'] as const) {
+      green.skills[skill] = xpForLevel(25)
+    }
+    const state = tickBy(startCombat(green, 'rustbelt', 'overseer'), 1800, 0.5)
     expect(state.actors.mech.stoppedReason).toBe('destroyed')
   })
 

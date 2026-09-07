@@ -222,5 +222,35 @@ export const FABRICATION: SkillDef = {
       outputs: [{ item: 'frame_aeroshell', qty: 1 }],
       xp: 108,
     },
+
+    // --- Bridge Checkpoint: the armour question and its answer. ---
+    {
+      id: 'fab_weapon_lance',
+      name: 'Breaching Lance',
+      description: 'Everything about it is aimed at the join rather than the plate.',
+      levelRequired: 75,
+      duration: 10,
+      inputs: [
+        { item: 'hardened_lattice', qty: 3 },
+        { item: 'security_core', qty: 2 },
+        { item: 'titanium_plate', qty: 4 },
+      ],
+      outputs: [{ item: 'weapon_lance', qty: 1 }],
+      xp: 63,
+    },
+    {
+      id: 'fab_frame_bulwark',
+      name: 'Bulwark Frame',
+      description: 'You will not dodge anything again. You will not especially need to.',
+      levelRequired: 90,
+      duration: 12,
+      inputs: [
+        { item: 'ablative_ceramic', qty: 6 },
+        { item: 'hardened_lattice', qty: 2 },
+        { item: 'crossing_writ', qty: 1 },
+      ],
+      outputs: [{ item: 'frame_bulwark', qty: 1 }],
+      xp: 108,
+    },
   ],
 }
