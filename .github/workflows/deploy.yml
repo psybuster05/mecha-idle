@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+# Publishes the built game to https://psybuster05.github.io/mecha-idle/
+#
+# Requires Pages to be enabled once, by hand: Settings -> Pages -> Build and
+# deployment -> Source: "GitHub Actions". Without that, deploy-pages fails.
+#
+# The build runs typecheck, lint and the full test suite first. A broken deploy is
+# worse than a late one, and this is the only thing standing between a bad commit
+# and the link people have been given.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # so a deploy can be re-run without an empty commit
+
+# Pages needs to write the deployment; nothing else does.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. Queue rather than cancel, so the last push always wins
+# and a half-finished upload is never what ends up live.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Runs tsc --noEmit itself, so typecheck is covered here.
+      - name: Build
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

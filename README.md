@@ -1,10 +1,15 @@
 # Mecha Idle
 
+**▶ Play it: https://psybuster05.github.io/mecha-idle/**
+
 A Melvor Idle-style skill-based idle game. You are a sentient mech that reactivated
 alone in the ruins after the end. Skills are not things you learn - they are subroutines
 you *recover*, and every part you fabricate becomes part of your own body.
 
-## Running it
+It saves to your browser, so you can close the tab and come back - it credits what you
+would have earned while you were gone, up to 24 hours.
+
+## Running it locally
 
 ```
 npm install
@@ -18,6 +23,9 @@ npm run dev
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run lint` | ESLint, including the sim-purity boundary rules |
 | `npm run build` | Production build into `dist/` |
+
+Pushing to `main` deploys to GitHub Pages, but only if lint, tests and the build all
+pass first - see [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
 ## The loop
 
@@ -48,9 +56,26 @@ See [CLAUDE.md](CLAUDE.md) for the architecture rules and why they exist, and
 
 ## Status
 
-v1 vertical slice: three gathering skills, one combat zone, five equipment slots,
-saves with migrations, and offline progress. Art is a placeholder CSS pass - pixel art
-comes once the loop is proven fun.
+**A proof of concept, not a product.** It is built and it is playable end to end; it has
+not been playtested by anyone, which is the honest gap. Everything below is verified by
+tests rather than by having been fun to anybody yet.
 
-- [Game Design Document](docs/GDD.md) - the design in progress. Fill in the OPEN items;
-  they drive most of what gets built next.
+- Five non-combat skills - Scavenging, Refining, Fabrication, Salvaging, Cartography -
+  81 actions between them, each skill with a full 1-99 ladder reachable on time alone
+- Four combat skills, seven zones, 26 enemies of which seven are bosses
+- Damage types with resistances, three weapon archetypes, boss phases
+- A second actor, the crawler, that runs industry while you are out
+- A story in 21 fragments, delivered as recovered memory
+- Saves with migrations, and offline progress that provably matches having played
+- Pixel art stored as data rather than image files, so it carries no licence
+
+**Combat never gates a skill.** Time alone maxes any non-combat skill. Bosses unlock
+breadth - new regions, unique materials, story, permanent perks - never height. A player
+who never fights still has a complete idle game.
+
+316 tests, most of them about the things that actually break idle games: xp curves,
+action rates, offline catch-up, and save migrations.
+
+- [Game Design Document](docs/GDD.md) - the design, with every decision and the reasoning
+  behind it, including the ones that got reversed.
+- [CLAUDE.md](CLAUDE.md) - the architecture rules and why each one exists.

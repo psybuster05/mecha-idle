@@ -4,7 +4,18 @@ A Melvor Idle-style skill-based idle game. Post-apocalyptic setting. **You are a
 mech** that reactivated alone in the ruins - skills are not things you learn, they are
 subroutines you *recover*. Every part you install is literally your own body.
 
-Target: web now, desktop wrap (Electron/Tauri) for a possible Steam release later.
+**Target: a playable proof of concept on the web.** Published as a static site at
+https://psybuster05.github.io/mecha-idle/ so people can be shown it and poke at it.
+
+Steam was the goal and no longer is. This exists to prove the systems and to find out
+what is actually fun, before a second game that its author writes and designs the
+majority of. Read that as licence to keep the scope where it is: this does not need
+achievements, a store page, or a desktop wrap. It needs to be good enough to hand to
+someone.
+
+The architecture rules below were written for a Steam release. They survive the change
+because none of them were really about Steam - see each one's *why*, which has been
+brought up to date.
 
 ## Architecture rules (these are load-bearing - do not violate)
 
@@ -14,11 +25,19 @@ Target: web now, desktop wrap (Electron/Tauri) for a possible Steam release late
    and unit tests possible at all.
 
 2. **Never touch `localStorage` directly.** Go through `SaveAdapter`
-   (`src/platform/SaveAdapter.ts`). Web uses localStorage; a desktop build swaps in a
-   filesystem adapter; Steam Cloud after that. Only that one file should change.
+   (`src/platform/SaveAdapter.ts`). One file knows where a save lives, which is what
+   makes "somewhere other than this browser" a one-line change rather than a hunt. The
+   key is namespaced (`mecha-idle/save`) because every GitHub Pages project site shares
+   one origin, and so shares one localStorage.
 
 3. **No network dependencies, ever.** No CDN scripts, no Google Fonts, no remote assets.
-   A Steam build must run fully offline. Bundle everything locally.
+   Bundle everything locally. A page that fetches from a third party is a page that
+   breaks later for reasons no one will be around to fix - and this one is meant to
+   still work when someone opens the link in a year.
+
+   Related: `base: './'` in `vite.config.ts` emits relative asset paths, which is what
+   lets the same build work from a subpath (`/mecha-idle/`) rather than only at a
+   domain root. Do not change it to `/`.
 
 4. **Saves are versioned with migrations.** Every save carries `version`. When the shape
    changes, add a migration - never silently break an existing save.
@@ -45,7 +64,9 @@ file, not writing engine code. "Make tier 3 parts stronger" should be a number e
 - `image-rendering: pixelated` and **integer scale factors only** (2x, 3x, 4x). Never
   fractional - it turns pixel art to mush.
 - Every asset must be logged in `ASSETS.md` with source, author, and license *before* it is
-  committed. A Steam release requires provable provenance.
+  committed. Less urgent now that nothing is being sold, but reconstructing provenance
+  later from memory is miserable, and the current art dodges the problem entirely by
+  being data rather than files.
 
 ## Commands
 

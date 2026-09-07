@@ -196,9 +196,32 @@ ul { list-style: none; margin: 0; padding: 0; }
 /* Pixel art, when it arrives: integer scaling only. See CLAUDE.md. */
 img.sprite { image-rendering: pixelated; }
 
+/*
+ * Phones.
+ *
+ * The rail is a 240px column of eleven stacked items, which on a phone became a full
+ * screen of menu before any game was visible - the first thing a new player saw was
+ * navigation. So on narrow screens it becomes a single horizontal strip that scrolls
+ * sideways, and the per-skill xp bars and level numbers inside it are dropped: they are
+ * detail for someone already playing, and the panel itself shows both anyway.
+ */
 @media (max-width: 720px) {
   .layout { flex-direction: column; }
-  .rail { width: 100%; border-right: none; border-bottom: 1px solid var(--line); }
+  .rail {
+    width: 100%; align-self: auto; border-right: none;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row; gap: 4px; padding: 8px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .rail-group { flex-direction: row; gap: 4px; }
+  /* Section captions ("SKILLS", "CHARACTER") are a column idea; sideways they are
+     just three words taking up the space two buttons wanted. */
+  .rail-heading, .rail-hint { display: none; }
+  .rail-item {
+    display: flex; align-items: center; white-space: nowrap;
+    border-color: var(--line); padding: 7px 11px;
+  }
+  .rail-item .bar-wrap, .rail-level { display: none; }
   .engagement { flex-direction: column; }
 }
 
