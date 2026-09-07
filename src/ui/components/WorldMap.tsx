@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { WORLD_EDGES, getNode, visibleNodes } from '../../content/world'
 import { actorPosition, isNodeOpen } from '../../sim/world'
 import type { WorldNodeDef } from '../../content/world'
@@ -12,8 +12,11 @@ import type { GameState } from '../../sim/state'
  * sprite would not stutter. Travel is gone, so nothing on this canvas moves between
  * player decisions and the throttled React snapshot is enough. It only ever reads.
  *
- * Placeholder art: blocks and lines. Sprite work lands later, and the integer-scaling
- * rule in CLAUDE.md is why the canvas is drawn at a fixed logical size and scaled up.
+ * **Zoom and pan are what make it a map rather than a decoration.** The whole world is
+ * drawn into a 740-unit logical space and then displayed in a ~280px column, so labels
+ * land at about four physical pixels - present, and completely unreadable. Zooming in is
+ * the only thing that makes the place names legible, which is the entire reason to have
+ * names on it.
  */
 
 /** Logical canvas size. Node coordinates are authored in this space. */
@@ -25,6 +28,18 @@ const MAP_HEIGHT = 540
  */
 const PADDING_X = 80
 const PADDING_Y = 34
+
+/**
+ * 1 fits the whole world; 3.5 is as far in as is useful.
+ *
+ * The ceiling is set by how sparse the graph is, not by legibility. Labels are readable
+ * from about 2.7x - they are ~4 physical pixels at 1x in this column, which is the whole
+ * reason zoom exists. But the visible window is 740/zoom logical units, and the nodes
+ * average about 150 apart, so past ~4x you are usually looking at empty space between
+ * two of them. An earlier ceiling of 8 rendered a blank square, which reads as broken.
+ */
+const MIN_ZOOM = 1
+const MAX_ZOOM = 3.5
 
 const COLOURS = {
   edge: '#1f3457',
@@ -41,6 +56,31 @@ const COLOURS = {
   crawler: '#c8a24a',
 }
 
+/** Zoom multiplier and pan offset, both in logical map pixels. */
+interface View {
+  zoom: number
+  x: number
+  y: number
+}
+
+const RESET: View = { zoom: 1, x: 0, y: 0 }
+
+/**
+ * Keep the drawn world overlapping the canvas.
+ *
+ * At zoom z the content spans z * MAP_WIDTH, so the pan may run from the point where its
+ * right edge meets the canvas right edge, to zero. At zoom 1 that collapses to exactly
+ * zero, which is why the un-zoomed map cannot be dragged out of frame.
+ */
+function clampView(view: View): View {
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom))
+  return {
+    zoom,
+    x: Math.min(0, Math.max(MAP_WIDTH * (1 - zoom), view.x)),
+    y: Math.min(0, Math.max(MAP_HEIGHT * (1 - zoom), view.y)),
+  }
+}
+
 function bounds(nodes: readonly WorldNodeDef[]) {
   const xs = nodes.map((n) => n.x)
   const ys = nodes.map((n) => n.y)
@@ -52,7 +92,7 @@ function bounds(nodes: readonly WorldNodeDef[]) {
   }
 }
 
-/** Map units -> canvas pixels, fitting the visible nodes with padding. */
+/** Map units -> canvas pixels, fitting the visible nodes with padding. Ignores zoom. */
 function makeProjection(nodes: readonly WorldNodeDef[]) {
   const { minX, maxX, minY, maxY } = bounds(nodes)
   const spanX = Math.max(1, maxX - minX)
@@ -70,14 +110,16 @@ function makeProjection(nodes: readonly WorldNodeDef[]) {
 /**
  * The mech, drawn from the same sprite data the Equipment panel uses.
  *
- * One source of art for both, so a change to the pixels shows up everywhere. Drawn at
- * 1:1 here because a 16x16 sprite is already the right size against these nodes, and
- * anything fractional would smear it.
+ * Drawn with the zoom transform *reset* and at an integer scale, unlike everything else
+ * here. Under a fractional transform each 1x1 pixel would land on a fractional boundary
+ * and smear, which is the one thing CLAUDE.md's art rules forbid. Vectors can take any
+ * scale; pixel art cannot.
  */
-function drawMech(ctx: CanvasRenderingContext2D, x: number, y: number) {
+function drawMech(ctx: CanvasRenderingContext2D, x: number, y: number, zoom: number) {
+  const scale = Math.max(1, Math.min(4, Math.round(zoom)))
   const rows = MECH_BASE.rows
-  const originX = Math.round(x - rows[0]!.length / 2)
-  const originY = Math.round(y - rows.length / 2)
+  const originX = Math.round(x - (rows[0]!.length * scale) / 2)
+  const originY = Math.round(y - (rows.length * scale) / 2)
 
   for (let py = 0; py < rows.length; py++) {
     const row = rows[py]!
@@ -87,19 +129,24 @@ function drawMech(ctx: CanvasRenderingContext2D, x: number, y: number) {
       const colour = MECH_BASE.palette[char]
       if (!colour) continue
       ctx.fillStyle = colour
-      ctx.fillRect(originX + px, originY + py, 1, 1)
+      ctx.fillRect(originX + px * scale, originY + py * scale, scale, scale)
     }
   }
 }
 
-function draw(ctx: CanvasRenderingContext2D, state: GameState) {
+function draw(ctx: CanvasRenderingContext2D, state: GameState, view: View, ratio: number) {
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
   ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
 
   const shown = visibleNodes((id) => isNodeOpen(state, id))
   const onScreen = new Set(shown.map((node) => node.id))
   const project = makeProjection(shown)
-
   const mech = state.actors.mech
+
+  // Zoom and pan as a transform rather than as arithmetic on every coordinate, so line
+  // widths and font sizes scale with it. Without that, zooming would spread the nodes
+  // apart while leaving the labels the same unreadable size.
+  ctx.setTransform(ratio * view.zoom, 0, 0, ratio * view.zoom, ratio * view.x, ratio * view.y)
 
   // --- edges ---
   ctx.lineWidth = 2
@@ -161,12 +208,25 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState) {
 
   // --- the mech ---
   const pos = actorPosition(state, 'mech')
-  const screen = project(pos.x, pos.y)
-  drawMech(ctx, screen.x, screen.y)
+  const base = project(pos.x, pos.y)
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
+  drawMech(ctx, base.x * view.zoom + view.x, base.y * view.zoom + view.y, view.zoom)
 }
 
 export function WorldMap({ state }: { state: GameState }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [view, setView] = useState<View>(RESET)
+  const drag = useRef<{ x: number; y: number } | null>(null)
+
+  /** Client pixels -> logical map pixels. The canvas is displayed far smaller than it
+   *  is drawn, so a raw offsetX would be wrong by that ratio. */
+  const toLogical = useCallback((event: { clientX: number; clientY: number }) => {
+    const rect = canvasRef.current!.getBoundingClientRect()
+    return {
+      x: (event.clientX - rect.left) * (MAP_WIDTH / rect.width),
+      y: (event.clientY - rect.top) * (MAP_HEIGHT / rect.height),
+    }
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -179,18 +239,69 @@ export function WorldMap({ state }: { state: GameState }) {
     const ratio = Math.min(window.devicePixelRatio || 1, 2)
     canvas.width = MAP_WIDTH * ratio
     canvas.height = MAP_HEIGHT * ratio
-    ctx.scale(ratio, ratio)
     ctx.imageSmoothingEnabled = false
 
-    draw(ctx, state)
-  }, [state])
+    draw(ctx, state, view, ratio)
+  }, [state, view])
+
+  // Native listener rather than onWheel, because React attaches wheel handlers passively
+  // and preventDefault is what stops the page scrolling as you zoom.
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const cursor = toLogical(event)
+      setView((current) => {
+        const zoom = current.zoom * (event.deltaY < 0 ? 1.15 : 1 / 1.15)
+        const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
+        // Hold whatever is under the cursor still while the scale changes around it.
+        const factor = next / current.zoom
+        return clampView({
+          zoom: next,
+          x: cursor.x - (cursor.x - current.x) * factor,
+          y: cursor.y - (cursor.y - current.y) * factor,
+        })
+      })
+    }
+
+    canvas.addEventListener('wheel', onWheel, { passive: false })
+    return () => canvas.removeEventListener('wheel', onWheel)
+  }, [toLogical])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="world-canvas"
-      style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}
-      aria-label="World map"
-    />
+    <div className="world-map">
+      <canvas
+        ref={canvasRef}
+        className="world-canvas"
+        style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`, cursor: view.zoom > 1 ? 'grab' : 'default' }}
+        aria-label="World map. Scroll to zoom, drag to pan."
+        onPointerDown={(event) => {
+          if (view.zoom <= 1) return
+          drag.current = toLogical(event)
+          event.currentTarget.setPointerCapture(event.pointerId)
+        }}
+        onPointerMove={(event) => {
+          if (!drag.current) return
+          const now = toLogical(event)
+          const from = drag.current
+          drag.current = now
+          setView((current) =>
+            clampView({ ...current, x: current.x + (now.x - from.x), y: current.y + (now.y - from.y) }),
+          )
+        }}
+        onPointerUp={(event) => {
+          drag.current = null
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }}
+        onDoubleClick={() => setView(RESET)}
+      />
+      {view.zoom > 1 && (
+        <button className="map-reset" onClick={() => setView(RESET)} title="Double-click the map too">
+          reset
+        </button>
+      )}
+    </div>
   )
 }

@@ -287,7 +287,24 @@ times is not a page, it is **what they are made of and what they are doing**.
 
 It holds three things: the layered portrait, a live readout of the current job (enemy
 sprite and its HP when fighting, action and progress bar when skilling, what it is short
-of when waiting), and the map.
+of when waiting), and the map pinned to the bottom corner.
+
+**The map zooms and pans**, and it has to. The world is drawn into a 740-unit logical
+space shown in a ~270px column, so at 1x the place names land at about four physical
+pixels - drawn, and unreadable. Zoom is what makes the names worth having.
+
+Two rules it must keep:
+
+- **Zoom is a canvas transform, not arithmetic on coordinates.** That is what scales line
+  widths and font sizes with it. Applying it per-coordinate would spread the nodes apart
+  while leaving the labels the same illegible size, which is not zooming.
+- **The mech sprite is drawn with that transform reset, at an integer scale.** Vectors
+  take any scale; pixel art does not. Under a fractional transform each 1x1 pixel lands
+  on a fractional boundary and smears.
+
+`MAX_ZOOM` is bounded by how sparse the graph is rather than by legibility: the visible
+window is 740/zoom units and nodes average ~150 apart, so past about 4x you are usually
+looking at empty space between two of them. A ceiling of 8 rendered a blank square.
 
 The shell is a **16:9 frame**, centred and letterboxed, because this is a web page shown
 to people rather than an app that owns the screen. Everything inside scrolls; nothing

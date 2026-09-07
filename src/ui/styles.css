@@ -429,14 +429,15 @@ img.sprite { image-rendering: pixelated; }
   display: flex; flex-direction: column; gap: 5px;
   padding-top: 12px; border-top: 1px solid var(--line);
 }
-/*
- * Capped rather than filling the column width. At full width the three stage pieces
- * overflowed a 16:9 frame and put a scrollbar down the side of the art; and since this
- * is a landmark rather than something you read, the height is what should give.
- * `width: auto` keeps the aspect honest so the pixel grid is not stretched.
- */
-.stage-map .world-canvas { max-height: 158px; width: auto; margin: 0 auto; }
 .stage-caption { font-size: 11px; text-align: center; }
+
+/* Anchors the reset button to the map rather than the column. */
+.world-map { position: relative; display: flex; }
+.map-reset {
+  position: absolute; top: 5px; right: 5px;
+  padding: 1px 7px; font-size: 11px;
+  background: rgba(15, 26, 46, 0.85);
+}
 
 @media (max-width: 720px) {
   /* No aspect frame on a phone - the screen is the frame. */
