@@ -208,7 +208,10 @@ body:has(.app) > #root { display: contents; }
 .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .slot { padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 5px; }
 .slot.filled { border-color: var(--line-bright); }
-.slot-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; }
+.slot-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
+  display: flex; align-items: center; gap: 6px;
+}
 .slot-item { font-weight: 700; }
 .slot-stats { font-size: 12px; }
 
@@ -296,7 +299,7 @@ img.sprite { image-rendering: pixelated; }
 
 .resists { display: flex; gap: 6px; flex-wrap: wrap; }
 .resist {
-  display: flex; align-items: baseline; gap: 5px; font-size: 11px;
+  display: flex; align-items: center; gap: 5px; font-size: 11px;
   padding: 1px 7px; border: 1px solid var(--line); background: #0a1526;
 }
 .resist-type { letter-spacing: 0.1em; color: var(--dim); }
@@ -493,5 +496,7 @@ img.sprite { image-rendering: pixelated; }
  * the scale prop - a canvas scaled by CSS stays on integer pixel boundaries here
  * because 16 divides both of these evenly.
  */
-.rail-icon, .item-icon { width: 16px; height: 16px; flex: none; image-rendering: pixelated; }
+.rail-icon, .item-icon {
+  width: 16px; height: 16px; flex: none; display: block; image-rendering: pixelated;
+}
 .bank-name { display: flex; align-items: center; gap: 7px; }
