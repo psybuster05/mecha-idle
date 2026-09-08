@@ -176,15 +176,16 @@ export interface StoryState {
  * two or three times faster until it is gone. Nothing to manage between sessions, which
  * is the point - a treat rather than a chore.
  */
-export interface BoostState {
-  /** How much faster work runs. 2 means twice. */
-  multiplier: number
-  secondsRemaining: number
-  /** Item that started it, for the read-out. */
-  source: ItemId
-}
+/**
+ * Where the speed toggle is set: 1x, 2x or 3x.
+ *
+ * A standing preference rather than a running effect. It stays where the player put it
+ * when the tank empties, so finding fuel later resumes at the speed they asked for
+ * instead of silently at 1x. What is actually running is `effectiveSpeed()`.
+ */
+export type Speed = 1 | 2 | 3
 
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */
@@ -214,7 +215,15 @@ export interface GameState {
   /** Narrative progress. Reads from the world; the world never reads from it. */
   story: StoryState
   /** Burning fuel, or null. */
-  boost: BoostState | null
+  /** Where the speed toggle is set. See sim/fuel.ts. */
+  speed: Speed
+  /**
+   * Energy in the tank, part-used. Whole items live in the bank until they are needed.
+   *
+   * Split this way so fuel is a visible, countable drop right up until the moment it is
+   * spent, rather than vanishing into an invisible pool the moment it is picked up.
+   */
+  fuelEnergy: number
   /**
    * Bosses beaten, and how many times.
    *
@@ -264,7 +273,8 @@ export function newGame(seed: number = 1): GameState {
     equipment: {},
     visited: [DEFAULT_START_NODE],
     story: { pending: [], seen: [] },
-    boost: null,
+    speed: 1,
+    fuelEnergy: 0,
     defeated: {},
     combat: {
       enemyId: null,

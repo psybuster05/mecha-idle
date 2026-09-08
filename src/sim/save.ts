@@ -7,6 +7,7 @@
  */
 
 import { getCombatStyle } from '../content/skills/combat'
+import { SPEEDS } from './fuel'
 import { ALL_SKILLS, newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
 
 export type LoadResult =
@@ -34,6 +35,33 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
 }
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /**
+   * 6 -> 7: burning a flask became a speed toggle.
+   *
+   * A boost that was running is converted to the energy it had left, at the same rate
+   * the new model spends it - `secondsRemaining * (multiplier - 1)`. The toggle is set
+   * to the speed they were already getting, so a player who left mid-burn comes back
+   * running exactly as fast as when they closed the tab, with exactly as much left.
+   */
+  6: (raw) => {
+    const boost = raw['boost'] as
+      | { multiplier?: unknown; secondsRemaining?: unknown }
+      | null
+      | undefined
+    const rest = { ...raw }
+    delete rest['boost']
+
+    const multiplier = typeof boost?.multiplier === 'number' ? boost.multiplier : 1
+    const seconds = typeof boost?.secondsRemaining === 'number' ? boost.secondsRemaining : 0
+    const running = multiplier > 1 && seconds > 0
+
+    return {
+      ...rest,
+      version: 7,
+      speed: running ? Math.min(3, Math.round(multiplier)) : 1,
+      fuelEnergy: running ? seconds * (multiplier - 1) : 0,
+    }
+  },
   /**
    * 5 -> 6: Cartography was removed.
    *
@@ -163,18 +191,12 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
   merged.visited = Array.isArray(raw['visited']) ? (raw['visited'] as string[]) : base.visited
-  // A malformed boost must never leave work permanently accelerated.
-  const rawBoost = raw['boost'] as {
-    multiplier?: unknown
-    secondsRemaining?: unknown
-  } | null
-  merged.boost =
-    rawBoost &&
-    typeof rawBoost.multiplier === 'number' &&
-    typeof rawBoost.secondsRemaining === 'number' &&
-    rawBoost.secondsRemaining > 0
-      ? (rawBoost as GameState['boost'])
-      : null
+  // A malformed speed or a negative tank must never leave work permanently accelerated.
+  merged.speed = SPEEDS.includes(merged.speed) ? merged.speed : 1
+  merged.fuelEnergy =
+    typeof merged.fuelEnergy === 'number' && Number.isFinite(merged.fuelEnergy)
+      ? Math.max(0, merged.fuelEnergy)
+      : 0
   const rawStory = raw['story'] as { pending?: unknown; seen?: unknown } | undefined
   merged.story = {
     pending: Array.isArray(rawStory?.pending) ? (rawStory.pending as string[]) : [],

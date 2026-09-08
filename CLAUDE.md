@@ -437,7 +437,32 @@ action never restarts on its own.
 would bank hours of progress against an empty bank and spend it all the instant one input
 appeared.
 
-### Salvaging is derived, not written
+### Fuel is a throttle, not a timer
+
+A **1x / 2x / 3x toggle** in the top bar. Fuel drains while it is above 1x; at 1x it
+costs nothing. Fuel itself is an uncommon Scavenging drop, as it always was.
+
+**Fuel is energy, not time.** Each item's `{ multiplier, seconds }` is read as
+`seconds * (multiplier - 1)` units, and running at speed M spends `M - 1` per second.
+That reinterpretation was picked because it leaves both items worth exactly what they
+were worth under the old burn-a-flask model - a Catalyst Flask is still 600s at 2x, an
+Overcharge Cell still 420s at 3x - so the mechanic changed without retuning a number.
+
+Rules it keeps:
+
+- **The toggle is a preference, not a rate.** It stays where the player put it when the
+  tank empties, so finding fuel later resumes at the speed they asked for. `state.speed`
+  is what they chose; `effectiveSpeed()` is what is running. The read-out shows both,
+  because a toggle claiming 3x while running at 1x is the confusing version.
+- **Cheapest fuel burns first**, in a fixed order. Deterministic order is what makes the
+  offline guarantee hold - the same fuel must be spent however the time is sliced.
+- **`advance` splits at the moment the tank runs dry**, exactly as it used to split at a
+  boost expiry, because action duration depends on whether fuel is burning.
+- **It scales skill work only, not combat.** That was true of the old boost too. Making
+  it global would let 3x trivialise every boss, and every boss budget was measured
+  without it.
+
+## Salvaging is derived, not written
 
 `SALVAGING.actions` is generated from `FABRICATION.actions` **and** `REFINING.actions`.
 Stripping reverses Fabrication, recycling reverses Refining; everything makeable is

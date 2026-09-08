@@ -7,8 +7,8 @@
  */
 
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
+import { SPEEDS, type Speed } from './fuel'
 import { removeItem } from './bank'
-import { getItem } from '../content'
 import { getCombatStyle, type CombatStyleId } from '../content/skills/combat'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
@@ -145,34 +145,19 @@ export function setCombatStyle(state: GameState, style: CombatStyleId): GameStat
   return next
 }
 
-export type BurnFailure = 'not-fuel' | 'not-in-bank' | 'already-burning'
-
 /**
- * Burn one fuel item.
+ * Move the speed toggle.
  *
- * Refuses while something is already burning rather than stacking or extending -
- * stacking would make hoarding correct, and the whole point is that fuel is spent the
- * moment you find it.
+ * Always allowed, even with an empty tank: the toggle is a standing preference, so
+ * setting it to 3x with no fuel means "run at 3x as soon as there is any", which is the
+ * useful behaviour for something you set once and leave.
  */
-export function burnFuel(
-  state: GameState,
-  itemId: ItemId,
-): { state: GameState; error: BurnFailure | null } {
-  const fuel = getItem(itemId)?.fuel
-  if (!fuel) return { state, error: 'not-fuel' }
-  if ((state.bank[itemId] ?? 0) < 1) return { state, error: 'not-in-bank' }
-  if (state.boost && state.boost.secondsRemaining > 0) {
-    return { state, error: 'already-burning' }
-  }
-
+export function setSpeed(state: GameState, speed: Speed): GameState {
+  if (state.speed === speed) return state
+  if (!SPEEDS.includes(speed)) return state
   const next = cloneState(state)
-  removeItem(next, itemId, 1)
-  next.boost = {
-    multiplier: fuel.multiplier,
-    secondsRemaining: fuel.seconds,
-    source: itemId,
-  }
-  return { state: next, error: null }
+  next.speed = speed
+  return next
 }
 
 export type CrawlerFailure = 'no-core' | 'already-running'

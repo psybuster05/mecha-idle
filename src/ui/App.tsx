@@ -14,6 +14,7 @@ import { levelFromXp, levelProgress } from '../sim/xp'
 import { formatNumber } from './format'
 import { useGame } from './useGame'
 import { Bar } from './components/Bar'
+import { SpeedToggle } from './components/SpeedToggle'
 import { PixelSprite } from './components/PixelSprite'
 import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
@@ -88,6 +89,8 @@ export function App() {
             />
           </div>
         </div>
+
+        <SpeedToggle state={state} dispatch={dispatch} />
       </header>
 
       {loadError && (
@@ -215,7 +218,7 @@ export function App() {
           ) : tab === 'mech' ? (
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
-            <BankPanel state={state} dispatch={dispatch} />
+            <BankPanel state={state} />
           ) : tab === 'crawler' ? (
             <CrawlerPanel state={state} dispatch={dispatch} />
           ) : tab === 'log' ? (

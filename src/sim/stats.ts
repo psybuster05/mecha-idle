@@ -7,6 +7,7 @@
  */
 
 import { getItem } from '../content'
+import { effectiveSpeed } from './fuel'
 import { perkTotal } from '../content/enemies'
 import { getCombatStyle, type CombatClass } from '../content/skills/combat'
 import type { EquipStats } from '../content/types'
@@ -178,7 +179,7 @@ export function derivedStats(state: GameState): DerivedStats {
     skillDurationScale:
       1 /
       ((1 + Math.max(0, equippedTotal(state, 'skillSpeed'))) *
-        (state.boost && state.boost.secondsRemaining > 0 ? state.boost.multiplier : 1)),
+        effectiveSpeed(state)),
     damageType: equippedDamageType(state),
     resistances: equippedResistances(state),
   }

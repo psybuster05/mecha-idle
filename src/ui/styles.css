@@ -500,3 +500,22 @@ img.sprite { image-rendering: pixelated; }
   width: 16px; height: 16px; flex: none; display: block; image-rendering: pixelated;
 }
 .bank-name { display: flex; align-items: center; gap: 7px; }
+
+/* --- the speed toggle --------------------------------------------------- */
+
+/*
+ * In the top bar, because it applies to whatever you are doing - changing it should not
+ * mean leaving the panel you are watching.
+ */
+.speed { display: flex; align-items: center; gap: 10px; flex: none; }
+.speed-buttons { display: flex; }
+.speed-button {
+  padding: 3px 10px; font-size: 12px; border-radius: 0;
+  border-right-width: 0; background: var(--panel);
+}
+.speed-button:first-child { border-radius: 2px 0 0 2px; }
+.speed-button:last-child { border-radius: 0 2px 2px 0; border-right-width: 1px; }
+.speed-button.selected {
+  background: var(--accent); border-color: var(--accent); color: #04101f; font-weight: 700;
+}
+.speed-note { font-size: 11px; white-space: nowrap; min-width: 78px; }

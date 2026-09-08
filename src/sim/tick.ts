@@ -7,6 +7,7 @@
  */
 
 import { advanceCombatActivity } from './combat'
+import { burnFuelFor, secondsOfFuel } from './fuel'
 import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
 import { derivedStats, HP_REGEN_PER_SECOND } from './stats'
@@ -22,19 +23,19 @@ export function tick(state: GameState, dtSeconds: number): GameState {
 /**
  * Mutates `state`. The in-place worker behind `tick`.
  *
- * Splits the step at a boost expiry before doing anything else. Action duration depends
- * on whether fuel is burning, so a single large step spanning the moment it runs out
- * would apply one rate to the whole span while many small steps applied both - exactly
- * the divergence that would break offline progress. Splitting keeps them identical.
+ * Splits the step at the moment the fuel runs out before doing anything else. Action
+ * duration depends on whether fuel is burning, so a single large step spanning that
+ * moment would apply one rate to the whole span while many small steps applied both -
+ * exactly the divergence that would break offline progress. Splitting keeps them
+ * identical.
  */
 export function advance(state: GameState, dt: number): void {
   if (!Number.isFinite(dt) || dt <= 0) return
 
-  const boost = state.boost
-  if (boost && boost.secondsRemaining > 0 && boost.secondsRemaining < dt) {
-    const boosted = boost.secondsRemaining
-    advanceStep(state, boosted)
-    advanceStep(state, dt - boosted)
+  const fuelLeft = secondsOfFuel(state)
+  if (fuelLeft > 0 && fuelLeft < dt) {
+    advanceStep(state, fuelLeft)
+    advanceStep(state, dt - fuelLeft)
     return
   }
 
@@ -75,12 +76,9 @@ function advanceStep(state: GameState, dt: number): void {
 
   advanceStory(state)
 
-  // Burned down *after* the work, not before. Decrementing first meant the boosted half
-  // of a split step had already lost its boost by the time anything happened, which made
-  // one large step produce a third less than many small ones - precisely the divergence
-  // the split exists to prevent.
-  if (state.boost) {
-    state.boost.secondsRemaining -= dt
-    if (state.boost.secondsRemaining <= 0) state.boost = null
-  }
+  // Burned *after* the work, not before. Draining first meant the boosted half of a
+  // split step had already lost its boost by the time anything happened, which made one
+  // large step produce a third less than many small ones - precisely the divergence the
+  // split exists to prevent.
+  burnFuelFor(state, dt)
 }
