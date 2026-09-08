@@ -379,13 +379,44 @@ one side and whatever it is fighting stands opposite, both on the same slab, wit
 readout below keeping the name and HP. **Bosses are drawn a third taller** than anything
 else - standing a boss the same height as a Scrap Crawler undersells the moment.
 
-**Each side lunges on its own swing.** A swing is detected as a *fall* in that actor's
-attack timer - it counts up to the interval and resets - so the view finds it by diffing
-snapshots, the same way item gains are found, and the simulation stays unaware anything
-is drawn. Driven through `element.animate()` rather than a CSS class because replaying a
-CSS animation means removing the class, forcing a reflow and putting it back, or
-remounting - and remounting would tear down and redraw the sprite canvas on every swing.
-Skipped entirely under `prefers-reduced-motion`.
+**The figure reacts to a timer that just reset.** In combat that is the attack clock -
+it counts up to the interval and resets, so each side lunges on its own swing. Skilling is
+the same cue: an action's progress counts up to its duration and drops by it, so every
+completion lands a *stroke*. Both are found by diffing snapshots, the same way item gains
+are found, and the simulation stays unaware anything is drawn. One hook, `useMotion`,
+because they are one idea.
+
+Driven through `element.animate()` rather than a CSS class because replaying a CSS
+animation means removing the class, forcing a reflow and putting it back, or remounting -
+and remounting would tear down and redraw the sprite canvas on every swing. Skipped
+entirely under `prefers-reduced-motion`.
+
+**Working also needs a motion between the strokes.** An action takes seconds, so a figure
+that only twitched on completion would stand dead still for most of the job - which is
+exactly what an idle mech looks like. A continuous bob says *busy*; the stroke says *that
+one is done*. Its period is `1s / effectiveSpeed`, so work running three times as fast
+looks it, and it stops while an action is **waiting** for materials, because a mech
+hammering on nothing contradicts the readout directly beneath it.
+
+Two things the work motion does that the lunge does not, both deliberate:
+
+- **It moves a whole number of *sprite* pixels, stepped rather than eased.** A fractional
+  transform lands each 1x1 sprite pixel on a fractional boundary and smears it - the same
+  reason the art rules allow only integer scales. A 190ms lunge blurs for a blink; a bob
+  is on screen for minutes, which is where that shows.
+- **The bob sits on a nested element.** Both are transforms, so on one element the
+  stroke's animation would override the bob for its whole duration and snap the mech
+  straight. Nested, they compose.
+
+There is **one work motion, not one per skill**, for the same reason there is one icon per
+skill rather than one per action: at 96px a mech with no articulated arms cannot tell
+scavenging apart from smelting, and four near-identical animations is four times the art
+for none of the information.
+
+Positioning had to move for this. The idle figure used to be centred with
+`translateX(-50%)`, which is a transform, so any animated transform on it would have
+thrown the mech half its width to the left. It is centred by flex now, leaving transform
+free in every state.
 
 The two figures are anchored to the slab's own edges rather than to centre points, and
 that is what lets sizes differ: a fixed centre only works while both sprites are the same
@@ -470,10 +501,15 @@ two actors - so gains sharing a key merge into one line that counts up. A scaven
 shows a single growing "+24 Scrap Steel", not twenty-four toasts fighting for the corner.
 Five on screen at once is the cap.
 
-**The first snapshot is deliberately compared to nothing.** Offline progress is credited
-before React ever renders, so the first bank the UI sees already holds hours of gains;
-diffing it against an empty baseline would fire a toast for every item earned overnight.
-The offline dialog already reports that, in a form that can hold it.
+**The first *loaded* snapshot is deliberately compared to nothing**, and the emphasis is
+load-bearing. Diffing it against an empty baseline would fire a toast for every item
+earned overnight; the offline dialog already reports that in a form that can hold it.
+
+The first snapshot React renders is **not** the save - it is the empty default the store
+boots on, before the adapter has answered. Taking the baseline there put an empty bank
+against a restored one and toasted the whole night's haul, which is what shipped until it
+was seen on a real save. `useItemGains` therefore takes `ready` rather than working it
+out from the state, and records nothing at all until the save is in.
 
 Losses are ignored: spending materials is something you chose and are already looking at.
 

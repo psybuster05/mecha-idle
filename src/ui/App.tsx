@@ -59,7 +59,7 @@ export function App() {
   // the World tab gone there is no longer a panel whose job is to be looked at.
   const [tab, setTab] = useState<Tab>('scavenging')
   const { toasts, show, showGain } = useToasts()
-  useItemGains(state, showGain)
+  useItemGains(state, showGain, ready)
 
   if (!ready) {
     return (

@@ -2,12 +2,19 @@ import { getEnemy, getSkill, itemName } from '../../content'
 import { ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 import { getNode } from '../../content/world'
 import type { GameState } from '../../sim/state'
+import { effectiveSpeed } from '../../sim/fuel'
 import { waitingFor } from '../../sim/skillEngine'
-import { useLunge } from '../useLunge'
+import { lunge, useMotion, workStroke } from '../useMotion'
 import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
 import { WorldMap } from './WorldMap'
+
+/** One sprite pixel on the stage. Motion in multiples of this stays crisp. */
+const MECH_SCALE = 6
+
+/** A full cycle of the working bob at 1x, in seconds. Divided by the speed toggle. */
+const BOB_SECONDS = 1
 
 /**
  * The permanent view of what is actually happening.
@@ -23,17 +30,26 @@ import { WorldMap } from './WorldMap'
  * are doing right now.
  */
 export function Stage({ state }: { state: GameState }) {
+  const activity = state.actors.mech.activity
   // Keyed off the *activity* rather than off there being an enemy right now, so the mech
   // holds its position through respawns instead of sliding back to centre after every
   // kill and out again a second later.
-  const fighting = state.actors.mech.activity?.kind === 'combat'
+  const fighting = activity?.kind === 'combat'
   const enemy = state.combat.enemyId ? getEnemy(state.combat.enemyId) : null
-
-  // Each side leans toward the other on its own swing. The enemy stands to the right,
-  // so the mech goes positive and it comes back the other way.
   const engaged = fighting && enemy !== null
-  const mechLunge = useLunge(state.combat.attackProgress, engaged, 10)
-  const enemyLunge = useLunge(state.combat.enemyAttackProgress, engaged, -10)
+
+  // An action short of materials is not working, it is waiting, and a mech hammering away
+  // on nothing would say the opposite of what the readout below it says.
+  const working = activity?.kind === 'skill' && waitingFor(state, 'mech').length === 0
+
+  // One figure, one motion, chosen by what it is doing: leaning into a blow, or bringing
+  // something down on the work. Both are the same cue - a timer that just reset.
+  const mechMotion = useMotion(
+    fighting ? state.combat.attackProgress : state.actors.mech.progress,
+    fighting ? engaged : working,
+    fighting ? lunge(10) : workStroke(MECH_SCALE),
+  )
+  const enemyMotion = useMotion(state.combat.enemyAttackProgress, engaged, lunge(-10))
 
   return (
     <aside className="stage">
@@ -46,11 +62,23 @@ export function Stage({ state }: { state: GameState }) {
         <div className="stage-scene">
           <div className="stage-sky" />
           <div className="stage-ground" />
-          <div ref={mechLunge} className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
-            <MechPortrait state={state} scale={6} caption={false} />
+          <div ref={mechMotion} className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
+            {/* The stroke lands on the figure and the bob on this wrapper, because both
+                are transforms: on one element the stroke would override the bob for its
+                whole duration and snap the mech straight. Nested, they compose. */}
+            <div
+              className={working ? 'stage-working' : undefined}
+              style={
+                working
+                  ? { animationDuration: `${BOB_SECONDS / effectiveSpeed(state)}s` }
+                  : undefined
+              }
+            >
+              <MechPortrait state={state} scale={MECH_SCALE} caption={false} />
+            </div>
           </div>
           {fighting && enemy && (
-            <div ref={enemyLunge} className="stage-figure stage-opponent">
+            <div ref={enemyMotion} className="stage-figure stage-opponent">
               {/* A boss standing the same height as a Scrap Crawler undersells the
                   moment. The slab is only so wide, so this is as far as it goes without
                   the two of them overlapping. */}

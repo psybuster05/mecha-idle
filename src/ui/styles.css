@@ -470,7 +470,8 @@ img.sprite { image-rendering: pixelated; }
  * says.
  */
 .stage-figure {
-  position: absolute; bottom: 28%; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 28%; left: 0; right: 0;
+  display: flex; justify-content: center;
   z-index: 1; line-height: 0;
 }
 /*
@@ -484,8 +485,32 @@ img.sprite { image-rendering: pixelated; }
  * The budget: a ~271px scene, 6% margins, leaves ~238px. A 96px mech against a 128px
  * boss is 224px, so they clear each other by about fourteen pixels at the worst case.
  */
-.stage-figure.squared-off { left: 6%; transform: none; }
-.stage-opponent { left: auto; right: 6%; transform: none; }
+.stage-figure.squared-off { left: 6%; right: auto; }
+.stage-opponent { left: auto; right: 6%; }
+
+/*
+ * Working: the mech keeps moving between strokes.
+ *
+ * An action takes seconds, so a figure that only twitched on completion would stand dead
+ * still for most of the job - which is the same "nothing is happening" the idle mech
+ * shows. The bob is what says busy; the stroke is what says *that one is done*.
+ *
+ * Two positions, not a smooth rise: a whole sprite pixel up (6px at 6x) and back, with no
+ * interpolation. Anything between the two lands the art on a fractional boundary and
+ * smears it, and this one is on screen for minutes at a time rather than for the 190ms a
+ * lunge lasts.
+ *
+ * The period comes from the speed toggle, so work that is running three times as fast
+ * looks it.
+ */
+@keyframes stage-bob {
+  0%, 49% { transform: translateY(0); }
+  50%, 100% { transform: translateY(-6px); }
+}
+.stage-working { animation: stage-bob 1s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .stage-working { animation: none; }
+}
 
 /* Fixed height so the column does not jump every time the mech starts or stops. */
 .stage-now {

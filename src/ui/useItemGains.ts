@@ -9,11 +9,15 @@ import type { GameState } from '../sim/state'
  * sim stays pure and knows nothing about notices, and this stays what it is - a view
  * noticing that a number changed.
  *
- * **The first snapshot is deliberately not compared to anything.** Offline progress is
- * credited before React ever renders, so the first bank the UI sees already contains
- * however many hours of gains; diffing against an empty starting point would fire a
- * toast for every item earned overnight. The offline dialog already reports that, in a
- * form that can hold it.
+ * **The first loaded snapshot is deliberately not compared to anything.** Diffing it
+ * against an empty starting point would fire a toast for every item earned overnight, and
+ * the offline dialog already reports that in a form that can hold it.
+ *
+ * Which is why this takes `loaded` rather than working it out from the state. The very
+ * first snapshot React renders is not the save - it is the empty default the store starts
+ * on, before the adapter has answered - so establishing the baseline there put an empty
+ * bank against a restored one and toasted the entire night's haul. Nothing is recorded
+ * until the save is actually in.
  *
  * Losses are ignored. Spending materials is something you chose and are already looking
  * at; finding one is the thing that happens while you are reading something else.
@@ -21,10 +25,14 @@ import type { GameState } from '../sim/state'
 export function useItemGains(
   state: GameState,
   onGain: (item: string, label: string, qty: number) => void,
+  /** False until the save has been read and offline progress credited. */
+  loaded: boolean,
 ): void {
   const previous = useRef<Partial<Record<string, number>> | null>(null)
 
   useEffect(() => {
+    if (!loaded) return // not the save yet, just the empty state the store boots on
+
     const before = previous.current
     previous.current = state.bank
 
@@ -35,5 +43,5 @@ export function useItemGains(
       const now = qty ?? 0
       if (now > had) onGain(item, itemName(item), now - had)
     }
-  }, [state.bank, onGain])
+  }, [state.bank, onGain, loaded])
 }
