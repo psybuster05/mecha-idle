@@ -445,8 +445,13 @@ img.sprite { image-rendering: pixelated; }
   /* A horizon, so the ground reads as receding rather than as a bar across the bottom. */
   background: linear-gradient(180deg, #060d1c 0%, #0b1526 62%, #0f1e33 100%);
 }
+/*
+ * Inset 6% rather than 10%. Two 96px figures in a ~270px scene leave barely any slack,
+ * and at 10% they stood flush against both ends of the slab like bookends. This gives
+ * them a margin to stand within without the ground losing its inset.
+ */
 .stage-ground {
-  position: absolute; left: 10%; right: 10%; bottom: 8%;
+  position: absolute; left: 6%; right: 6%; bottom: 8%;
   height: 22%;
   background: var(--panel-2);
   border: 1px solid var(--line-bright);
@@ -468,6 +473,14 @@ img.sprite { image-rendering: pixelated; }
   position: absolute; bottom: 28%; left: 50%; transform: translateX(-50%);
   z-index: 1; line-height: 0;
 }
+/*
+ * Squared off: the mech steps aside to make room for whatever it is fighting.
+ *
+ * Both figures are 96px in a ~270px scene, so centres at 28% and 72% leave a gap between
+ * them without either overhanging the slab, which is inset 10% each side.
+ */
+.stage-figure.squared-off { left: 28%; }
+.stage-opponent { left: 72%; }
 
 /* Fixed height so the column does not jump every time the mech starts or stops. */
 .stage-now {

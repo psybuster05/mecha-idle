@@ -374,6 +374,12 @@ It holds three things: the mech standing in a scene, a live readout of the curre
 (enemy sprite and its HP when fighting, action and progress bar when skilling, what it
 is short of when waiting), and the map pinned to the bottom corner.
 
+**In combat the scene shows the encounter**, not just your chassis: the mech steps to
+one side and whatever it is fighting stands opposite, both on the same slab, with the
+readout below keeping the name and HP. Which side the mech stands on is keyed off the
+*activity* rather than off there being an enemy right now - keyed off the enemy it would
+slide back to centre after every kill and out again a second later, once per respawn.
+
 **The scene is two rectangles, not art** - a darker ground slab inset inside a lighter
 sky. That is enough to read as a *place* rather than a sprite floating on the panel,
 which is what made the stage look like a piece of the equipment page pasted into the

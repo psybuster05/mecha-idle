@@ -22,6 +22,12 @@ import { WorldMap } from './WorldMap'
  * are doing right now.
  */
 export function Stage({ state }: { state: GameState }) {
+  // Keyed off the *activity* rather than off there being an enemy right now, so the mech
+  // holds its position through respawns instead of sliding back to centre after every
+  // kill and out again a second later.
+  const fighting = state.actors.mech.activity?.kind === 'combat'
+  const enemy = state.combat.enemyId ? getEnemy(state.combat.enemyId) : null
+
   return (
     <aside className="stage">
       {/* Scrolls on its own so the map below can hold the corner. Without this split
@@ -33,9 +39,18 @@ export function Stage({ state }: { state: GameState }) {
         <div className="stage-scene">
           <div className="stage-sky" />
           <div className="stage-ground" />
-          <div className="stage-figure">
+          <div className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
             <MechPortrait state={state} scale={6} caption={false} />
           </div>
+          {fighting && enemy && (
+            <div className="stage-figure stage-opponent">
+              <PixelSprite
+                layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
+                scale={6}
+                title={enemy.name}
+              />
+            </div>
+          )}
         </div>
 
         <NowPlaying state={state} />
@@ -81,14 +96,7 @@ function NowPlaying({ state }: { state: GameState }) {
       <div className="stage-now">
         {enemy ? (
           <>
-            <div className="stage-enemy">
-              <PixelSprite
-                layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
-                scale={3}
-                title={enemy.name}
-              />
-              <span className="stage-enemy-name">{enemy.name}</span>
-            </div>
+            <span className="stage-enemy-name">{enemy.name}</span>
             <Bar value={Math.max(0, state.combat.enemyHp) / enemy.maxHp} tone="enemy" />
           </>
         ) : (
