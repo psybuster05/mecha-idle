@@ -177,38 +177,40 @@ describe('every combat branch has a weapon ladder', () => {
 })
 
 /**
- * Salvaging is derived from Fabrication, and these are the properties that derivation
- * exists to guarantee.
+ * Salvaging is derived from Fabrication *and* Refining - stripping reverses one,
+ * recycling the other - and these are the properties that derivation exists to
+ * guarantee.
  *
  * The hand-written version covered 8 of 23 fabricable items and had quietly stopped
- * keeping up - the fifteen it missed were the whole late game. Deriving it makes that
- * unrepresentable, and these tests are what say so out loud.
+ * keeping up; the fifteen it missed were the whole late game. Deriving it makes that
+ * class of drift unrepresentable, and these tests are what say so out loud.
  */
 describe('salvaging', () => {
-  const fab = getSkill('fabrication')!
   const salv = getSkill('salvaging')!
 
-  const recipeFor = (item: string) => fab.actions.find((a) => a.outputs[0]!.item === item)
+  /** Every recipe that produces something, from either skill it reverses. */
+  const recipes = [...getSkill('fabrication')!.actions, ...getSkill('refining')!.actions]
+  const recipeFor = (item: string) => recipes.find((a) => a.outputs[0]!.item === item)
 
-  it('can strip everything that can be built', () => {
+  it('can take apart everything that can be made', () => {
     const strippable = new Set(salv.actions.flatMap((a) => (a.inputs ?? []).map((i) => i.item)))
-    for (const recipe of fab.actions) {
+    for (const recipe of recipes) {
       const made = recipe.outputs[0]!.item
-      expect(strippable.has(made), `${itemName(made)} can be built but not stripped`).toBe(true)
+      expect(strippable.has(made), `${itemName(made)} can be made but not taken apart`).toBe(true)
     }
   })
 
-  it('strips nothing that cannot be built, so no action is orphaned', () => {
+  it('takes apart nothing that cannot be made, so no action is orphaned', () => {
     for (const action of salv.actions) {
       const target = action.inputs?.[0]?.item
-      expect(target, `${action.name} strips nothing`).toBeDefined()
-      expect(recipeFor(target!), `${action.name} strips something unbuildable`).toBeDefined()
+      expect(target, `${action.name} consumes nothing`).toBeDefined()
+      expect(recipeFor(target!), `${action.name} consumes something unmakeable`).toBeDefined()
     }
   })
 
-  it('always returns less than went in, so build-and-strip is never a source', () => {
+  it('always returns less than went in, so a make-and-unmake loop is never a source', () => {
     // The rule that keeps this a sink. If a loop ever paid out, the fastest route to any
-    // material would be to fabricate and immediately undo it.
+    // material would be to make something and immediately undo it.
     for (const action of salv.actions) {
       const recipe = recipeFor(action.inputs![0]!.item)!
       const spent = (recipe.inputs ?? []).reduce((n, i) => n + i.qty, 0)
@@ -217,7 +219,7 @@ describe('salvaging', () => {
     }
   })
 
-  it('always returns something, so no strip is a pure delete', () => {
+  it('always returns something, so nothing here is a pure delete', () => {
     // Flooring each input to half can reach zero for a recipe made of single units.
     // There is none today; the fallback exists so adding one is not a silent trap.
     for (const action of salv.actions) {
@@ -226,10 +228,25 @@ describe('salvaging', () => {
     }
   })
 
-  it('unlocks at the level that built the thing', () => {
+  it('unlocks at the level that made the thing', () => {
     for (const action of salv.actions) {
       const recipe = recipeFor(action.inputs![0]!.item)!
-      expect(action.levelRequired, `${action.name}`).toBe(recipe.levelRequired)
+      expect(action.levelRequired, action.name).toBe(recipe.levelRequired)
     }
+  })
+
+  it('pays exactly the xp per second of the recipe it reverses', () => {
+    // Rounding xp to a whole number broke this once: smelting pays 4 over 4s, and its
+    // teardown rounded to 2 over 2.4s - a quarter worse per second than its level-mate,
+    // which the pacing suite flagged as a trap action.
+    for (const action of salv.actions) {
+      const recipe = recipeFor(action.inputs![0]!.item)!
+      expect(action.xp / action.duration, action.name).toBeCloseTo(recipe.xp / recipe.duration, 6)
+    }
+  })
+
+  it('reverses both skills, not just one', () => {
+    const verbs = new Set(salv.actions.map((a) => a.name.split(' ')[0]))
+    expect(verbs).toEqual(new Set(['Strip', 'Recycle']))
   })
 })

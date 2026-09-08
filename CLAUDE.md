@@ -439,8 +439,14 @@ appeared.
 
 ### Salvaging is derived, not written
 
-`SALVAGING.actions` is generated from `FABRICATION.actions`. Every fabricable thing is
-strippable, at the level that built it, returning `floor(50%)` of that recipe's inputs.
+`SALVAGING.actions` is generated from `FABRICATION.actions` **and** `REFINING.actions`.
+Stripping reverses Fabrication, recycling reverses Refining; everything makeable is
+takeable-apart, at the level that made it, returning `floor(50%)` of that recipe's
+inputs. 40 actions, none of them hand-written.
+
+Both halves are one skill rather than two because they are the same operation at
+different depths. A separate Recycling skill would have been a second ladder trained by
+consuming things you had to make first - the shape that got Cartography deleted.
 
 It was hand-written and had quietly stopped keeping up: **8 of 23 fabricable items**, and
 the fifteen it missed were the entire late game - the Harpoon Launcher, The Sentence, the
@@ -455,9 +461,12 @@ Rules the derivation has to keep, all tested:
 - **Never empty.** Flooring can reach zero for a recipe made of single units. There is
   none today, so the fallback (keep one of the largest input) is untested by the content
   and guarded by a test instead.
-- **The same xp per second as Fabrication.** Duration and xp are both scaled by 0.6, so
-  Salvaging lands on the same 1-99 curve as everything else - 504h against Fabrication's
-  506h. Changing one scale without the other silently moves it off the one-month target.
+- **The same xp per second as the recipe it reverses.** Duration and xp are both scaled
+  by 0.6, so Salvaging lands on the same 1-99 curve as everything else. Rounding xp to a
+  whole number broke this once: smelting pays 4 over 4s, and its teardown rounded to 2
+  over 2.4s - a quarter worse per second than its level-mate, which the pacing suite
+  caught as a trap action. Both are kept to one decimal, which is exact because every
+  source duration and xp is a whole number.
 - **Flavour is a lookup, not a generated string.** Deriving gained coverage and lost
   voice; twenty-three copies of one sentence is worse writing than eight good ones. The
   hand-written lines are kept in `FLAVOUR`, keyed by item so they survive renames.
