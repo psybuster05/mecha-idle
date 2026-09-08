@@ -17,17 +17,18 @@
  * So the Cell is still the better find, 3x still burns through it in seven minutes, and
  * nothing had to be retuned to change the mechanic.
  *
- * **Running dry drops the toggle back to 1x.** An earlier version left it where the
- * player put it, on the grounds that a standing preference should resume when fuel turns
- * up. That stopped making sense once 2x and 3x are disabled without fuel: a selected
- * button that is also disabled is a contradiction, and a toggle claiming 3x while
- * running at 1x is the confusing version of the same thing. The cost is that a resupply
- * does not auto-resume - you click again, and a toast tells you when it happened.
+ * **Running dry drops the toggle back to 1x**, and so does asking for a speed with an
+ * empty tank. A toggle reading 3x while work runs at 1x is the confusing version; better
+ * that it always shows what is actually happening, with a toast saying why it moved.
+ *
+ * **Nothing burns while nothing is running.** Fuel buys work, so an idle mech at 3x
+ * spends nothing - otherwise leaving the tab on the equipment screen would quietly empty
+ * a tank you had been saving.
  */
 
 import { getItem, ITEMS } from '../content'
 import { count, removeItem } from './bank'
-import type { GameState, ItemId } from './state'
+import { ACTOR_IDS, type GameState, type ItemId } from './state'
 
 /** The positions on the toggle. */
 export const SPEEDS = [1, 2, 3] as const
@@ -73,14 +74,25 @@ export function effectiveSpeed(state: GameState): Speed {
 }
 
 /**
- * How long the current setting can be held, in seconds. Infinity at 1x.
+ * Whether anything is actually running.
+ *
+ * Fuel buys work, so this is what decides whether it burns at all. Either actor counts:
+ * the crawler refining on its own is work, and the speed applies to it.
+ */
+export function isWorking(state: GameState): boolean {
+  return ACTOR_IDS.some((id) => state.actors[id].unlocked && state.actors[id].activity !== null)
+}
+
+/**
+ * How long the current setting can be held, in seconds. Infinity at 1x, and Infinity
+ * while idle - nothing is being spent, so there is no moment to run out at.
  *
  * Used by the read-out, and by `advance` to find the moment the tank runs dry so a
  * single large step can be split there.
  */
 export function secondsOfFuel(state: GameState): number {
   const rate = drainRate(effectiveSpeed(state))
-  if (rate <= 0) return Infinity
+  if (rate <= 0 || !isWorking(state)) return Infinity
   return availableEnergy(state) / rate
 }
 
@@ -94,10 +106,15 @@ export function burnFuelFor(state: GameState, seconds: number): void {
   // Checked up front rather than only on the refill path. Draining to *exactly* empty
   // leaves the loop before it ever asks for another item, so a tank that ran out on a
   // clean boundary would have kept the toggle showing a speed it could not pay for.
+  // Deliberately before the idle check: a toggle should never sit on a speed it cannot
+  // pay for, whether or not anything is running.
   if (state.speed > 1 && availableEnergy(state) <= 0) {
     state.speed = 1
     return
   }
+
+  // Fuel buys work. Idling at 3x costs nothing.
+  if (!isWorking(state)) return
 
   const rate = drainRate(effectiveSpeed(state))
   if (rate <= 0 || seconds <= 0) return

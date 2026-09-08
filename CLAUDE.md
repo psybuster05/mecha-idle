@@ -449,15 +449,18 @@ Fuel drains while the toggle is above 1x; at 1x it costs nothing. It drops from
 Scavenging, from every regular enemy, and three at a time from every boss - deliberately
 generous, because this is a proof of concept and running out is not the interesting part.
 
-**2x and 3x are disabled without fuel, and running dry drops the toggle back to 1x.**
-Those two go together and they replaced an earlier "standing preference" model, where
-the toggle held its setting so a later drop resumed it. That could not survive disabling
-the buttons: one that is both selected and disabled is a contradiction, and so is a
-toggle reading 3x while work runs at 1x.
+**The toggle always shows what is actually happening.** Asking for a speed you cannot
+afford bounces straight back to 1x with a red toast, and the tank emptying mid-job does
+the same on its own. A toggle reading 3x while work runs at 1x is the confusing version,
+and running out is otherwise the one fuel event with no visible cause - work quietly
+drops to a third speed and nothing on screen would say why.
 
-The cost is that a resupply does not auto-resume - you click again. A red toast fires
-the moment the tank empties, because that is the one fuel event with no visible cause:
-work quietly drops to a third speed and nothing else on screen would say why.
+The buttons stay **clickable rather than disabled**. A disabled control tells you that
+you cannot press it and never what would let you; the toast names where fuel comes from.
+
+**Nothing burns while nothing is running.** Fuel buys work, so an idle mech at 3x spends
+nothing - otherwise leaving the tab open on the equipment screen would quietly empty a
+tank you had been saving. Either actor counts: the crawler refining alone is work.
 
 **Fuel is energy, not time.** Each item's `{ multiplier, seconds }` is read as
 `seconds * (multiplier - 1)` units, and running at speed M spends `M - 1` per second.

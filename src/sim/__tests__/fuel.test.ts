@@ -3,7 +3,7 @@ import { getAction, YIELD_PER_LEVEL } from '../../content'
 import { ENEMIES, perkTotal } from '../../content/enemies'
 import { newGame, type GameState } from '../state'
 import { count } from '../bank'
-import { setSpeed, startSkillAction } from '../intents'
+import { installCrawler, setSpeed, startSkillAction } from '../intents'
 import { availableEnergy, effectiveSpeed, fuelEnergy, secondsOfFuel } from '../fuel'
 import { tick } from '../tick'
 import { derivedStats } from '../stats'
@@ -22,6 +22,12 @@ function withFuel(item = 'catalyst_flask', seed = 5): GameState {
   return state
 }
 
+/** Fuel only burns for work, so anything measuring a burn rate needs a job running. */
+function working(state: GameState): GameState {
+  state.actors.mech.at = 'roadside'
+  return startSkillAction(state, 'scavenging', 'roadside_wrecks')
+}
+
 describe('fuel as energy', () => {
   it('is worth what it was worth before the toggle existed', () => {
     // The reinterpretation was chosen to leave both items exactly as valuable: a flask
@@ -31,11 +37,11 @@ describe('fuel as energy', () => {
 
     const flask = withFuel('catalyst_flask')
     flask.bank['catalyst_flask'] = 1
-    expect(secondsOfFuel(setSpeed(flask, 2))).toBe(600)
+    expect(secondsOfFuel(working(setSpeed(flask, 2)))).toBe(600)
 
     const cell = newGame()
     cell.bank['overcharge_cell'] = 1
-    expect(secondsOfFuel(setSpeed(cell, 3))).toBe(420)
+    expect(secondsOfFuel(working(setSpeed(cell, 3)))).toBe(420)
   })
 
   it('counts nothing that is not fuel', () => {
@@ -46,7 +52,7 @@ describe('fuel as energy', () => {
   })
 
   it('burns faster the higher the setting', () => {
-    const at = (speed: 1 | 2 | 3) => secondsOfFuel(setSpeed(withFuel(), speed))
+    const at = (speed: 1 | 2 | 3) => secondsOfFuel(working(setSpeed(withFuel(), speed)))
     expect(at(1)).toBe(Infinity)
     expect(at(2)).toBe(1200) // two flasks
     expect(at(3)).toBe(600)
@@ -74,6 +80,31 @@ describe('the speed toggle', () => {
     expect(availableEnergy(state)).toBe(0)
     expect(state.speed).toBe(1)
     expect(effectiveSpeed(state)).toBe(1)
+  })
+
+  it('burns nothing while nothing is running', () => {
+    // Fuel buys work. Leaving the tab open on the equipment screen at 3x should not
+    // quietly empty a tank you were saving.
+    let state = setSpeed(withFuel(), 3)
+    const before = availableEnergy(state)
+    state = tickBy(state, 600, 1)
+
+    expect(state.actors.mech.activity).toBeNull()
+    expect(availableEnergy(state)).toBe(before)
+    expect(state.speed).toBe(3)
+  })
+
+  it('burns for the crawler working alone, because that is still work', () => {
+    let state = setSpeed(withFuel(), 2)
+    state.bank['crawler_core'] = 1
+    state = installCrawler(state).state
+    state.bank['scrap_steel'] = 10000
+    state = startSkillAction(state, 'refining', 'smelt_steel', 'crawler')
+    const before = availableEnergy(state)
+    state = tickBy(state, 120, 1)
+
+    expect(state.actors.mech.activity).toBeNull()
+    expect(availableEnergy(state)).toBeLessThan(before)
   })
 
   it('does not touch the toggle while there is still fuel', () => {

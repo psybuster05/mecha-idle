@@ -10,22 +10,22 @@ import { formatSeconds } from '../format'
  * Lives in the top bar rather than a panel because it applies to whatever you are doing
  * and you should be able to change it without leaving the thing you are watching.
  *
- * 2x and 3x are disabled with an empty tank, and the tank emptying drops the toggle
- * back to 1x on its own. Those two go together: a button that is both selected and
- * disabled is a contradiction, and so is a toggle reading 3x while work runs at 1x.
+ * Asking for a speed you cannot afford bounces straight back to 1x and says why. The
+ * buttons stay clickable rather than going disabled: a disabled control tells you that
+ * you cannot press it but never what would let you, and the toast does.
  *
- * The cost is that a fuel drop does not auto-resume the speed you were on - you click
- * again. The toast on running dry is what makes that a decision rather than a surprise.
+ * The tank emptying while you work does the same thing on its own, for the same reason -
+ * a toggle reading 3x while work runs at 1x is the confusing version.
  */
 export function SpeedToggle({
   state,
   dispatch,
-  onRanDry,
+  onNoFuel,
 }: {
   state: GameState
   dispatch: (transform: (s: GameState) => GameState) => void
-  /** Called when the tank empties and the toggle drops itself back to 1x. */
-  onRanDry: () => void
+  /** Called when the toggle lands back on 1x for want of fuel, asked for or not. */
+  onNoFuel: (asked: boolean) => void
 }) {
   const energy = availableEnergy(state)
   const rate = drainRate(state.speed)
@@ -36,9 +36,19 @@ export function SpeedToggle({
   // in the sim keeps the notice a view concern, which is where it belongs.
   const wasFuelled = useRef(!dry)
   useEffect(() => {
-    if (dry && wasFuelled.current) onRanDry()
+    if (dry && wasFuelled.current) onNoFuel(false)
     wasFuelled.current = !dry
-  }, [dry, onRanDry])
+  }, [dry, onNoFuel])
+
+  const pick = (speed: number) => {
+    if (speed > 1 && dry) {
+      // Land on 1x rather than leaving the toggle asking for something it cannot have.
+      onNoFuel(true)
+      dispatch((s) => setSpeed(s, 1))
+      return
+    }
+    dispatch((s) => setSpeed(s, speed as 1 | 2 | 3))
+  }
 
   return (
     <div className="speed">
@@ -49,15 +59,14 @@ export function SpeedToggle({
             className={`speed-button ${state.speed === speed ? 'selected' : ''}`}
             aria-pressed={state.speed === speed}
             aria-label={`${speed} times speed`}
-            disabled={speed > 1 && dry}
             title={
               speed === 1
                 ? 'Normal speed. Costs no fuel.'
                 : dry
                   ? 'No fuel. Find some by scavenging, or take it off what you kill.'
-                  : `${speed}x speed. Burns fuel.`
+                  : `${speed}x speed. Burns fuel while you are working.`
             }
-            onClick={() => dispatch((s) => setSpeed(s, speed))}
+            onClick={() => pick(speed)}
           >
             <Chevrons count={speed} />
           </button>
