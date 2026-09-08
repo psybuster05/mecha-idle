@@ -15,6 +15,7 @@ import { formatNumber } from './format'
 import { useGame } from './useGame'
 import { Bar } from './components/Bar'
 import { SpeedToggle } from './components/SpeedToggle'
+import { Toasts, useToasts } from './components/Toast'
 import { PixelSprite } from './components/PixelSprite'
 import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
@@ -56,6 +57,7 @@ export function App() {
   // Scavenging opens first: it is the first thing a new mech can actually do, and with
   // the World tab gone there is no longer a panel whose job is to be looked at.
   const [tab, setTab] = useState<Tab>('scavenging')
+  const { toasts, show } = useToasts()
 
   if (!ready) {
     return (
@@ -90,7 +92,13 @@ export function App() {
           </div>
         </div>
 
-        <SpeedToggle state={state} dispatch={dispatch} />
+        <SpeedToggle
+          state={state}
+          dispatch={dispatch}
+          onNoFuel={() =>
+            show('Not enough fuel. Find more by scavenging, or take it off what you kill.')
+          }
+        />
       </header>
 
       {loadError && (
@@ -230,6 +238,8 @@ export function App() {
 
         <Stage state={state} />
       </div>
+
+      <Toasts toasts={toasts} />
 
       {offlineReport && <OfflineDialog report={offlineReport} onDismiss={dismissOffline} />}
 

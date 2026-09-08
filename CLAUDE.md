@@ -439,8 +439,20 @@ appeared.
 
 ### Fuel is a throttle, not a timer
 
-A **1x / 2x / 3x toggle** in the top bar. Fuel drains while it is above 1x; at 1x it
-costs nothing. Fuel itself is an uncommon Scavenging drop, as it always was.
+A **1x / 2x / 3x toggle** in the top bar, drawn as one, two or three chevrons - the
+fast-forward metaphor everyone already knows. Those are SVG rather than pixel sprites,
+unlike every other icon in the game, because they have to invert against the selected
+button and `currentColor` can do that where a canvas cannot. The art rules are about
+game content; this is a transport control.
+
+Fuel drains while the toggle is above 1x; at 1x it costs nothing. It drops from
+Scavenging, from every regular enemy, and three at a time from every boss - deliberately
+generous, because this is a proof of concept and running out is not the interesting part.
+
+**Asking for a speed you cannot afford still moves the toggle**, and raises a toast
+saying why nothing sped up. Refusing the click would have been the wrong shape: the
+toggle is a standing preference, so 3x with an empty tank means "3x as soon as there is
+fuel", and it starts paying out the moment some arrives.
 
 **Fuel is energy, not time.** Each item's `{ multiplier, seconds }` is read as
 `seconds * (multiplier - 1)` units, and running at speed M spends `M - 1` per second.

@@ -78,6 +78,9 @@ body { background: var(--bg-deep, #05080f); }
   width: min(100vw, calc(100vh * 16 / 9));
   height: min(100vh, calc(100vw * 9 / 16));
   margin: auto;
+  /* Toasts anchor to the frame, not the viewport, so a notice never lands in the
+     letterbox where nothing else in the game lives. */
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -519,3 +522,27 @@ img.sprite { image-rendering: pixelated; }
   background: var(--accent); border-color: var(--accent); color: #04101f; font-weight: 700;
 }
 .speed-note { font-size: 11px; white-space: nowrap; min-width: 78px; }
+
+/* --- toasts ------------------------------------------------------------- */
+
+/*
+ * Bottom centre, inside the 16:9 frame rather than the viewport, so a notice cannot
+ * appear in the letterbox where nothing else lives.
+ */
+.toasts {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 6px; align-items: center;
+  pointer-events: none; z-index: 20;
+}
+.toast {
+  padding: 8px 16px; max-width: 30rem;
+  background: var(--panel-2); border: 1px solid var(--accent-dim);
+  color: var(--text); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  animation: toast-in 140ms ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chevrons { width: 26px; height: 12px; display: block; }

@@ -102,7 +102,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { emp: 1.4 },
     xp: 6,
     guaranteed: [{ item: 'scrap_steel', qty: 2 }],
-    drops: [{ item: 'copper_wiring', qty: 1, chance: 0.25 }],
+    drops: [
+      { item: 'copper_wiring', qty: 1, chance: 0.25 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
+    ],
   },
   {
     id: 'sentry_drone',
@@ -122,6 +125,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'copper_wiring', qty: 2, chance: 0.4 },
       { item: 'intact_servo', qty: 1, chance: 0.06 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
     ],
   },
   {
@@ -145,6 +149,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'intact_servo', qty: 1, chance: 0.15 },
       { item: 'power_cell', qty: 1, chance: 0.1 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
     ],
   },
 
@@ -167,7 +172,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { emp: 0.6, kinetic: 1.2, energy: 1 },
     xp: 40,
     guaranteed: [{ item: 'hull_plate', qty: 2 }],
-    drops: [{ item: 'scrap_steel', qty: 4, chance: 0.5 }],
+    drops: [
+      { item: 'scrap_steel', qty: 4, chance: 0.5 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
+    ],
   },
   {
     id: 'deck_gunner',
@@ -186,6 +194,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'sonar_array', qty: 1, chance: 0.12 },
       { item: 'copper_wiring', qty: 4, chance: 0.4 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
     ],
   },
   {
@@ -208,6 +217,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'sonar_array', qty: 1, chance: 0.25 },
       { item: 'catalyst_flask', qty: 1, chance: 0.02 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
     ],
   },
 
@@ -231,7 +241,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 0.8, energy: 1, emp: 1.1 },
     xp: 220,
     guaranteed: [{ item: 'airframe_spar', qty: 3 }],
-    drops: [{ item: 'scrap_steel', qty: 8, chance: 0.5 }],
+    drops: [
+      { item: 'scrap_steel', qty: 8, chance: 0.5 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
+    ],
   },
   {
     id: 'gate_sentry',
@@ -247,7 +260,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1, energy: 1.2, emp: 1.4 },
     xp: 260,
     guaranteed: [{ item: 'avionics_board', qty: 1 }],
-    drops: [{ item: 'airframe_spar', qty: 3, chance: 0.5 }],
+    drops: [
+      { item: 'airframe_spar', qty: 3, chance: 0.5 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
+    ],
   },
   {
     id: 'approach_drone',
@@ -263,7 +279,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1.1, energy: 1.25, emp: 1.5 },
     xp: 300,
     guaranteed: [{ item: 'avionics_board', qty: 2 }],
-    drops: [{ item: 'turbine_blade', qty: 1, chance: 0.2 }],
+    drops: [
+      { item: 'turbine_blade', qty: 1, chance: 0.2 },
+      { item: 'catalyst_flask', qty: 1, chance: 0.04 },
+    ],
   },
 
   // --- Bridge Checkpoint ---------------------------------------------------
@@ -288,7 +307,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 0.85, energy: 1.1, emp: 1 },
     xp: 480,
     guaranteed: [{ item: 'barrier_segment', qty: 3 }],
-    drops: [{ item: 'ceramic_composite', qty: 2, chance: 0.4 }],
+    drops: [
+      { item: 'ceramic_composite', qty: 2, chance: 0.4 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'checkpoint_sentry',
@@ -304,7 +326,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 0.8, energy: 0.9, emp: 1.15 },
     xp: 620,
     guaranteed: [{ item: 'ceramic_composite', qty: 3 }],
-    drops: [{ item: 'security_core', qty: 1, chance: 0.18 }],
+    drops: [
+      { item: 'security_core', qty: 1, chance: 0.18 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'riot_column',
@@ -326,6 +351,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'security_core', qty: 2, chance: 0.3 },
       { item: 'overcharge_cell', qty: 1, chance: 0.03 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
     ],
   },
 
@@ -348,7 +374,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1.1, energy: 1.15, emp: 1.3 },
     xp: 105,
     guaranteed: [{ item: 'polymer_frame', qty: 2 }],
-    drops: [{ item: 'control_collar', qty: 1, chance: 0.08 }],
+    drops: [
+      { item: 'control_collar', qty: 1, chance: 0.08 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'ward_enforcer',
@@ -364,7 +393,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1, energy: 0.9, emp: 1.2 },
     xp: 190,
     guaranteed: [{ item: 'conduit_spool', qty: 2 }],
-    drops: [{ item: 'control_collar', qty: 1, chance: 0.2 }],
+    drops: [
+      { item: 'control_collar', qty: 1, chance: 0.2 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'transit_marshal',
@@ -383,7 +415,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'conduit_spool', qty: 3 },
       { item: 'polymer_frame', qty: 3 },
     ],
-    drops: [{ item: 'control_collar', qty: 2, chance: 0.3 }],
+    drops: [
+      { item: 'control_collar', qty: 2, chance: 0.3 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
 
   // --- The Base ------------------------------------------------------------
@@ -405,7 +440,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 0.8, energy: 0.95, emp: 0.9 },
     xp: 1400,
     guaranteed: [{ item: 'munitions_case', qty: 2 }],
-    drops: [{ item: 'command_plate', qty: 1, chance: 0.3 }],
+    drops: [
+      { item: 'command_plate', qty: 1, chance: 0.3 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'shock_lancer',
@@ -421,7 +459,10 @@ export const ENEMIES: readonly EnemyDef[] = [
     resistances: { kinetic: 1.05, energy: 0.85, emp: 1.1 },
     xp: 1650,
     guaranteed: [{ item: 'munitions_case', qty: 3 }],
-    drops: [{ item: 'command_plate', qty: 2, chance: 0.35 }],
+    drops: [
+      { item: 'command_plate', qty: 2, chance: 0.35 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
   {
     id: 'siege_bastion',
@@ -440,7 +481,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'command_plate', qty: 4 },
       { item: 'munitions_case', qty: 3 },
     ],
-    drops: [{ item: 'security_core', qty: 3, chance: 0.4 }],
+    drops: [
+      { item: 'security_core', qty: 3, chance: 0.4 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
 
   // --- The Lair ------------------------------------------------------------
@@ -464,7 +508,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'command_plate', qty: 5 },
       { item: 'continuity_core', qty: 1 },
     ],
-    drops: [{ item: 'munitions_case', qty: 6, chance: 0.5 }],
+    drops: [
+      { item: 'munitions_case', qty: 6, chance: 0.5 },
+      { item: 'overcharge_cell', qty: 1, chance: 0.035 },
+    ],
   },
 
   // --- Bosses --------------------------------------------------------------
@@ -498,6 +545,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'optic_lens', qty: 2, chance: 0.6 },
       { item: 'sealed_bearing', qty: 3, chance: 0.5 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
     ],
     phases: [
       {
@@ -553,6 +601,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'sonar_array', qty: 3, chance: 0.7 },
       { item: 'pressure_hull', qty: 1, chance: 0.25 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
     ],
     phases: [
       {
@@ -605,6 +654,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'guidance_module', qty: 2, chance: 0.6 },
       { item: 'beacon_core', qty: 1, chance: 0.2 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
     ],
     // Phases here move *evasion*, not resistance. Every other boss asks "which
     // weapon"; this one asks whether you can land anything at all, then whether you
@@ -659,6 +709,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'barrier_segment', qty: 12, chance: 0.7 },
       { item: 'crossing_writ', qty: 1, chance: 0.2 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
     ],
     // Phases move *armour*. Without penetration the middle phase is a wall you cannot
     // meaningfully dent; with it, it is merely a long fight.
@@ -713,6 +764,7 @@ export const ENEMIES: readonly EnemyDef[] = [
     drops: [
       { item: 'control_collar', qty: 10, chance: 0.8 },
       { item: 'census_ledger', qty: 1, chance: 0.2 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
     ],
     phases: [
       {
@@ -760,7 +812,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'command_plate', qty: 20 },
       { item: 'munitions_case', qty: 20 },
     ],
-    drops: [{ item: 'field_alloy', qty: 4, chance: 0.6 }],
+    drops: [
+      { item: 'field_alloy', qty: 4, chance: 0.6 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
+    ],
     phases: [
       {
         below: 0.6,
@@ -809,7 +864,10 @@ export const ENEMIES: readonly EnemyDef[] = [
       { item: 'continuity_core', qty: 5 },
       { item: 'field_alloy', qty: 10 },
     ],
-    drops: [{ item: 'command_plate', qty: 30, chance: 0.9 }],
+    drops: [
+      { item: 'command_plate', qty: 30, chance: 0.9 },
+      { item: 'overcharge_cell', qty: 3, chance: 1 },
+    ],
     // The exam. Each phase is a lesson from an earlier boss, in the order you learned
     // them - armour, then evasion, then a damage floor. A generalist grinds through;
     // someone who kept all four weapons and swaps between phases wins roughly twice as

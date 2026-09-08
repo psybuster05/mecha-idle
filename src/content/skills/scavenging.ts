@@ -60,7 +60,7 @@ export const SCAVENGING: SkillDef = {
       ],
       drops: [
         { item: 'power_cell', qty: 1, chance: 0.12 },
-        { item: 'catalyst_flask', qty: 1, chance: 0.01 },
+        { item: 'catalyst_flask', qty: 1, chance: 0.03 },
       ],
       xp: 12,
     },
@@ -76,7 +76,7 @@ export const SCAVENGING: SkillDef = {
       ],
       drops: [
         { item: 'sealed_bearing', qty: 1, chance: 0.2 },
-        { item: 'catalyst_flask', qty: 1, chance: 0.012 },
+        { item: 'catalyst_flask', qty: 1, chance: 0.035 },
       ],
       xp: 16,
     },
@@ -108,7 +108,7 @@ export const SCAVENGING: SkillDef = {
       ],
       drops: [
         { item: 'fused_core', qty: 1, chance: 0.1 },
-        { item: 'overcharge_cell', qty: 1, chance: 0.008 },
+        { item: 'overcharge_cell', qty: 1, chance: 0.025 },
       ],
       xp: 38,
     },
@@ -225,7 +225,7 @@ export const SCAVENGING: SkillDef = {
       ],
       drops: [
         { item: 'airframe_spar', qty: 4, chance: 0.35 },
-        { item: 'overcharge_cell', qty: 1, chance: 0.01 },
+        { item: 'overcharge_cell', qty: 1, chance: 0.03 },
       ],
       xp: 63,
     },

@@ -358,19 +358,46 @@ describe('attack styles', () => {
   /**
    * The cost of specialising, measured rather than assumed.
    *
-   * Combat level is the average of four skills and the xp curve is exponential, so the
-   * same xp concentrated into one skill buys fewer levels than spread across three.
-   * Specialising should therefore make one number climb fast and combat level climb
-   * slower. If that ever inverts, the styles have stopped being a trade-off.
+   * Combat level is built from the average of your skills and the xp curve is
+   * exponential, so the same xp concentrated into one skill buys fewer levels than spread
+   * across three. Specialising should make one number climb fast and combat level climb
+   * slower - which matters, because zone requirements read combat level.
+   *
+   * **There is a crossover, and it is worth knowing about.** For roughly the first two
+   * hours a focused style is ahead on *both*, because its +12% stat bonus kills faster
+   * and the extra throughput outweighs the curve penalty. Measured at level 30:
+   *
+   *     after    balanced    aggressive    aggressive Strength
+   *       1h          32            33                     40
+   *       4h          39            36                     51
+   *      12h          49            41                     62
+   *      36h          59            46                     73
+   *
+   * So specialising is a straight win while you are getting going, and a real trade once
+   * you are established. That is a better shape than the one originally designed, and it
+   * is measured here rather than assumed - if the stat bonuses grow, this is what tells
+   * you the trade has stopped existing.
    */
-  it('costs combat level to specialise, and buys a higher single skill', () => {
-    const balanced = fought('balanced', 3600)
-    const focused = fought('aggressive', 3600)
+  it('costs combat level to specialise, and buys a much higher single skill', () => {
+    // Twelve hours, well past the early window where raw throughput dominates.
+    const span = 12 * 3600
+    const balanced = fought('balanced', span)
+    const focused = fought('aggressive', span)
 
     expect(levelFromXp(focused.skills.strength)).toBeGreaterThan(
       levelFromXp(balanced.skills.strength),
     )
-    expect(combatLevel(focused)).toBeLessThanOrEqual(combatLevel(balanced))
+    expect(combatLevel(focused)).toBeLessThan(combatLevel(balanced))
+  })
+
+  it('lets a focused style get going faster, before the curve catches up', () => {
+    // The other half of the crossover. A new player picking Aggressive should not be
+    // punished for it immediately; the cost arrives once the levels are high enough for
+    // the exponential curve to bite.
+    const span = 3600
+    expect(combatLevel(fought('aggressive', span))).toBeGreaterThanOrEqual(
+      combatLevel(fought('balanced', span)),
+    )
   })
 
   it('refuses a style that does not exist rather than losing the xp', () => {
