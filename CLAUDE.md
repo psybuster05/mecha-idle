@@ -408,10 +408,22 @@ Two things the work motion does that the lunge does not, both deliberate:
   stroke's animation would override the bob for its whole duration and snap the mech
   straight. Nested, they compose.
 
-There is **one work motion, not one per skill**, for the same reason there is one icon per
-skill rather than one per action: at 96px a mech with no articulated arms cannot tell
-scavenging apart from smelting, and four near-identical animations is four times the art
-for none of the information.
+**Each skill works differently**, and the four are told apart by *axis, depth and rate*
+rather than by what a pair of arms is doing - the mech has no articulated parts, so the
+whole figure is the only thing there is to move. Scavenging **stoops** to the ground and
+straightens. Refining **leans** sideways into a furnace, slowly, and is the only one that
+holds a position off the vertical. Fabrication **taps**, at twice the rate and half the
+depth, and its stroke rises before it falls - the one motion with an anticipation in it,
+because assembly is precise rather than heavy. Salvaging **wrenches** side to side, the
+widest travel of the four and the only bob that crosses its own resting position.
+
+The differences are deliberately large. A subtle distinction at 96px is no distinction,
+which is the same reason two icons must not need colour to tell them apart, and the reason
+the first pass here shipped one shared motion instead of four timid ones.
+
+`WORK_STYLES` is a `Record<GatheringSkillId, WorkStyle>` on purpose: a fifth gathering
+skill is a compile error asking what it looks like, not a skill that silently works in
+mime.
 
 Positioning had to move for this. The idle figure used to be centred with
 `translateX(-50%)`, which is a transform, so any animated transform on it would have

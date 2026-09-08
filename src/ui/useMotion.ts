@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { GatheringSkillId } from '../sim/state'
 
 /**
  * Makes a figure react to its own timer.
@@ -21,6 +22,9 @@ export interface Motion {
   easing?: string
 }
 
+/** One sprite pixel on the stage, in screen pixels. The bob keyframes assume it too. */
+export const SPRITE_PIXEL = 6
+
 /** Leaning into a blow. The opponent stands to the right, so it comes back negative. */
 export function lunge(distance: number): Motion {
   return {
@@ -35,24 +39,97 @@ export function lunge(distance: number): Motion {
 }
 
 /**
- * Bringing something down on the work - one stroke per completed action.
+ * What a skill looks like when it is running.
  *
- * Stepped rather than eased, and a whole number of *sprite* pixels rather than a whole
- * number of screen ones. A fractional transform lands each 1x1 sprite pixel on a
- * fractional boundary and smears it, which is the same reason the art rules allow only
- * integer scales; holding two positions keeps every frame crisp and reads as a machine
- * rather than a pendulum.
+ * Two parts, because they answer different questions. The **bob** is continuous and says
+ * *busy* - an action takes seconds, and a figure that only moved on completion would
+ * stand dead still for most of the job, which is what idle looks like. The **stroke**
+ * fires once per completed action and says *that one is done*.
+ *
+ * Both are whole numbers of *sprite* pixels, and both are stepped rather than eased. A
+ * fractional transform lands each 1x1 sprite pixel on a fractional boundary and smears
+ * it - the same reason the art rules allow only integer scales.
+ *
+ * The mech has no articulated parts, so the whole figure is all there is to move. The
+ * four are told apart by **axis, depth and rate**, not by what a pair of arms is doing:
+ * stooping, leaning, tapping, hauling back. That is the honest ceiling on this sprite,
+ * and it is why the differences are deliberately large - a subtle distinction at 96px is
+ * no distinction.
  */
-export function workStroke(spritePixel: number): Motion {
-  return {
-    keyframes: [
-      { transform: 'translateY(0)' },
-      { transform: `translateY(${spritePixel * 2}px)`, offset: 0.45 },
-      { transform: 'translateY(0)' },
-    ],
-    duration: 220,
-    easing: 'steps(1, end)',
-  }
+export interface WorkStyle {
+  /** Class carrying the bob keyframes. Its period is set inline from the speed toggle. */
+  bob: string
+  /** A full bob cycle at 1x, in seconds. */
+  bobSeconds: number
+  stroke: Motion
+}
+
+const STEPPED = 'steps(1, end)'
+
+/**
+ * Exhaustive over the gathering skills on purpose: adding a fifth should be a compile
+ * error asking what it looks like, not a skill that silently works in mime.
+ */
+export const WORK_STYLES: Record<GatheringSkillId, WorkStyle> = {
+  // Stooping to the ground and coming back up with something.
+  scavenging: {
+    bob: 'work-stoop',
+    bobSeconds: 1,
+    stroke: {
+      keyframes: [
+        { transform: 'translateY(0)' },
+        { transform: `translateY(${SPRITE_PIXEL * 2}px)`, offset: 0.45 },
+        { transform: 'translateY(0)' },
+      ],
+      duration: 220,
+      easing: STEPPED,
+    },
+  },
+  // Leaning in to feed a furnace: slow, and the only one that holds a position sideways.
+  refining: {
+    bob: 'work-feed',
+    bobSeconds: 1.4,
+    stroke: {
+      keyframes: [
+        { transform: 'translateX(0)' },
+        { transform: `translateX(${SPRITE_PIXEL * 2}px)`, offset: 0.5 },
+        { transform: 'translateX(0)' },
+      ],
+      duration: 320,
+      easing: STEPPED,
+    },
+  },
+  // Small fast taps, and a strike that rises before it falls - the one motion with an
+  // anticipation in it, because assembly is the skill that is precise rather than heavy.
+  fabrication: {
+    bob: 'work-tap',
+    bobSeconds: 0.5,
+    stroke: {
+      keyframes: [
+        { transform: 'translateY(0)' },
+        { transform: `translateY(${-SPRITE_PIXEL}px)`, offset: 0.3 },
+        { transform: `translateY(${SPRITE_PIXEL}px)`, offset: 0.55 },
+        { transform: 'translateY(0)' },
+      ],
+      duration: 240,
+      easing: STEPPED,
+    },
+  },
+  // Wrenching something apart: the widest travel of the four, and the only one that
+  // crosses its own resting position.
+  salvaging: {
+    bob: 'work-wrench',
+    bobSeconds: 0.9,
+    stroke: {
+      keyframes: [
+        { transform: 'translateX(0)' },
+        { transform: `translateX(${-SPRITE_PIXEL * 3}px)`, offset: 0.6 },
+        { transform: 'translateX(0)' },
+      ],
+      duration: 260,
+      easing: STEPPED,
+    },
+  },
 }
 
 export function useMotion(

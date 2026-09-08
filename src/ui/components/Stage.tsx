@@ -4,17 +4,11 @@ import { getNode } from '../../content/world'
 import type { GameState } from '../../sim/state'
 import { effectiveSpeed } from '../../sim/fuel'
 import { waitingFor } from '../../sim/skillEngine'
-import { lunge, useMotion, workStroke } from '../useMotion'
+import { lunge, SPRITE_PIXEL, useMotion, WORK_STYLES } from '../useMotion'
 import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
 import { WorldMap } from './WorldMap'
-
-/** One sprite pixel on the stage. Motion in multiples of this stays crisp. */
-const MECH_SCALE = 6
-
-/** A full cycle of the working bob at 1x, in seconds. Divided by the speed toggle. */
-const BOB_SECONDS = 1
 
 /**
  * The permanent view of what is actually happening.
@@ -42,12 +36,13 @@ export function Stage({ state }: { state: GameState }) {
   // on nothing would say the opposite of what the readout below it says.
   const working = activity?.kind === 'skill' && waitingFor(state, 'mech').length === 0
 
-  // One figure, one motion, chosen by what it is doing: leaning into a blow, or bringing
-  // something down on the work. Both are the same cue - a timer that just reset.
+  // One figure, one motion, chosen by what it is doing: leaning into a blow, or working
+  // in whichever way that skill works. Both are the same cue - a timer that just reset.
+  const style = activity?.kind === 'skill' ? WORK_STYLES[activity.skill] : null
   const mechMotion = useMotion(
     fighting ? state.combat.attackProgress : state.actors.mech.progress,
     fighting ? engaged : working,
-    fighting ? lunge(10) : workStroke(MECH_SCALE),
+    fighting || !style ? lunge(10) : style.stroke,
   )
   const enemyMotion = useMotion(state.combat.enemyAttackProgress, engaged, lunge(-10))
 
@@ -67,14 +62,14 @@ export function Stage({ state }: { state: GameState }) {
                 are transforms: on one element the stroke would override the bob for its
                 whole duration and snap the mech straight. Nested, they compose. */}
             <div
-              className={working ? 'stage-working' : undefined}
+              className={working && style ? `stage-working ${style.bob}` : undefined}
               style={
-                working
-                  ? { animationDuration: `${BOB_SECONDS / effectiveSpeed(state)}s` }
+                working && style
+                  ? { animationDuration: `${style.bobSeconds / effectiveSpeed(state)}s` }
                   : undefined
               }
             >
-              <MechPortrait state={state} scale={MECH_SCALE} caption={false} />
+              <MechPortrait state={state} scale={SPRITE_PIXEL} caption={false} />
             </div>
           </div>
           {fighting && enemy && (

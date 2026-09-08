@@ -489,25 +489,56 @@ img.sprite { image-rendering: pixelated; }
 .stage-opponent { left: auto; right: 6%; }
 
 /*
- * Working: the mech keeps moving between strokes.
+ * Working: the mech keeps moving between strokes, and moves differently per skill.
  *
  * An action takes seconds, so a figure that only twitched on completion would stand dead
  * still for most of the job - which is the same "nothing is happening" the idle mech
  * shows. The bob is what says busy; the stroke is what says *that one is done*.
  *
- * Two positions, not a smooth rise: a whole sprite pixel up (6px at 6x) and back, with no
+ * Two positions each, not a smooth rise: whole sprite pixels (6px at 6x) with no
  * interpolation. Anything between the two lands the art on a fractional boundary and
- * smears it, and this one is on screen for minutes at a time rather than for the 190ms a
+ * smears it, and these are on screen for minutes at a time rather than for the 190ms a
  * lunge lasts.
  *
- * The period comes from the speed toggle, so work that is running three times as fast
- * looks it.
+ * The mech has no articulated parts, so the whole figure is all there is to move: the
+ * four are told apart by axis, depth and rate. Deliberately far apart - a subtle
+ * distinction at 96px is no distinction at all.
+ *
+ * The period comes from the speed toggle, so work running three times as fast looks it.
+ * Its base is per skill and lives beside the strokes in useMotion.ts.
  */
-@keyframes stage-bob {
+/* steps(1) rather than the default ease: the 1% between the two held positions would
+   otherwise be interpolated, which is a frame of the art on a fractional boundary. */
+.stage-working { animation-iteration-count: infinite; animation-timing-function: steps(1, end); }
+
+/* Scavenging: stooping to the ground and straightening up. */
+@keyframes work-stoop {
+  0%, 49% { transform: translateY(0); }
+  50%, 100% { transform: translateY(6px); }
+}
+.work-stoop { animation-name: work-stoop; }
+
+/* Refining: a slow lean into the furnace. The only one that holds sideways. */
+@keyframes work-feed {
+  0%, 49% { transform: translateX(0); }
+  50%, 100% { transform: translateX(6px); }
+}
+.work-feed { animation-name: work-feed; }
+
+/* Fabrication: small fast taps. Precise rather than heavy. */
+@keyframes work-tap {
   0%, 49% { transform: translateY(0); }
   50%, 100% { transform: translateY(-6px); }
 }
-.stage-working { animation: stage-bob 1s infinite; }
+.work-tap { animation-name: work-tap; }
+
+/* Salvaging: hauling side to side, the only bob that crosses its own resting position. */
+@keyframes work-wrench {
+  0%, 49% { transform: translateX(-6px); }
+  50%, 100% { transform: translateX(6px); }
+}
+.work-wrench { animation-name: work-wrench; }
+
 @media (prefers-reduced-motion: reduce) {
   .stage-working { animation: none; }
 }
