@@ -449,10 +449,15 @@ Fuel drains while the toggle is above 1x; at 1x it costs nothing. It drops from
 Scavenging, from every regular enemy, and three at a time from every boss - deliberately
 generous, because this is a proof of concept and running out is not the interesting part.
 
-**Asking for a speed you cannot afford still moves the toggle**, and raises a toast
-saying why nothing sped up. Refusing the click would have been the wrong shape: the
-toggle is a standing preference, so 3x with an empty tank means "3x as soon as there is
-fuel", and it starts paying out the moment some arrives.
+**2x and 3x are disabled without fuel, and running dry drops the toggle back to 1x.**
+Those two go together and they replaced an earlier "standing preference" model, where
+the toggle held its setting so a later drop resumed it. That could not survive disabling
+the buttons: one that is both selected and disabled is a contradiction, and so is a
+toggle reading 3x while work runs at 1x.
+
+The cost is that a resupply does not auto-resume - you click again. A red toast fires
+the moment the tank empties, because that is the one fuel event with no visible cause:
+work quietly drops to a third speed and nothing else on screen would say why.
 
 **Fuel is energy, not time.** Each item's `{ multiplier, seconds }` is read as
 `seconds * (multiplier - 1)` units, and running at speed M spends `M - 1` per second.

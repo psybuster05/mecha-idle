@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { setSpeed } from '../../sim/intents'
-import { SPEEDS, availableEnergy, drainRate, effectiveSpeed, type Speed } from '../../sim/fuel'
+import { SPEEDS, availableEnergy, drainRate } from '../../sim/fuel'
 import type { GameState } from '../../sim/state'
 import { formatSeconds } from '../format'
 
@@ -9,33 +10,35 @@ import { formatSeconds } from '../format'
  * Lives in the top bar rather than a panel because it applies to whatever you are doing
  * and you should be able to change it without leaving the thing you are watching.
  *
- * The selected speed and the running speed are shown as different things on purpose. A
- * toggle set to 3x with an empty tank is a standing request, not a lie - it starts
- * paying out the moment fuel is found, and saying "3x" while running at 1x would be the
- * confusing version.
+ * 2x and 3x are disabled with an empty tank, and the tank emptying drops the toggle
+ * back to 1x on its own. Those two go together: a button that is both selected and
+ * disabled is a contradiction, and so is a toggle reading 3x while work runs at 1x.
+ *
+ * The cost is that a fuel drop does not auto-resume the speed you were on - you click
+ * again. The toast on running dry is what makes that a decision rather than a surprise.
  */
 export function SpeedToggle({
   state,
   dispatch,
-  onNoFuel,
+  onRanDry,
 }: {
   state: GameState
   dispatch: (transform: (s: GameState) => GameState) => void
-  /** Called when a speed is picked that there is no fuel to run. */
-  onNoFuel: () => void
+  /** Called when the tank empties and the toggle drops itself back to 1x. */
+  onRanDry: () => void
 }) {
-  const running = effectiveSpeed(state)
   const energy = availableEnergy(state)
   const rate = drainRate(state.speed)
-  const stalled = state.speed > 1 && running === 1
+  const dry = energy <= 0
 
-  const pick = (speed: Speed) => {
-    // The toggle still moves - it is a standing preference, so setting 3x with an empty
-    // tank means "3x as soon as there is fuel". The toast explains why nothing sped up,
-    // which is the part that would otherwise look broken.
-    if (speed > 1 && energy <= 0) onNoFuel()
-    dispatch((s) => setSpeed(s, speed))
-  }
+  // Running out is the one fuel event with no visible cause: work quietly halves in
+  // speed and nothing on screen says why. Watching for the transition here rather than
+  // in the sim keeps the notice a view concern, which is where it belongs.
+  const wasFuelled = useRef(!dry)
+  useEffect(() => {
+    if (dry && wasFuelled.current) onRanDry()
+    wasFuelled.current = !dry
+  }, [dry, onRanDry])
 
   return (
     <div className="speed">
@@ -46,21 +49,26 @@ export function SpeedToggle({
             className={`speed-button ${state.speed === speed ? 'selected' : ''}`}
             aria-pressed={state.speed === speed}
             aria-label={`${speed} times speed`}
-            title={speed === 1 ? 'Normal speed. Costs no fuel.' : `${speed}x speed. Burns fuel.`}
-            onClick={() => pick(speed)}
+            disabled={speed > 1 && dry}
+            title={
+              speed === 1
+                ? 'Normal speed. Costs no fuel.'
+                : dry
+                  ? 'No fuel. Find some by scavenging, or take it off what you kill.'
+                  : `${speed}x speed. Burns fuel.`
+            }
+            onClick={() => dispatch((s) => setSpeed(s, speed))}
           >
             <Chevrons count={speed} />
           </button>
         ))}
       </div>
-      <span className={`speed-note ${stalled ? 'warn' : 'dim'}`}>
-        {stalled
+      <span className={`speed-note ${dry ? 'warn' : 'dim'}`}>
+        {dry
           ? 'no fuel'
           : rate > 0
             ? `${formatSeconds(energy / rate)} of fuel`
-            : energy > 0
-              ? `${Math.floor(energy)} fuel`
-              : 'no fuel'}
+            : `${Math.floor(energy)} fuel`}
       </span>
     </div>
   )

@@ -95,8 +95,8 @@ export function App() {
         <SpeedToggle
           state={state}
           dispatch={dispatch}
-          onNoFuel={() =>
-            show('Not enough fuel. Find more by scavenging, or take it off what you kill.')
+          onRanDry={() =>
+            show('Out of fuel - back to 1x. Find more by scavenging, or take it off what you kill.')
           }
         />
       </header>

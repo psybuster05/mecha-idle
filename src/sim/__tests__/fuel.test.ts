@@ -61,20 +61,29 @@ describe('the speed toggle', () => {
     expect(derivedStats(dry).skillDurationScale).toBe(1)
   })
 
-  it('keeps the setting when the fuel runs out, so finding more resumes it', () => {
-    // The toggle is a standing preference, not a running effect. Resetting it to 1x on
-    // empty would mean a player who set it once has to keep re-setting it.
+  it('drops itself back to 1x when the tank runs dry', () => {
+    // This reversed a previous decision. The toggle used to hold its setting so a later
+    // fuel drop resumed it, but that cannot coexist with disabling 2x and 3x on empty:
+    // a button both selected and disabled is a contradiction. Dropping it is the honest
+    // version, and the UI toasts so it is a decision rather than a surprise.
     let state = setSpeed(withFuel(), 3)
     state.actors.mech.at = 'roadside'
     state = startSkillAction(state, 'scavenging', 'roadside_wrecks')
     state = tickBy(state, 1200, 1) // burns both flasks dry
 
     expect(availableEnergy(state)).toBe(0)
-    expect(state.speed).toBe(3)
+    expect(state.speed).toBe(1)
     expect(effectiveSpeed(state)).toBe(1)
+  })
 
-    state.bank['catalyst_flask'] = 1
-    expect(effectiveSpeed(state)).toBe(3)
+  it('does not touch the toggle while there is still fuel', () => {
+    let state = setSpeed(withFuel(), 3)
+    state.actors.mech.at = 'roadside'
+    state = startSkillAction(state, 'scavenging', 'roadside_wrecks')
+    state = tickBy(state, 60, 1)
+
+    expect(availableEnergy(state)).toBeGreaterThan(0)
+    expect(state.speed).toBe(3)
   })
 
   it('makes work faster in proportion to the setting', () => {

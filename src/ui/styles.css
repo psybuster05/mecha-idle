@@ -534,10 +534,20 @@ img.sprite { image-rendering: pixelated; }
   display: flex; flex-direction: column; gap: 6px; align-items: center;
   pointer-events: none; z-index: 20;
 }
+/*
+ * Red rather than the interface blue, because a toast only ever appears when something
+ * the player wanted did not happen - and blue on a blue interface was easy to miss.
+ *
+ * Not the enemy orange: that colour is reserved for hostile things, and a notice about
+ * your own fuel is not one. Red already means "a problem" elsewhere here (shortfalls in
+ * a recipe, losses in the offline report), so it carries the right meaning already.
+ */
 .toast {
-  padding: 8px 16px; max-width: 30rem;
-  background: var(--panel-2); border: 1px solid var(--accent-dim);
-  color: var(--text); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  padding: 9px 16px; max-width: 30rem;
+  background: #2a1220; border: 1px solid var(--bad);
+  border-left: 3px solid var(--bad);
+  color: #ffd9d9; font-weight: 700;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
   animation: toast-in 140ms ease-out;
 }
 @keyframes toast-in {

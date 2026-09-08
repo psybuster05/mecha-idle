@@ -17,9 +17,12 @@
  * So the Cell is still the better find, 3x still burns through it in seven minutes, and
  * nothing had to be retuned to change the mechanic.
  *
- * The toggle is a *preference*, not a state: it stays where the player put it when the
- * tank runs dry, so finding fuel later resumes at the speed they asked for rather than
- * silently at 1x.
+ * **Running dry drops the toggle back to 1x.** An earlier version left it where the
+ * player put it, on the grounds that a standing preference should resume when fuel turns
+ * up. That stopped making sense once 2x and 3x are disabled without fuel: a selected
+ * button that is also disabled is a contradiction, and a toggle claiming 3x while
+ * running at 1x is the confusing version of the same thing. The cost is that a resupply
+ * does not auto-resume - you click again, and a toast tells you when it happened.
  */
 
 import { getItem, ITEMS } from '../content'
@@ -88,6 +91,14 @@ export function secondsOfFuel(state: GameState): number {
  * differently spends exactly the same items. Never spends more than is there.
  */
 export function burnFuelFor(state: GameState, seconds: number): void {
+  // Checked up front rather than only on the refill path. Draining to *exactly* empty
+  // leaves the loop before it ever asks for another item, so a tank that ran out on a
+  // clean boundary would have kept the toggle showing a speed it could not pay for.
+  if (state.speed > 1 && availableEnergy(state) <= 0) {
+    state.speed = 1
+    return
+  }
+
   const rate = drainRate(effectiveSpeed(state))
   if (rate <= 0 || seconds <= 0) return
 
@@ -96,8 +107,9 @@ export function burnFuelFor(state: GameState, seconds: number): void {
     if (state.fuelEnergy <= 0) {
       const next = BURN_ORDER.find((item) => count(state, item) > 0)
       if (!next) {
-        // Out of fuel entirely. The toggle stays where it is; the rate does not.
+        // Ran out part-way through this step. The check at the top catches the next one.
         state.fuelEnergy = 0
+        state.speed = 1
         return
       }
       removeItem(state, next, 1)
