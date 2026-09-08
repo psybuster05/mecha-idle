@@ -3,6 +3,7 @@ import { ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 import { getNode } from '../../content/world'
 import type { GameState } from '../../sim/state'
 import { waitingFor } from '../../sim/skillEngine'
+import { useLunge } from '../useLunge'
 import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
@@ -28,6 +29,12 @@ export function Stage({ state }: { state: GameState }) {
   const fighting = state.actors.mech.activity?.kind === 'combat'
   const enemy = state.combat.enemyId ? getEnemy(state.combat.enemyId) : null
 
+  // Each side leans toward the other on its own swing. The enemy stands to the right,
+  // so the mech goes positive and it comes back the other way.
+  const engaged = fighting && enemy !== null
+  const mechLunge = useLunge(state.combat.attackProgress, engaged, 10)
+  const enemyLunge = useLunge(state.combat.enemyAttackProgress, engaged, -10)
+
   return (
     <aside className="stage">
       {/* Scrolls on its own so the map below can hold the corner. Without this split
@@ -39,11 +46,11 @@ export function Stage({ state }: { state: GameState }) {
         <div className="stage-scene">
           <div className="stage-sky" />
           <div className="stage-ground" />
-          <div className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
+          <div ref={mechLunge} className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
             <MechPortrait state={state} scale={6} caption={false} />
           </div>
           {fighting && enemy && (
-            <div className="stage-figure stage-opponent">
+            <div ref={enemyLunge} className="stage-figure stage-opponent">
               {/* A boss standing the same height as a Scrap Crawler undersells the
                   moment. The slab is only so wide, so this is as far as it goes without
                   the two of them overlapping. */}

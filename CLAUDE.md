@@ -379,6 +379,14 @@ one side and whatever it is fighting stands opposite, both on the same slab, wit
 readout below keeping the name and HP. **Bosses are drawn a third taller** than anything
 else - standing a boss the same height as a Scrap Crawler undersells the moment.
 
+**Each side lunges on its own swing.** A swing is detected as a *fall* in that actor's
+attack timer - it counts up to the interval and resets - so the view finds it by diffing
+snapshots, the same way item gains are found, and the simulation stays unaware anything
+is drawn. Driven through `element.animate()` rather than a CSS class because replaying a
+CSS animation means removing the class, forcing a reflow and putting it back, or
+remounting - and remounting would tear down and redraw the sprite canvas on every swing.
+Skipped entirely under `prefers-reduced-motion`.
+
 The two figures are anchored to the slab's own edges rather than to centre points, and
 that is what lets sizes differ: a fixed centre only works while both sprites are the same
 width, and the moment bosses grew it pushed them off the end of the ground they were
