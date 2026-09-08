@@ -458,9 +458,16 @@ Rules it keeps:
   offline guarantee hold - the same fuel must be spent however the time is sliced.
 - **`advance` splits at the moment the tank runs dry**, exactly as it used to split at a
   boost expiry, because action duration depends on whether fuel is burning.
-- **It scales skill work only, not combat.** That was true of the old boost too. Making
-  it global would let 3x trivialise every boss, and every boss budget was measured
-  without it.
+- **Combat is fast-forwarded, not made easier.** The dt handed to combat is multiplied
+  by the speed, so your swings, the enemy's, regeneration and respawn all run at the same
+  rate. The same exchanges happen in the same order, just sooner. Scaling only the
+  player's side would have been a power boost, and every boss budget in the game was
+  measured without one.
+
+  Measured across all seven bosses at 1x, 2x and 3x when this landed: **every win/lose
+  outcome identical**, times scaling 2.01x and 2.99x. Two of those fights are kept as
+  tests - one winnable, one not - because a 3x that made an unbeatable fight beatable
+  would have quietly re-tuned the whole game.
 
 ## Salvaging is derived, not written
 

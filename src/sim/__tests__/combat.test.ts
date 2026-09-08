@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { tick } from '../tick'
+import { ENEMIES } from '../../content/enemies'
 import {
   COMBAT_SKILLS,
   newGame,
+  recordDefeat,
   setActivity,
   type GameState,
 } from '../state'
@@ -13,7 +15,7 @@ import {
   getCombatStyle,
   type CombatStyleId,
 } from '../../content/skills/combat'
-import { setCombatStyle } from '../intents'
+import { setCombatStyle, setSpeed as setCombatSpeed, startCombat } from '../intents'
 import { deserialize, serialize } from '../save'
 import { levelFromXp } from '../xp'
 import { count } from '../bank'
@@ -487,5 +489,58 @@ describe('ranged', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(levelFromXp(result.state.skills.ranged)).toBe(70)
+  })
+})
+
+/**
+ * The speed toggle fast-forwards combat; it does not win it for you.
+ *
+ * Scaling only the player's swings would have been a power boost, and every boss budget
+ * in the game was measured without one - a 3x that made unbeatable fights beatable would
+ * have silently re-tuned all seven. Scaling the whole fight instead means the same
+ * exchanges happen in the same order, just sooner.
+ *
+ * Measured across all seven bosses when this landed: every win/lose outcome identical at
+ * 1x, 2x and 3x, and times scaling 2.01x and 2.99x. Two representative fights are kept
+ * here - one winnable, one not - because running all seven at three speeds is slow.
+ */
+describe('fuel speeds combat up without making it easier', () => {
+  const fuelled = (weapon: string, level: number, speed: 1 | 2 | 3) => {
+    const state = newGame(99)
+    for (const skill of COMBAT_SKILLS) state.skills[skill] = xpForLevel(level)
+    for (const enemy of ENEMIES) if (enemy.isBoss) recordDefeat(state, enemy.id)
+    for (const part of [weapon, 'frame_bulwark', 'legs_thruster', 'arms_labour', 'reactor_grid']) {
+      state.bank[part] = 1
+      expect(equipItem(state, part)).toBeNull()
+    }
+    state.bank['overcharge_cell'] = 9999 // enough that the whole fight runs at speed
+    return setCombatSpeed(state, speed)
+  }
+
+  /** Wall-clock seconds to the first kill, or null if it never lands. */
+  const timeToKill = (weapon: string, level: number, speed: 1 | 2 | 3, budget = 900) => {
+    let state = startCombat(fuelled(weapon, level, speed), 'the_city', 'census')
+    const baseline = state.defeated['census'] ?? 0
+    for (let t = 0; t < budget * 2; t++) {
+      state = tick(state, 0.5)
+      if ((state.defeated['census'] ?? 0) > baseline) return t * 0.5
+    }
+    return null
+  }
+
+  it('takes a third of the time at 3x', () => {
+    const slow = timeToKill('weapon_lance', 90, 1)
+    const fast = timeToKill('weapon_lance', 90, 3)
+    expect(slow).not.toBeNull()
+    expect(fast).not.toBeNull()
+    expect(slow! / fast!).toBeGreaterThan(2.6)
+    expect(slow! / fast!).toBeLessThan(3.2)
+  })
+
+  it('does not turn a losing fight into a winning one', () => {
+    // The Pulse Emitter cannot finish the Census at level 80 at any speed. If 3x ever
+    // changed that, the toggle would have become a difficulty setting.
+    expect(timeToKill('weapon_pulse', 80, 1)).toBeNull()
+    expect(timeToKill('weapon_pulse', 80, 3)).toBeNull()
   })
 })

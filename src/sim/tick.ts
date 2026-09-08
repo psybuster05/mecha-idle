@@ -7,7 +7,7 @@
  */
 
 import { advanceCombatActivity } from './combat'
-import { burnFuelFor, secondsOfFuel } from './fuel'
+import { burnFuelFor, effectiveSpeed, secondsOfFuel } from './fuel'
 import { advanceSkillActivity } from './skillEngine'
 import { ACTOR_IDS, cloneState, type GameState } from './state'
 import { derivedStats, HP_REGEN_PER_SECOND } from './stats'
@@ -69,7 +69,11 @@ function advanceStep(state: GameState, dt: number): void {
         advanceSkillActivity(state, actorId, dt)
         break
       case 'combat':
-        advanceCombatActivity(state, actorId, dt)
+        // Combat is fast-forwarded rather than made easier: the whole fight runs at
+        // speed, your swings and the enemy's alike, so the outcome is identical and
+        // only the wall-clock cost changes. Scaling one side would have been a power
+        // boost, and every boss budget was measured without one.
+        advanceCombatActivity(state, actorId, dt * effectiveSpeed(state))
         break
     }
   }
