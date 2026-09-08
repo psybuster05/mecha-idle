@@ -376,7 +376,15 @@ is short of when waiting), and the map pinned to the bottom corner.
 
 **In combat the scene shows the encounter**, not just your chassis: the mech steps to
 one side and whatever it is fighting stands opposite, both on the same slab, with the
-readout below keeping the name and HP. Which side the mech stands on is keyed off the
+readout below keeping the name and HP. **Bosses are drawn a third taller** than anything
+else - standing a boss the same height as a Scrap Crawler undersells the moment.
+
+The two figures are anchored to the slab's own edges rather than to centre points, and
+that is what lets sizes differ: a fixed centre only works while both sprites are the same
+width, and the moment bosses grew it pushed them off the end of the ground they were
+meant to be standing on. The budget is tight - a ~271px scene less 6% margins leaves
+~238px, and a 96px mech against a 128px boss clears by about thirteen pixels - so this is
+as far as boss sprites go without a wider stage. Which side the mech stands on is keyed off the
 *activity* rather than off there being an enemy right now - keyed off the enemy it would
 slide back to centre after every kill and out again a second later, once per respawn.
 

@@ -70,7 +70,7 @@ function EnemyRow({
     <li className={`enemy-row ${active ? 'active' : ''} ${enemy.isBoss ? 'boss' : ''}`}>
       <PixelSprite
         layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
-        scale={2}
+        scale={enemy.isBoss ? 3 : 2}
         className="enemy-thumb"
         title={enemy.name}
       />

@@ -44,9 +44,12 @@ export function Stage({ state }: { state: GameState }) {
           </div>
           {fighting && enemy && (
             <div className="stage-figure stage-opponent">
+              {/* A boss standing the same height as a Scrap Crawler undersells the
+                  moment. The slab is only so wide, so this is as far as it goes without
+                  the two of them overlapping. */}
               <PixelSprite
                 layers={[ENEMY_SPRITES[enemySpriteKey(enemy)]]}
-                scale={6}
+                scale={enemy.isBoss ? 8 : 6}
                 title={enemy.name}
               />
             </div>

@@ -476,11 +476,16 @@ img.sprite { image-rendering: pixelated; }
 /*
  * Squared off: the mech steps aside to make room for whatever it is fighting.
  *
- * Both figures are 96px in a ~270px scene, so centres at 28% and 72% leave a gap between
- * them without either overhanging the slab, which is inset 10% each side.
+ * Anchored to the slab's own edges (6%) rather than to centre points, so the figures
+ * cannot overhang it whatever size they are. Centre-based positions only worked while
+ * both sprites were the same width - the moment bosses grew, a fixed centre pushed them
+ * off the end of the ground they were supposed to be standing on.
+ *
+ * The budget: a ~271px scene, 6% margins, leaves ~238px. A 96px mech against a 128px
+ * boss is 224px, so they clear each other by about fourteen pixels at the worst case.
  */
-.stage-figure.squared-off { left: 28%; }
-.stage-opponent { left: 72%; }
+.stage-figure.squared-off { left: 6%; transform: none; }
+.stage-opponent { left: auto; right: 6%; transform: none; }
 
 /* Fixed height so the column does not jump every time the mech starts or stops. */
 .stage-now {
