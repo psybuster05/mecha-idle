@@ -265,7 +265,10 @@ describe('producer and consumer across the two actors', () => {
    */
   const driftAt = (span: number) => {
     const oneStep = framesAfter(span)
-    const many = framesAfter(span, 0.5)
+    // 2s rather than 0.5s: still smaller than the shortest action, so it is genuinely
+    // incremental, at a quarter of the iterations. A day at 0.5s is ~173,000 ticks twice
+    // over, which timed out on CI at the default five seconds.
+    const many = framesAfter(span, 2)
     const absolute = Math.abs(oneStep - many)
     return { absolute, relative: absolute / Math.max(1, many) }
   }
@@ -284,7 +287,9 @@ describe('producer and consumer across the two actors', () => {
       const { absolute, relative } = driftAt(span)
       expect(absolute <= 1 || relative < 0.01, `${span}s span: ${absolute} frames, ${(relative * 100).toFixed(2)}%`).toBe(true)
     }
-  })
+    // Simulating a day of two actors several times over is genuinely slow work, so this
+    // one gets a budget rather than the default five seconds.
+  }, 30_000)
 
   it('does not drift further the longer you are away', () => {
     // The failure that would actually matter: an error that compounds with time away.
@@ -292,7 +297,7 @@ describe('producer and consumer across the two actors', () => {
     const short = driftAt(3600).relative
     const long = driftAt(24 * 3600).relative
     expect(long).toBeLessThan(Math.max(short, 0.002) * 3)
-  })
+  }, 30_000)
 
   it('agrees exactly between two different small step sizes', () => {
     // Live play is self-consistent; only the single giant step differs.
