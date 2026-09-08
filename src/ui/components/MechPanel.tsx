@@ -1,9 +1,11 @@
+import { SLOT_ICONS } from '../../content/sprites'
 import { getItem, itemName } from '../../content'
 import { earnedPerks } from '../../content/enemies'
 import { equip, unequip } from '../../sim/intents'
 import { EQUIP_SLOTS, type EquipSlot, type GameState } from '../../sim/state'
 import { derivedStats } from '../../sim/stats'
 import { MechPortrait } from './MechPortrait'
+import { PixelSprite } from './PixelSprite'
 import { formatNumber, formatSeconds } from '../format'
 import { statLine } from '../statText'
 
@@ -97,7 +99,10 @@ export function MechPanel({ state, dispatch }: Props) {
           const item = fitted ? getItem(fitted) : undefined
           return (
             <li key={slot} className={`slot ${fitted ? 'filled' : 'empty'}`}>
-              <div className="slot-label dim">{SLOT_LABELS[slot]}</div>
+              <div className="slot-label dim">
+                <PixelSprite layers={[SLOT_ICONS[slot]]} scale={1} className="item-icon" />
+                {SLOT_LABELS[slot]}
+              </div>
               {item ? (
                 <>
                   <div className="slot-item">{item.name}</div>

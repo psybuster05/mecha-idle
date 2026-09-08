@@ -1,3 +1,6 @@
+import { PixelSprite } from './PixelSprite'
+import { CATEGORY_ICONS } from '../../content/sprites'
+import { getItem } from '../../content'
 import { getEnemy, getSkill, itemName } from '../../content'
 import { nodesForAction } from '../../content/world'
 import { isNodeOpen } from '../../sim/world'
@@ -25,6 +28,11 @@ function ItemList({ state, stacks, kind }: { state: GameState; stacks: { item: s
         return (
           <li key={stack.item} className={short ? 'short' : undefined}>
             <span className="qty">{stack.qty}</span>
+            <PixelSprite
+              layers={[CATEGORY_ICONS[getItem(stack.item)?.category ?? '']]}
+              scale={1}
+              className="item-icon"
+            />
             <span>{itemName(stack.item)}</span>
             {kind === 'in' && <span className="dim held">({formatNumber(held)} held)</span>}
           </li>

@@ -8,13 +8,14 @@ import {
   MECH_LEGS_HEAVY,
   MECH_LEGS_THRUSTER,
   SKILL_ICONS,
+  SLOT_ICONS,
   WEAPON_SPRITES,
   enemySpriteKey,
   type Sprite,
 } from '../sprites'
 import { ENEMIES } from '../enemies'
 import { ITEMS } from '../items'
-import { ALL_SKILLS, DAMAGE_TYPES } from '../../sim/state'
+import { ALL_SKILLS, DAMAGE_TYPES, EQUIP_SLOTS } from '../../sim/state'
 
 const ALL: Record<string, Sprite> = {
   FIGHT_ICON,
@@ -26,6 +27,7 @@ const ALL: Record<string, Sprite> = {
   ...Object.fromEntries(Object.entries(ENEMY_SPRITES).map(([k, v]) => [`enemy:${k}`, v])),
   ...Object.fromEntries(Object.entries(SKILL_ICONS).map(([k, v]) => [`skill:${k}`, v])),
   ...Object.fromEntries(Object.entries(CATEGORY_ICONS).map(([k, v]) => [`category:${k}`, v])),
+  ...Object.fromEntries(Object.entries(SLOT_ICONS).map(([k, v]) => [`slot:${k}`, v])),
 }
 
 /**
@@ -124,6 +126,15 @@ describe('icons cover the content', () => {
     const used = new Set(ITEMS.map((item) => item.category))
     for (const key of Object.keys(CATEGORY_ICONS)) {
       expect(used.has(key as (typeof ITEMS)[number]['category']), `"${key}" icon is orphaned`).toBe(true)
+    }
+  })
+
+  it('gives every equipment slot an icon', () => {
+    // Every equippable item is category "part", so category icons would make all five
+    // slots identical. The slot is what differs, and an empty one still has to say what
+    // belongs in it.
+    for (const slot of EQUIP_SLOTS) {
+      expect(SLOT_ICONS[slot], `${slot} has no icon`).toBeDefined()
     }
   })
 })

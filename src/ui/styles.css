@@ -159,7 +159,9 @@ body:has(.app) > #root { display: contents; }
 
 .recipe { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
 .stacks { display: flex; gap: 10px; flex-wrap: wrap; }
-.stacks li { display: flex; align-items: baseline; gap: 5px; }
+/* Centred rather than baseline: a canvas sits its bottom edge on the text baseline,
+   which lifts a 16px icon noticeably above the line it belongs to. */
+.stacks li { display: flex; align-items: center; gap: 5px; }
 .stacks .qty { color: var(--accent); font-weight: 700; }
 .stacks li.short, .stacks li.short .qty { color: var(--bad); }
 .stacks .held { font-size: 11px; }

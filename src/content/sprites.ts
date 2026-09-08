@@ -529,6 +529,113 @@ export const FIGHT_ICON: Sprite = icon([
 ])
 
 /**
+ * Equipment slot icons.
+ *
+ * One per slot rather than one per item, and for a different reason than the category
+ * icons: every equippable part shares the category "part", so a category icon would
+ * make all five slots identical. The slot is the thing that differs, and an empty slot
+ * needs to say what belongs in it before anything is fitted.
+ */
+export const SLOT_ICONS: Readonly<Record<string, Sprite>> = {
+  // A torso. The thing everything else bolts onto.
+  frame: icon([
+    '                ',
+    '     ......     ',
+    '    .bBBBBb.    ',
+    '   ..BWWWWB..   ',
+    '  .BBBBBBBBBB.  ',
+    '  .BB.bBBb.BB.  ',
+    '  .BB.BWWB.BB.  ',
+    '  .BB.BWWB.BB.  ',
+    '  .BB.bBBb.BB.  ',
+    '  .BBBBBBBBBB.  ',
+    '   ..BBBBBBB..  ',
+    '    .bB..Bb.    ',
+    '    ...  ...    ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A manipulator: shoulder, upper arm, and a hand that closes.
+  arms: icon([
+    '                ',
+    '  ......        ',
+    '  .bBBBb.       ',
+    '  .BWWWB.       ',
+    '  .bBBBb...     ',
+    '  ...BBBBBb..   ',
+    '     .BBBBBBb.  ',
+    '      ..BBBBB.  ',
+    '       .BB..BB. ',
+    '       .B.  .B. ',
+    '       ...  ... ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A leg bent to one side, ending on a tracked foot. Drawn asymmetric on purpose: a
+  // symmetric hip-shin-foot read as a table, and shared a silhouette with the anvil.
+  legs: icon([
+    '                ',
+    '   ......       ',
+    '  .bBBBBb.      ',
+    '  .BWWWWB.      ',
+    '  .bBBBBb.      ',
+    '   .BBBB.       ',
+    '    .BBB.       ',
+    '     .BBB.      ',
+    '      .BBB.     ',
+    '      .BBB.     ',
+    '     ..BBB..    ',
+    '   .bBBBBBBb.   ',
+    '   .B.B.B.B.B.  ',
+    '   ..........   ',
+    '                ',
+    '                ',
+  ]),
+  // A barrel with a muzzle and a grip under it.
+  weapon: icon([
+    '                ',
+    '                ',
+    '                ',
+    '  ...........   ',
+    '  .bBBBBBBBb.C  ',
+    '  .BWWWWWWWB.CC ',
+    '  .bBBBBBBBb.C  ',
+    '  .....BB....   ',
+    '      .BB.      ',
+    '      .BB.      ',
+    '     .bBBb.     ',
+    '     ......     ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A core, lit. Everything else is dead without it.
+  reactor: icon([
+    '                ',
+    '      ....      ',
+    '     .bBBb.     ',
+    '   ...bBBb...   ',
+    '  .bBBBBBBBBb.  ',
+    '  .BBCCCCCCBB.  ',
+    '  .BCCWWWWCCB.  ',
+    '  .BCWWWWWWCB.  ',
+    '  .BCWWWWWWCB.  ',
+    '  .BCCWWWWCCB.  ',
+    '  .BBCCCCCCBB.  ',
+    '  .bBBBBBBBBb.  ',
+    '   ...bBBb...   ',
+    '     .bBBb.     ',
+    '      ....      ',
+    '                ',
+  ]),
+}
+
+/**
  * Item icons, one per category rather than one per item.
  *
  * Seventy items is more art than this project can carry - the same call that gave the
