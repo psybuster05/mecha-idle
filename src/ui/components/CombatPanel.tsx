@@ -9,7 +9,7 @@ import { formatNumber, formatSeconds } from '../format'
 import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
-import { ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
+import { DAMAGE_ICONS, ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 
 interface Props {
   state: GameState
@@ -42,6 +42,7 @@ function Resistances({
         const tone = value > 1.05 ? 'weak' : value < 0.95 ? 'strong' : 'neutral'
         return (
           <li key={type} className={`resist ${tone} ${mine === type ? 'mine' : ''}`}>
+            <PixelSprite layers={[DAMAGE_ICONS[type]]} scale={1} className="item-icon" />
             <span className="resist-type">{TYPE_LABEL[type]}</span>
             <span className="resist-value">&times;{value.toFixed(2)}</span>
           </li>
@@ -189,6 +190,7 @@ export function CombatPanel({ state, dispatch }: Props) {
 
       <div className="loadout">
         <span className="dim">Dealing</span>
+        <PixelSprite layers={[DAMAGE_ICONS[stats.damageType]]} scale={1} className="item-icon" />
         <span className="my-type">{TYPE_LABEL[stats.damageType]}</span>
         <span className="dim">&middot; resisting</span>
         <Resistances resistances={stats.resistances} />

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   CATEGORY_ICONS,
+  DAMAGE_ICONS,
   ENEMY_SPRITES,
   FIGHT_ICON,
   MECH_ARMS,
@@ -28,6 +29,7 @@ const ALL: Record<string, Sprite> = {
   ...Object.fromEntries(Object.entries(SKILL_ICONS).map(([k, v]) => [`skill:${k}`, v])),
   ...Object.fromEntries(Object.entries(CATEGORY_ICONS).map(([k, v]) => [`category:${k}`, v])),
   ...Object.fromEntries(Object.entries(SLOT_ICONS).map(([k, v]) => [`slot:${k}`, v])),
+  ...Object.fromEntries(Object.entries(DAMAGE_ICONS).map(([k, v]) => [`damage:${k}`, v])),
 }
 
 /**
@@ -135,6 +137,14 @@ describe('icons cover the content', () => {
     // belongs in it.
     for (const slot of EQUIP_SLOTS) {
       expect(SLOT_ICONS[slot], `${slot} has no icon`).toBeDefined()
+    }
+  })
+
+  it('gives every damage type an icon', () => {
+    // Resistances are multiplicative and several boss fights turn on bringing the right
+    // type, so a missing one here is a missing answer to the question the fight asks.
+    for (const type of DAMAGE_TYPES) {
+      expect(DAMAGE_ICONS[type], `${type} has no icon`).toBeDefined()
     }
   })
 })

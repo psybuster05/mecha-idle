@@ -295,6 +295,10 @@ const ICON_PALETTE: Readonly<Record<string, string>> = {
   C: '#6fe3ff',
   O: '#ff8a3d',
   G: '#4fe0b0',
+  // Damage-type colours, taken from WEAPON_SPRITES rather than picked fresh, so the
+  // weapon drawn on your portrait and the type tag beside it are the same colour.
+  S: '#8fa5c4',
+  V: '#7a5fd0',
 }
 
 const icon = (rows: readonly string[]): Sprite => ({ rows, palette: ICON_PALETTE })
@@ -527,6 +531,76 @@ export const FIGHT_ICON: Sprite = icon([
   ' ..          .. ',
   '                ',
 ])
+
+/**
+ * Damage type icons.
+ *
+ * These carry real mechanical weight - resistances are multiplicative and several boss
+ * fights turn entirely on bringing the right one - so they get shapes with nothing else
+ * in common, not three variations on a spark.
+ *
+ * Deliberately *not* the same metaphor as the Ranged skill icon, which is also a
+ * projectile: kinetic is a solid wedge with no trail, Ranged is a bolt with one.
+ */
+export const DAMAGE_ICONS: Readonly<Record<string, Sprite>> = {
+  // A wedge. Mass arriving, with nothing clever about it.
+  kinetic: icon([
+    '                ',
+    '                ',
+    '    ..          ',
+    '    .S..        ',
+    '    .SSS..      ',
+    '    .SSSSS..    ',
+    '    .SSSSSSS..  ',
+    '    .SWWWWWWS.  ',
+    '    .SWWWWWWS.  ',
+    '    .SSSSSSS..  ',
+    '    .SSSSS..    ',
+    '    .SSS..      ',
+    '    .S..        ',
+    '    ..          ',
+    '                ',
+    '                ',
+  ]),
+  // A bolt.
+  energy: icon([
+    '                ',
+    '        ..      ',
+    '       .CC.     ',
+    '      .CCC.     ',
+    '     .CCC.      ',
+    '    .CCC.       ',
+    '   .CCCCCC.     ',
+    '   .CCCCCC.     ',
+    '     ..CCC.     ',
+    '      .CCC.     ',
+    '     .CCC.      ',
+    '    .CCC.       ',
+    '   .CC.         ',
+    '   ..           ',
+    '                ',
+    '                ',
+  ]),
+  // A pulse going outward. Hollow rings, so it does not read as the reactor core.
+  emp: icon([
+    '                ',
+    '      ....      ',
+    '    ..VVVV..    ',
+    '   .V......V.   ',
+    '  .V..VVVV..V.  ',
+    ' .V..V....V..V. ',
+    ' .V..V.VV.V..V. ',
+    ' .V..V.VV.V..V. ',
+    ' .V..V....V..V. ',
+    '  .V..VVVV..V.  ',
+    '   .V......V.   ',
+    '    ..VVVV..    ',
+    '      ....      ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+}
 
 /**
  * Equipment slot icons.

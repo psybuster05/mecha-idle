@@ -347,6 +347,10 @@ Rules:
   than this project can carry, and at 16x16 the silhouette is what reads anyway - a
   category still tells a player the thing they actually want to know, which is whether
   this is raw stock, a finished part, or something they burn.
+- **Damage type icons reuse the weapon-overlay colours** (steel, cyan, violet) rather
+  than picking fresh ones, so the weapon drawn on your portrait and the type tag beside
+  it agree. They also avoid each other's metaphors: kinetic is a solid wedge and Ranged
+  a bolt *with a trail*, because two projectiles would have been one icon twice.
 - **Two icons must not need colour to tell them apart.** Cartography shipped as a compass
   rose that collapsed into the same cross as Hitpoints at 16px; only the green said which
   was which, which is exactly the failure the colour rule above is meant to prevent. It is
