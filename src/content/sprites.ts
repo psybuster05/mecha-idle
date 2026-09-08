@@ -273,3 +273,344 @@ export function enemySpriteKey(enemy: {
   if (enemy.maxHp >= 500) return 'bulwark'
   return 'skitter'
 }
+
+
+// ---------------------------------------------------------------------------
+// Icons
+// ---------------------------------------------------------------------------
+
+/**
+ * One shared palette for every icon, so they read as a set.
+ *
+ * The colour language is the same one the rest of the art uses: blue is yours, cyan is
+ * a live readout, orange is heat or hostility, green is health. An icon inventing its
+ * own colours would break the thing that lets a player read the screen without reading
+ * the words.
+ */
+const ICON_PALETTE: Readonly<Record<string, string>> = {
+  '.': '#050c1a',
+  B: '#2f6fd0',
+  b: '#1d4a92',
+  W: '#e8f1fb',
+  C: '#6fe3ff',
+  O: '#ff8a3d',
+  G: '#4fe0b0',
+}
+
+const icon = (rows: readonly string[]): Sprite => ({ rows, palette: ICON_PALETTE })
+
+/**
+ * Skill icons, one per skill.
+ *
+ * Not one per action, for the same reason enemies get archetype sprites: eighty-odd
+ * actions is more art than this project can carry, and at 16x16 the silhouette is what
+ * reads anyway.
+ */
+export const SKILL_ICONS: Readonly<Record<string, Sprite>> = {
+  // A three-prong grab. Two prongs merged into a pair of dividers at 16px; three with
+  // real gaps between them reads as something that takes hold of scrap.
+  scavenging: icon([
+    '                ',
+    '       ..       ',
+    '      .WW.      ',
+    '      .BB.      ',
+    '   ...bBBb...   ',
+    '  .BBBBBBBBBB.  ',
+    '  .bBBBBBBBBb.  ',
+    '  ...  ...  ... ',
+    '  .B.  .B.  .B. ',
+    '  .B.  .B.  .B. ',
+    '  .b.  .b.  .b. ',
+    '  .b.  .b.  .b. ',
+    '  ...  ...  ... ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A furnace with the fire showing. Heat is the only argument scrap responds to.
+  refining: icon([
+    '                ',
+    '  ............  ',
+    '  .bbbbbbbbbb.  ',
+    '  .b........b.  ',
+    '  .b..OOOO..b.  ',
+    '  .b.OOWWOO.b.  ',
+    '  .b.OWWWWO.b.  ',
+    '  .b.OOWWOO.b.  ',
+    '  .b..OOOO..b.  ',
+    '  .b........b.  ',
+    '  .bbbbbbbbbb.  ',
+    '  ............  ',
+    '   .b.    .b.   ',
+    '   ...    ...   ',
+    '                ',
+    '                ',
+  ]),
+  // An anvil. The press read as three stacked bars; this silhouette is its own.
+  fabrication: icon([
+    '                ',
+    '                ',
+    '   ..........   ',
+    '  .WWWWWWWWWWW. ',
+    '  .BBBBBBBBBBB. ',
+    '  ..BBBBBBBBB.  ',
+    '   ..BBBBBBB.   ',
+    '     .BBBB.     ',
+    '     .BBBB.     ',
+    '    ..BBBB..    ',
+    '   .BBBBBBBB.   ',
+    '   .bbbbbbbb.   ',
+    '   ..........   ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A cutting torch, sparks coming off what it is taking apart.
+  salvaging: icon([
+    '                ',
+    '  ....          ',
+    '  .bB..         ',
+    '  .BBBb..       ',
+    '   .BBBBb..     ',
+    '    .BBBBBb.    ',
+    '     .BBBBB.    ',
+    '      .OOO.  O  ',
+    '       .O. O    ',
+    '        .   O   ',
+    '   ..      O    ',
+    '  .WW.   O   O  ',
+    '  .WW.          ',
+    '  .bb.     O    ',
+    '  ....          ',
+    '                ',
+  ]),
+  // A survey grid with one square fixed. A compass rose collapsed into the same cross
+  // as Hitpoints at this size, and two icons telling themselves apart by colour alone
+  // is two icons that have stopped doing their job.
+  cartography: icon([
+    '                ',
+    '                ',
+    '  ............  ',
+    '  .WWWWbWWWWW.  ',
+    '  .WWWWbWWWWW.  ',
+    '  .WWWWbWWWWW.  ',
+    '  .bbbbbbbbbb.  ',
+    '  .WWWWbWCCWW.  ',
+    '  .WWWWbWCCWW.  ',
+    '  .bbbbbbbbbb.  ',
+    '  .WWWWbWWWWW.  ',
+    '  .WWWWbWWWWW.  ',
+    '  .WWWWbWWWWW.  ',
+    '  ............  ',
+    '                ',
+    '                ',
+  ]),
+  // A reticle. Attack is what lands the shot.
+  attack: icon([
+    '                ',
+    '       ..       ',
+    '       CC       ',
+    '       CC       ',
+    '    ........    ',
+    '   ..bBBBBb..   ',
+    '  ..B......B..  ',
+    ' CC.B..CC..B.CC ',
+    ' CC.B..CC..B.CC ',
+    '  ..B......B..  ',
+    '   ..bBBBBb..   ',
+    '    ........    ',
+    '       CC       ',
+    '       CC       ',
+    '       ..       ',
+    '                ',
+  ]),
+  // An impact, throwing sparks.
+  strength: icon([
+    '                ',
+    '    O           ',
+    '     O    O     ',
+    '  O   .....  O  ',
+    '     .OOOOO.    ',
+    '    .OWWWWWO.   ',
+    '   .OWWWWWWWO.  ',
+    '   .OWWWWWWWO.  ',
+    '   .OWWWWWWWO.  ',
+    '    .OWWWWWO.   ',
+    '     .OOOOO.    ',
+    '  O   .....  O  ',
+    '     O    O     ',
+    '           O    ',
+    '                ',
+    '                ',
+  ]),
+  // A shield.
+  defence: icon([
+    '                ',
+    '   ..........   ',
+    '  .bBBBBBBBBb.  ',
+    '  .BWWWWWWWWB.  ',
+    '  .BWbbbbbbWB.  ',
+    '  .BWbBBBBbWB.  ',
+    '  .BWbBBBBbWB.  ',
+    '  .BWbbbbbbWB.  ',
+    '  .BWWWWWWWWB.  ',
+    '   .BWWWWWWB.   ',
+    '    .BWWWWB.    ',
+    '     .BWWB.     ',
+    '      .BB.      ',
+    '       ..       ',
+    '                ',
+    '                ',
+  ]),
+  // A cross. Standard for health, and readable at any size.
+  hitpoints: icon([
+    '                ',
+    '      ....      ',
+    '      .GG.      ',
+    '      .GG.      ',
+    '   ....GG....   ',
+    '   .GGGGGGGG.   ',
+    '   .GGGGGGGG.   ',
+    '   ....GG....   ',
+    '      .GG.      ',
+    '      .GG.      ',
+    '      ....      ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A bolt in flight. The trail is straight lines rather than a chevron - a chevron
+  // read as a second arrowhead pointing back the other way.
+  ranged: icon([
+    '                ',
+    '                ',
+    '                ',
+    '            ..  ',
+    '  CCCCC    .WW. ',
+    '  ......  .WWWW.',
+    ' .bBBBBBBBWWWWW.',
+    ' .bBBBBBBBWWWWW.',
+    '  ......  .WWWW.',
+    '  CCCCC    .WW. ',
+    '            ..  ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+}
+
+/**
+ * Fight, which is the one rail entry that is not a skill.
+ *
+ * Blue crossed with orange, because that is literally what the fight is - the colour
+ * language does the work, and the shape says "combat" in every game anyone has played.
+ */
+export const FIGHT_ICON: Sprite = icon([
+  '                ',
+  ' ..          .. ',
+  ' .B..      ..O. ',
+  '  .BB.    .OO.  ',
+  '   .BB.  .OO.   ',
+  '    .BB..OO.    ',
+  '     .BOOB.     ',
+  '      .WW.      ',
+  '      .WW.      ',
+  '     .OBBO.     ',
+  '    .OO..BB.    ',
+  '   .OO.  .BB.   ',
+  '  .OO.    .BB.  ',
+  ' .O..      ..B. ',
+  ' ..          .. ',
+  '                ',
+])
+
+/**
+ * Item icons, one per category rather than one per item.
+ *
+ * Seventy items is more art than this project can carry - the same call that gave the
+ * enemy roster four archetype sprites instead of twenty-six. The category still tells a
+ * player the thing they actually want at a glance: is this raw stock, a finished part,
+ * or something I burn.
+ */
+export const CATEGORY_ICONS: Readonly<Record<string, Sprite>> = {
+  // A bar sitting squarely on a bigger one. Raw stock.
+  material: icon([
+    '                ',
+    '                ',
+    '                ',
+    '                ',
+    '    ........    ',
+    '   .bBBBBBBb.   ',
+    '   .BWWWWWWB.   ',
+    '   .bBBBBBBb.   ',
+    '  ............  ',
+    '  .bBBBBBBBBb.  ',
+    '  .BWWWWWWWWB.  ',
+    '  .bBBBBBBBBb.  ',
+    '  ............  ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A board with traces and two legs. Something that was made.
+  component: icon([
+    '                ',
+    '   ..........   ',
+    '   .bbbbbbbb.   ',
+    '   .bCCbbCCb.   ',
+    '   .bCbbbbCb.   ',
+    '   .bbbCCbbb.   ',
+    '   .bCbCCbCb.   ',
+    '   .bCbbbbCb.   ',
+    '   .bbCCCCbb.   ',
+    '   .bCbbbbCb.   ',
+    '   .bbbbbbbb.   ',
+    '   ..........   ',
+    '    .W.  .W.    ',
+    '    .W.  .W.    ',
+    '                ',
+    '                ',
+  ]),
+  // A bolted plate. Something you fit.
+  part: icon([
+    '                ',
+    '  ............  ',
+    '  .bBBBBBBBBb.  ',
+    '  .BWb....bWB.  ',
+    '  .BB......BB.  ',
+    '  .BB.BBBB.BB.  ',
+    '  .BB.BWWB.BB.  ',
+    '  .BB.BWWB.BB.  ',
+    '  .BB.BBBB.BB.  ',
+    '  .BB......BB.  ',
+    '  .BWb....bWB.  ',
+    '  .bBBBBBBBBb.  ',
+    '  ............  ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+  // A flask, lit. You spend it the moment you find it.
+  fuel: icon([
+    '                ',
+    '     ......     ',
+    '     .bWWb.     ',
+    '     .b..b.     ',
+    '     .b..b.     ',
+    '    ..b..b..    ',
+    '   .bb....bb.   ',
+    '   .bOOOOOOb.   ',
+    '  ..bOOOOOOb..  ',
+    '  .bOOWWWWOOb.  ',
+    '  .bOOWWWWOOb.  ',
+    '  .bOOOOOOOOb.  ',
+    '  ..bbbbbbbb..  ',
+    '   ..........   ',
+    '                ',
+    '                ',
+  ]),
+}

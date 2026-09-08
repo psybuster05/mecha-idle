@@ -483,3 +483,13 @@ img.sprite { image-rendering: pixelated; }
   .stage-now { flex: 1; min-width: 0; min-height: 0; }
   .stage-map { display: none; }
 }
+
+/* --- icons -------------------------------------------------------------- */
+
+/*
+ * Icons are 16x16 sprites drawn to a canvas, so they are sized in CSS rather than by
+ * the scale prop - a canvas scaled by CSS stays on integer pixel boundaries here
+ * because 16 divides both of these evenly.
+ */
+.rail-icon, .item-icon { width: 16px; height: 16px; flex: none; image-rendering: pixelated; }
+.bank-name { display: flex; align-items: center; gap: 7px; }

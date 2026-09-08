@@ -14,6 +14,8 @@ import { levelFromXp, levelProgress } from '../sim/xp'
 import { formatNumber } from './format'
 import { useGame } from './useGame'
 import { Bar } from './components/Bar'
+import { PixelSprite } from './components/PixelSprite'
+import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
 import { CombatSkillPanel } from './components/CombatSkillPanel'
@@ -106,6 +108,7 @@ export function App() {
               onClick={() => setTab('combat')}
             >
               <span className="rail-name">
+                <PixelSprite layers={[FIGHT_ICON]} scale={1} className="rail-icon" />
                 {activity?.kind === 'combat' && <span className="running-dot" aria-label="running" />}
                 Fight
               </span>
@@ -119,7 +122,10 @@ export function App() {
                   className={`rail-item ${tab === id ? 'selected' : ''}`}
                   onClick={() => setTab(id)}
                 >
-                  <span className="rail-name">{getCombatSkill(id)?.name ?? id}</span>
+                  <span className="rail-name">
+                    <PixelSprite layers={[SKILL_ICONS[id]]} scale={1} className="rail-icon" />
+                    {getCombatSkill(id)?.name ?? id}
+                  </span>
                   <span className="rail-level">{levelFromXp(xp)}</span>
                   <Bar value={levelProgress(xp)} tone="xp" />
                 </button>
@@ -140,6 +146,7 @@ export function App() {
                   onClick={() => setTab(id)}
                 >
                   <span className="rail-name">
+                    <PixelSprite layers={[SKILL_ICONS[id]]} scale={1} className="rail-icon" />
                     {running && <span className="running-dot" aria-label="running" />}
                     {skill?.name ?? id}
                   </span>

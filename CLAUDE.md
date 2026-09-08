@@ -342,6 +342,15 @@ Rules:
   characters its palette defines, and is not blank.
 - **Colour is meaning.** Blue is yours, orange is hostile, cyan is a live readout. A
   player should tell friend from enemy without reading a word.
+- **Icons follow the same archetype rule.** One per skill, not one per action; one per
+  item *category*, not one per item. Seventy items and eighty-odd actions is more art
+  than this project can carry, and at 16x16 the silhouette is what reads anyway - a
+  category still tells a player the thing they actually want to know, which is whether
+  this is raw stock, a finished part, or something they burn.
+- **Two icons must not need colour to tell them apart.** Cartography shipped as a compass
+  rose that collapsed into the same cross as Hitpoints at 16px; only the green said which
+  was which, which is exactly the failure the colour rule above is meant to prevent. It is
+  a survey grid now. Look at every icon next to its neighbours before believing it works.
 - Enemies use **archetype sprites** (skitter / flyer / bulwark / authority), not one per
   enemy. Twenty enemies is more art than this project can carry, and at this size the
   silhouette is what reads anyway. Bosses always get `authority`.

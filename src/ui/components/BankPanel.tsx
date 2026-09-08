@@ -1,3 +1,5 @@
+import { PixelSprite } from './PixelSprite'
+import { CATEGORY_ICONS } from '../../content/sprites'
 import { getItem } from '../../content'
 import { burnFuel } from '../../sim/intents'
 import type { GameState } from '../../sim/state'
@@ -56,7 +58,14 @@ export function BankPanel({
                   const item = getItem(id)
                   return (
                     <li key={id} className="bank-item" title={item?.description}>
-                      <div className="bank-name">{item?.name ?? id}</div>
+                      <div className="bank-name">
+                        <PixelSprite
+                          layers={[CATEGORY_ICONS[category]]}
+                          scale={1}
+                          className="item-icon"
+                        />
+                        {item?.name ?? id}
+                      </div>
                       <div className="bank-qty">{formatNumber(qty)}</div>
                       {item?.fuel && (
                         <button

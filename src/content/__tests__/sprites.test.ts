@@ -1,24 +1,31 @@
 import { describe, it, expect } from 'vitest'
 import {
+  CATEGORY_ICONS,
   ENEMY_SPRITES,
+  FIGHT_ICON,
   MECH_ARMS,
   MECH_BASE,
   MECH_LEGS_HEAVY,
   MECH_LEGS_THRUSTER,
+  SKILL_ICONS,
   WEAPON_SPRITES,
   enemySpriteKey,
   type Sprite,
 } from '../sprites'
 import { ENEMIES } from '../enemies'
-import { DAMAGE_TYPES } from '../../sim/state'
+import { ITEMS } from '../items'
+import { ALL_SKILLS, DAMAGE_TYPES } from '../../sim/state'
 
 const ALL: Record<string, Sprite> = {
+  FIGHT_ICON,
   MECH_BASE,
   MECH_ARMS,
   MECH_LEGS_HEAVY,
   MECH_LEGS_THRUSTER,
   ...Object.fromEntries(Object.entries(WEAPON_SPRITES).map(([k, v]) => [`weapon:${k}`, v])),
   ...Object.fromEntries(Object.entries(ENEMY_SPRITES).map(([k, v]) => [`enemy:${k}`, v])),
+  ...Object.fromEntries(Object.entries(SKILL_ICONS).map(([k, v]) => [`skill:${k}`, v])),
+  ...Object.fromEntries(Object.entries(CATEGORY_ICONS).map(([k, v]) => [`category:${k}`, v])),
 }
 
 /**
@@ -89,5 +96,34 @@ describe('sprite coverage', () => {
     // If everything collapsed to one sprite the classification would be pointless.
     const used = new Set(ENEMIES.map(enemySpriteKey))
     expect(used.size).toBeGreaterThan(2)
+  })
+})
+
+/**
+ * Icon coverage.
+ *
+ * A missing icon renders as a hole rather than an error, so the only way to know every
+ * skill and every item has one is to enumerate them from the content tables themselves.
+ * The same reasoning as the test that gives every enemy a sprite.
+ */
+describe('icons cover the content', () => {
+  it('gives every skill an icon', () => {
+    for (const skill of ALL_SKILLS) {
+      expect(SKILL_ICONS[skill], `${skill} has no icon`).toBeDefined()
+    }
+  })
+
+  it('gives every item category an icon, so all items are covered', () => {
+    for (const item of ITEMS) {
+      expect(CATEGORY_ICONS[item.category], `${item.id} is a "${item.category}" with no icon`)
+        .toBeDefined()
+    }
+  })
+
+  it('has no icon for a category that does not exist', () => {
+    const used = new Set(ITEMS.map((item) => item.category))
+    for (const key of Object.keys(CATEGORY_ICONS)) {
+      expect(used.has(key as (typeof ITEMS)[number]['category']), `"${key}" icon is orphaned`).toBe(true)
+    }
   })
 })
