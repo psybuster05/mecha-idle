@@ -422,7 +422,52 @@ img.sprite { image-rendering: pixelated; }
   display: flex; flex-direction: column; gap: 16px;
 }
 
-.stage-portrait { display: flex; justify-content: center; padding: 6px 0; }
+/*
+ * The mech gets somewhere to stand.
+ *
+ * Two rectangles, no art: a darker ground inset inside a lighter sky. That is enough to
+ * read as a place rather than as a sprite floating on the panel, which is what made the
+ * stage look like a piece of the equipment page pasted into the corner.
+ *
+ * Deliberately not a drawn background. A real one is a commission; this holds the
+ * composition until there is one, and replacing it means replacing two rules.
+ */
+.stage-scene {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #050b18;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.stage-sky {
+  position: absolute; inset: 0;
+  /* A horizon, so the ground reads as receding rather than as a bar across the bottom. */
+  background: linear-gradient(180deg, #060d1c 0%, #0b1526 62%, #0f1e33 100%);
+}
+.stage-ground {
+  position: absolute; left: 10%; right: 10%; bottom: 8%;
+  height: 22%;
+  background: var(--panel-2);
+  border: 1px solid var(--line-bright);
+}
+/*
+ * Feet on the slab, not in it and not above it.
+ *
+ * The ground's top edge is at 30% of the scene height (bottom 8% + height 22%), so the
+ * figure sits at 28% - two percent of overlap, enough to read as contact rather than
+ * hovering.
+ *
+ * Positioned rather than margined on purpose: a percentage *margin* resolves against the
+ * containing block's width, not its height, so matching a height-based ground line with
+ * one silently lands somewhere else. It put the mech knee-deep at 14% and floating at
+ * 28%. `bottom` on an absolutely positioned box is height-relative, so it means what it
+ * says.
+ */
+.stage-figure {
+  position: absolute; bottom: 28%; left: 50%; transform: translateX(-50%);
+  z-index: 1; line-height: 0;
+}
 
 /* Fixed height so the column does not jump every time the mech starts or stops. */
 .stage-now {

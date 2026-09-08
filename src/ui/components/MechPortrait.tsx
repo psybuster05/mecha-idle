@@ -18,7 +18,17 @@ import { PixelSprite } from './PixelSprite'
  * what is equipped, and an empty slot simply contributes nothing - which is why a fresh
  * mech reads as stripped.
  */
-export function MechPortrait({ state, scale = 5 }: { state: GameState; scale?: number }) {
+export function MechPortrait({
+  state,
+  scale = 5,
+  caption = true,
+}: {
+  state: GameState
+  scale?: number
+  /** "3 of 5 fitted" belongs on the equipment page. The stage wants a figure, not a
+   *  readout, so it turns this off. */
+  caption?: boolean
+}) {
   const layers: (Sprite | undefined)[] = [MECH_BASE]
 
   if (state.equipment.arms) layers.push(MECH_ARMS)
@@ -42,9 +52,11 @@ export function MechPortrait({ state, scale = 5 }: { state: GameState; scale?: n
   return (
     <div className="portrait">
       <PixelSprite layers={layers} scale={scale} title="Your mech" />
-      <div className="portrait-caption dim">
-        {fitted === 0 ? 'Stripped' : `${fitted} of 5 fitted`}
-      </div>
+      {caption && (
+        <div className="portrait-caption dim">
+          {fitted === 0 ? 'Stripped' : `${fitted} of 5 fitted`}
+        </div>
+      )}
     </div>
   )
 }

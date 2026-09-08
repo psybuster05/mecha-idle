@@ -27,8 +27,15 @@ export function Stage({ state }: { state: GameState }) {
       {/* Scrolls on its own so the map below can hold the corner. Without this split
           the pinned map simply covered whatever it overlapped. */}
       <div className="stage-body">
-        <div className="stage-portrait">
-          <MechPortrait state={state} scale={6} />
+        {/* A place rather than an inventory readout. Two rectangles - ground inside
+            sky - is enough to stop the mech floating in the panel background, which is
+            what made this read as a slice of the equipment page. */}
+        <div className="stage-scene">
+          <div className="stage-sky" />
+          <div className="stage-ground" />
+          <div className="stage-figure">
+            <MechPortrait state={state} scale={6} caption={false} />
+          </div>
         </div>
 
         <NowPlaying state={state} />

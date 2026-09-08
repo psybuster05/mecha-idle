@@ -370,9 +370,22 @@ The right-hand column (`Stage.tsx`) is where the art actually lives, and it is p
 rather than a tab. A tab can only show one thing; what a player wants visible at all
 times is not a page, it is **what they are made of and what they are doing**.
 
-It holds three things: the layered portrait, a live readout of the current job (enemy
-sprite and its HP when fighting, action and progress bar when skilling, what it is short
-of when waiting), and the map pinned to the bottom corner.
+It holds three things: the mech standing in a scene, a live readout of the current job
+(enemy sprite and its HP when fighting, action and progress bar when skilling, what it
+is short of when waiting), and the map pinned to the bottom corner.
+
+**The scene is two rectangles, not art** - a darker ground slab inset inside a lighter
+sky. That is enough to read as a *place* rather than a sprite floating on the panel,
+which is what made the stage look like a piece of the equipment page pasted into the
+corner. It is deliberately not a drawn background: a real one is a commission, and
+replacing this means replacing two CSS rules. The equipment page's "3 of 5 fitted"
+caption is off here for the same reason - the stage wants a figure, not a readout.
+
+One trap worth knowing if you move the mech: **a percentage `margin` resolves against
+the containing block's width, not its height.** Lining the feet up with a ground line
+defined in height percentages using one silently lands somewhere else - it put the mech
+knee-deep at 14% and floating at 28%. The figure is absolutely positioned, where
+`bottom` is height-relative and means what it says.
 
 **The map zooms and pans**, and it has to. The world is drawn into a 740-unit logical
 space shown in a ~270px column, so at 1x the place names land at about four physical
