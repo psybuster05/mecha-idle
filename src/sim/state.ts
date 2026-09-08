@@ -22,7 +22,7 @@ import type { CombatStyleId } from '../content/skills/combat'
 export type ActorId = 'mech' | 'crawler'
 
 export type GatheringSkillId =
-  'scavenging' | 'refining' | 'fabrication' | 'salvaging' | 'cartography'
+  'scavenging' | 'refining' | 'fabrication' | 'salvaging'
 export type CombatSkillId = 'attack' | 'strength' | 'defence' | 'hitpoints' | 'ranged'
 export type SkillId = GatheringSkillId | CombatSkillId
 
@@ -31,7 +31,6 @@ export const GATHERING_SKILLS: readonly GatheringSkillId[] = [
   'refining',
   'fabrication',
   'salvaging',
-  'cartography',
 ]
 export const COMBAT_SKILLS: readonly CombatSkillId[] = [
   'attack',
@@ -185,7 +184,7 @@ export interface BoostState {
   source: ItemId
 }
 
-export const SAVE_VERSION = 5
+export const SAVE_VERSION = 6
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */

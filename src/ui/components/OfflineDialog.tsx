@@ -8,7 +8,6 @@ const SKILL_LABELS: Record<SkillId, string> = {
   refining: 'Refining',
   fabrication: 'Fabrication',
   salvaging: 'Salvaging',
-  cartography: 'Cartography',
   attack: 'Attack',
   strength: 'Strength',
   defence: 'Defence',

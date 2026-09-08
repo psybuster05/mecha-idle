@@ -97,9 +97,16 @@ describe('offline - the report', () => {
     expect(report.seconds).toBe(3600)
     expect(report.awaySeconds).toBeNull()
     const completions = 3600 / ROADSIDE.duration
-    expect(report.items['scrap_steel']).toBe(completions)
+
+    // xp is exact: bonus hauls grant items, never experience, which is what keeps the
+    // levelling target measurable.
     expect(report.skillXp.scavenging).toBe(completions * ROADSIDE.xp)
-    expect(count(state, 'scrap_steel')).toBe(completions)
+
+    // Items are at least one per completion, plus whatever the skill's own yield paid
+    // out as it levelled during the hour. A few percent over, not under.
+    expect(report.items['scrap_steel']).toBeGreaterThanOrEqual(completions)
+    expect(report.items['scrap_steel']).toBeLessThan(completions * 1.1)
+    expect(count(state, 'scrap_steel')).toBe(report.items['scrap_steel'])
     expect(report.stopped).toBeNull()
   })
 
@@ -148,6 +155,12 @@ describe('offline - the cap', () => {
 
   it('credits exactly the capped amount of work', () => {
     const { report } = applyOffline(scavengingFor(100 * 3600), NOW)
-    expect(report?.items['scrap_steel']).toBe(MAX_OFFLINE_SECONDS / ROADSIDE.duration)
+    const completions = MAX_OFFLINE_SECONDS / ROADSIDE.duration
+
+    // The cap is on time, so xp is exactly the capped span's worth.
+    expect(report?.skillXp.scavenging).toBe(completions * ROADSIDE.xp)
+    // Items carry the bonus haul earned as Scavenging levelled through that span.
+    expect(report?.items['scrap_steel']).toBeGreaterThanOrEqual(completions)
+    expect(report?.items['scrap_steel']).toBeLessThan(completions * 1.3)
   })
 })

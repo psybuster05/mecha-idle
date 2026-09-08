@@ -8,14 +8,12 @@ import { SCAVENGING } from './skills/scavenging'
 import { REFINING } from './skills/refining'
 import { FABRICATION } from './skills/fabrication'
 import { SALVAGING } from './skills/salvaging'
-import { CARTOGRAPHY } from './skills/cartography'
 
 export const SKILLS: readonly SkillDef[] = [
   SCAVENGING,
   REFINING,
   FABRICATION,
   SALVAGING,
-  CARTOGRAPHY,
 ]
 
 const skillsById = new Map<GatheringSkillId, SkillDef>(SKILLS.map((s) => [s.id, s]))
@@ -44,4 +42,4 @@ export type { EnemyDef } from './enemies'
 export { ZONES, getZone } from './zones'
 export type { ZoneDef } from './zones'
 
-export { SURVEY_BONUS_PER_LEVEL } from './skills/cartography'
+export { YIELD_PER_LEVEL } from './yield'

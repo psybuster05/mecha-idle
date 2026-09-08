@@ -7,7 +7,7 @@
  */
 
 import { getCombatStyle } from '../content/skills/combat'
-import { newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
+import { ALL_SKILLS, newGame, SAVE_VERSION, type ActorId, type GameState } from './state'
 
 export type LoadResult =
   { ok: true; state: GameState; migratedFrom: number | null } | { ok: false; error: string }
@@ -34,6 +34,22 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
 }
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /**
+   * 5 -> 6: Cartography was removed.
+   *
+   * Its xp is dropped rather than redistributed. There is nowhere honest to put it - the
+   * skill it replaced itself with is every other skill's own level, and crediting that
+   * from Cartography would hand a player levels in skills they never trained. Anyone who
+   * had trained it keeps everything it ever produced, which is in the bank already.
+   *
+   * The key has to be deleted rather than left to rot: withDefaults spreads the saved
+   * skills over the defaults, so an unknown key would survive every future save.
+   */
+  5: (raw) => {
+    const skills = { ...(raw['skills'] as Record<string, number> | undefined) }
+    delete skills['cartography']
+    return { ...raw, version: 6, skills }
+  },
   /**
    * 4 -> 5: Ranged became a skill of its own.
    *
@@ -116,7 +132,19 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   const base = newGame()
   const merged = { ...base, ...raw } as GameState
 
-  merged.skills = { ...base.skills, ...(raw['skills'] as object | undefined) }
+  // Copied key by key from the skills the game actually has, rather than spread.
+  //
+  // Spreading preserves keys the game no longer knows about, so a removed skill would
+  // survive in every future save even after its migration had run once - and a save
+  // written by a build that still had the skill would reintroduce it permanently, which
+  // is exactly what happened when Cartography was cut. This also drops anything
+  // non-numeric, so a hand-edited save cannot poison a level.
+  const rawSkills = raw['skills'] as Record<string, unknown> | undefined
+  merged.skills = { ...base.skills }
+  for (const id of ALL_SKILLS) {
+    const value = rawSkills?.[id]
+    if (typeof value === 'number' && Number.isFinite(value)) merged.skills[id] = value
+  }
 
   // Actors are merged *per field*, not wholesale. Spreading whole actor objects
   // leaves any field added later missing on old saves - which is exactly how a save

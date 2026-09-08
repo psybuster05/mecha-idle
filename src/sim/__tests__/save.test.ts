@@ -262,3 +262,52 @@ describe('migration 4 -> 5: Ranged', () => {
     expect(result.ok && result.state.skills.ranged).toBe(5000)
   })
 })
+
+/**
+ * Removing a skill is a migration, not a deletion.
+ *
+ * Skill ids live in save files, so dropping one leaves a key behind that withDefaults
+ * would spread over the defaults and carry forward into every future save. Anyone who
+ * trained Cartography keeps what it produced - that is already in the bank - but the
+ * xp itself has nowhere honest to go.
+ */
+describe('cartography was removed', () => {
+  it('strips the key even from a save already stamped with the current version', () => {
+    // The case that actually bit. A build still carrying the skill wrote a save at the
+    // *new* version number, so the migration never ran on it - and withDefaults used to
+    // spread the saved skills over the defaults, which preserves keys the game no longer
+    // knows about. The key then survived every future save. Copying key by key from
+    // ALL_SKILLS is what makes that unrepresentable rather than merely migrated once.
+    const stray = { ...newGame(), version: SAVE_VERSION } as Record<string, unknown>
+    stray['skills'] = { ...(stray['skills'] as object), cartography: 0 }
+
+    const result = deserialize(JSON.stringify(stray))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.migratedFrom).toBeNull()
+    expect('cartography' in result.state.skills).toBe(false)
+  })
+
+  it('ignores a skill value that is not a finite number', () => {
+    const junk = { ...newGame(), version: SAVE_VERSION } as Record<string, unknown>
+    junk['skills'] = { ...(junk['skills'] as object), scavenging: 'lots' }
+
+    const result = deserialize(JSON.stringify(junk))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.skills.scavenging).toBe(0)
+  })
+
+  it('drops its xp and leaves every other skill alone', () => {
+    const old = { ...newGame(), version: 5 } as Record<string, unknown>
+    old['skills'] = { ...(old['skills'] as object), cartography: 1_234_567, scavenging: 5000 }
+
+    const result = deserialize(JSON.stringify(old))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.migratedFrom).toBe(5)
+    expect('cartography' in result.state.skills).toBe(false)
+    expect(result.state.skills.scavenging).toBe(5000)
+  })
+})

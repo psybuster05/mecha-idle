@@ -6,7 +6,7 @@
  * only in their content tables. Adding a fourth skill should require no code here.
  */
 
-import { getAction, SURVEY_BONUS_PER_LEVEL } from '../content'
+import { getAction, YIELD_PER_LEVEL } from '../content'
 import { perkTotal } from '../content/enemies'
 import type { ItemStack, SkillAction } from '../content/types'
 import { addItem, count, grantAll, maxCraftable, payCost } from './bank'
@@ -108,22 +108,19 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
     // than a multiplier on the total. A multiplier would round differently for one big
     // step than for many small ones and break the offline guarantee.
     //
-    // Two things feed it: boss perks, which are fixed for the whole step, and
-    // Cartography level, which is not - Cartography raises its own bonus as it levels.
-    // So the chance is recomputed per completion against the xp earned so far, which is
-    // what a hundred one-second ticks would have done anyway. Without that, one long
-    // offline stretch would roll the entire span at the level it started at, and the gap
-    // would grow with time away.
+    // Two things feed it: boss perks, which are fixed for the whole step, and the level
+    // of the skill being trained, which is not - every skill now raises its own yield as
+    // it climbs. So the chance is recomputed per completion against the xp earned so
+    // far, which is what a hundred one-second ticks would have done anyway. Without
+    // that, one long offline stretch would roll the entire span at the level it started
+    // at, and the gap would grow with time away rather than staying a rounding error.
     const xpEach = action.xp * (1 + perkTotal(state.defeated, 'xpBonus'))
     const perk = perkTotal(state.defeated, 'gatheringYield')
-    const cartography = state.skills.cartography
-    const surveying = activity.skill === 'cartography'
+    const startXp = state.skills[activity.skill]
 
     const bonus = rollPerCompletion(state, action, applied, (i) => {
-      const xp = cartography + (surveying ? xpEach * i : 0)
-      // Level 1 pays nothing, so an untrained surveyor leaves every other skill's
-      // numbers exactly as they read on the action.
-      return perk + (levelFromXp(xp) - 1) * SURVEY_BONUS_PER_LEVEL
+      // Level 1 pays nothing, so a fresh skill's numbers read exactly as its actions say.
+      return perk + (levelFromXp(startXp + xpEach * i) - 1) * YIELD_PER_LEVEL
     })
     if (bonus > 0) grantAll(state, action.outputs, bonus)
 

@@ -388,27 +388,6 @@ export const SKILL_ICONS: Readonly<Record<string, Sprite>> = {
     '  ....          ',
     '                ',
   ]),
-  // A survey grid with one square fixed. A compass rose collapsed into the same cross
-  // as Hitpoints at this size, and two icons telling themselves apart by colour alone
-  // is two icons that have stopped doing their job.
-  cartography: icon([
-    '                ',
-    '                ',
-    '  ............  ',
-    '  .WWWWbWWWWW.  ',
-    '  .WWWWbWWWWW.  ',
-    '  .WWWWbWWWWW.  ',
-    '  .bbbbbbbbbb.  ',
-    '  .WWWWbWCCWW.  ',
-    '  .WWWWbWCCWW.  ',
-    '  .bbbbbbbbbb.  ',
-    '  .WWWWbWWWWW.  ',
-    '  .WWWWbWWWWW.  ',
-    '  .WWWWbWWWWW.  ',
-    '  ............  ',
-    '                ',
-    '                ',
-  ]),
   // A reticle. Attack is what lands the shot.
   attack: icon([
     '                ',

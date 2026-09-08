@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getItem } from '../../content'
-import { getAction, SURVEY_BONUS_PER_LEVEL } from '../../content'
+import { getAction, YIELD_PER_LEVEL } from '../../content'
 import { ENEMIES, perkTotal } from '../../content/enemies'
 import { newGame, type GameState } from '../state'
 import { burnFuel, startSkillAction } from '../intents'
@@ -120,34 +120,37 @@ describe('a boost expiring mid-step', () => {
 })
 
 /**
- * Cartography's replacement job.
+ * Bonus haul.
  *
- * It has been given away twice: zones went to bosses, travel was deleted. What is left
- * is a passive bonus-haul chance on every gathering completion, which is the only thing
- * a surveyor is plausibly worth once there is no journey to shorten.
+ * This was Cartography's job, and Cartography is gone: as a separate skill you had to
+ * stop gathering in order to train the thing that made gathering better, which measured
+ * out as a 504-hour investment needing 1,715 hours of gathering to repay. Each skill now
+ * raises its own yield instead, so the reward lands on whatever you are already doing.
  */
-describe('surveying', () => {
+describe('bonus haul', () => {
   const roadside = () => {
     const s = newGame(99)
     s.actors.mech.at = 'roadside'
     return s
   }
 
-  it('does nothing at level 1 and a great deal at 99', () => {
+  it('pays nothing at level 1 and a great deal at 99', () => {
     const green = tickBy(startSkillAction(roadside(), 'scavenging', 'roadside_wrecks'), 3600, 1)
 
     const veteran = roadside()
-    veteran.skills.cartography = xpForLevel(99)
-    const surveyed = tickBy(startSkillAction(veteran, 'scavenging', 'roadside_wrecks'), 3600, 1)
+    veteran.skills.scavenging = xpForLevel(99)
+    const skilled = tickBy(startSkillAction(veteran, 'scavenging', 'roadside_wrecks'), 3600, 1)
 
-    // Same completions either way - this is bonus haul, not faster work.
-    expect(surveyed.skills.scavenging).toBe(green.skills.scavenging)
-    expect(surveyed.bank['scrap_steel']!).toBeGreaterThan(green.bank['scrap_steel']!)
+    // Same number of completions either way - this is a bonus haul, not faster work.
+    const wrecks = getAction('scavenging', 'roadside_wrecks')!
+    expect(skilled.skills.scavenging - xpForLevel(99)).toBe(green.skills.scavenging)
+    expect(skilled.bank['scrap_steel']!).toBeGreaterThan(green.bank['scrap_steel']!)
+    expect(wrecks).toBeDefined()
   })
 
   it('pays about what the number says', () => {
     const veteran = roadside()
-    veteran.skills.cartography = xpForLevel(99)
+    veteran.skills.scavenging = xpForLevel(99)
     const hours = 40
     const after = tickBy(
       startSkillAction(veteran, 'scavenging', 'roadside_wrecks'),
@@ -158,16 +161,35 @@ describe('surveying', () => {
     const wrecks = getAction('scavenging', 'roadside_wrecks')!
     const completions = (hours * 3600) / wrecks.duration
     const perCompletion = wrecks.outputs.find((o) => o.item === 'scrap_steel')!.qty
-    const expected = completions * perCompletion * (1 + 98 * SURVEY_BONUS_PER_LEVEL)
+    const expected = completions * perCompletion * (1 + 98 * YIELD_PER_LEVEL)
     expect(after.bank['scrap_steel']!).toBeGreaterThan(expected * 0.95)
     expect(after.bank['scrap_steel']!).toBeLessThan(expected * 1.05)
   })
 
+  it('only boosts the skill being trained, never the others', () => {
+    // The whole reason this stopped being its own skill: a bonus that pays out across
+    // everything makes training the booster compete with what it boosts.
+    const veteran = roadside()
+    veteran.skills.scavenging = xpForLevel(99)
+    veteran.bank['scrap_steel'] = 100000
+
+    const smeltMaxedScavenging = tickBy(
+      startSkillAction(veteran, 'refining', 'smelt_steel'),
+      3600,
+      1,
+    )
+    const plain = roadside()
+    plain.bank['scrap_steel'] = 100000
+    const smeltPlain = tickBy(startSkillAction(plain, 'refining', 'smelt_steel'), 3600, 1)
+
+    expect(smeltMaxedScavenging.bank['steel_ingot']).toBe(smeltPlain.bank['steel_ingot'])
+  })
+
   it('is a serious reward that still loses to clearing the world', () => {
-    // If maxing one skill beat every boss in the game on the same axis, the fastest
-    // route through an idle game would be to ignore all of it except this one. If it
-    // were negligible, the skill would be a chore. Either side retuning trips this.
-    const maxed = 98 * SURVEY_BONUS_PER_LEVEL
+    // If maxing one skill beat every boss in the game on the same axis, the fastest route
+    // through an idle game would be to ignore all of it except this. Either side retuning
+    // trips this.
+    const maxed = 98 * YIELD_PER_LEVEL
     const allBosses = perkTotal(
       Object.fromEntries(ENEMIES.filter((e) => e.isBoss).map((e) => [e.id, 1])),
       'gatheringYield',
@@ -177,15 +199,15 @@ describe('surveying', () => {
   })
 
   /**
-   * The trap this feature had to avoid.
+   * The trap this mechanic has always had to avoid.
    *
-   * Cartography raises its own bonus as it levels, so a single large offline step would
-   * roll the whole span at the level it started at while many small steps would not -
-   * and unlike the usual rounding slop, that gap would grow with time away. The engine
+   * A skill raises its own yield as it levels, so a single large offline step would roll
+   * the whole span at the level it started at while many small steps would not - and
+   * unlike ordinary rounding slop, that gap would grow with time away. The engine
    * recomputes the chance per completion for exactly this reason.
    */
   it('levels itself mid-step without breaking the offline guarantee', () => {
-    const make = () => startSkillAction(newGame(4242), 'cartography', 'pace_the_hollow')
+    const make = () => startSkillAction(newGame(4242), 'scavenging', 'roadside_wrecks')
     const bulk = tick(make(), 4 * 3600)
     const incremental = tickBy(make(), 4 * 3600, 0.5)
 

@@ -437,7 +437,28 @@ action never restarts on its own.
 would bank hours of progress against an empty bank and spend it all the instant one input
 appeared.
 
-### The one known step-size dependency
+### Yield, and why it is not a skill
+
+Every gathering skill raises **its own** bonus-haul chance as it levels: +0.3% per level,
+so +29.4% at 99, stacking with the boss yield perks on the same number. It grants
+**items, not xp**, so it changes what you end up holding and never how fast you level -
+which is what keeps the one-month target measurable.
+
+This was Cartography, and Cartography was deleted. As a separate skill the bonus had a
+shape no idle game should ship: you stopped gathering in order to train the thing that
+made gathering better. Measured, maxing it cost 504 hours and needed **1,715 hours** of
+gathering afterwards to break even, in a game with about 503 hours of content - worth
+taking to level 30, a trap past 70. A skill raising its own yield has no such choice to
+get wrong, and is strictly weaker: maxing one skill used to pay out across all of them.
+
+Removing a skill is a **migration**, because skill ids live in save files. It also
+exposed a real hole: `withDefaults` spread the saved skills over the defaults, which
+*preserves keys the game no longer knows about*. A build still carrying the skill had
+written a save at the new version number, so the migration never ran on it and the dead
+key survived every subsequent save. Skills are now copied key by key from `ALL_SKILLS`,
+which makes a stray one unrepresentable rather than merely migrated once.
+
+## The one known step-size dependency
 
 `advance` runs each actor for the whole step in turn, so a single large offline step
 refines everything *before* the consumer eats any of it, where live play interleaves them.
@@ -445,6 +466,10 @@ Measured with a producer/consumer pair, this is a **constant off-by-one** - one 
 completion whether the span is ten minutes or eight hours - and it favours the player.
 Two small step sizes agree with each other exactly; only the giant step differs.
 
-Accepted rather than engineered away, and guarded: a test asserts the gap stays within one
-completion and, more importantly, that it does **not grow with the span**. Drift
-proportional to time away is the thing that would actually matter.
+Accepted rather than engineered away, and guarded - but the guard had to change when
+yield became level-dependent. Producers now *accelerate* across a span, so the absolute
+gap scales with how much was made while the **error rate** does not. The test therefore
+asserts the drift is within one completion *or* under one percent, and that it does not
+grow with the span, measured out to the 24-hour offline cap. Drift proportional to time
+away is still the thing that would actually matter; it is just no longer visible as a
+constant.
