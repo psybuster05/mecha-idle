@@ -441,6 +441,26 @@ Rules that keep the two actors distinct:
 - **It works wherever it is.** It carries the workshop, so `startSkillAction` never
   moves it. Parking it is cosmetic - it is there so the world has two bodies in it.
 
+## Toasts
+
+Transient notices in the bottom corner, and **purely a view concern** - the simulation
+never knows they exist. Item gains are found by *diffing bank snapshots* in the UI rather
+than by having the sim announce anything, which keeps `sim/` pure and keeps this what it
+is: a view noticing that a number changed.
+
+Two kinds, and the difference is about volume. A **notice** is rare and one-off (no fuel
+for that). A **gain** is a stream - an item lands every few seconds, faster at 3x with
+two actors - so gains sharing a key merge into one line that counts up. A scavenging run
+shows a single growing "+24 Scrap Steel", not twenty-four toasts fighting for the corner.
+Five on screen at once is the cap.
+
+**The first snapshot is deliberately compared to nothing.** Offline progress is credited
+before React ever renders, so the first bank the UI sees already holds hours of gains;
+diffing it against an empty baseline would fire a toast for every item earned overnight.
+The offline dialog already reports that, in a form that can hold it.
+
+Losses are ignored: spending materials is something you chose and are already looking at.
+
 ## Waiting, not halting
 
 An action short of materials **waits**. It keeps the order, stops accumulating progress,

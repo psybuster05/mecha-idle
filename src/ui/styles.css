@@ -614,3 +614,15 @@ img.sprite { image-rendering: pixelated; }
 }
 
 .chevrons { width: 26px; height: 12px; display: block; }
+
+/*
+ * Gains read as good news, notices as a problem - the two arrive in the same corner and
+ * must not be mistaken for each other. Green is already "you gained" elsewhere here (the
+ * offline report), so it carries the meaning already.
+ */
+.toast-gain {
+  background: #0d2321; border-color: var(--good); border-left-color: var(--good);
+  color: #cdf6ea; font-weight: 400;
+  display: flex; align-items: baseline; gap: 7px;
+}
+.toast-amount { color: var(--good); font-weight: 700; }

@@ -16,6 +16,7 @@ import { useGame } from './useGame'
 import { Bar } from './components/Bar'
 import { SpeedToggle } from './components/SpeedToggle'
 import { Toasts, useToasts } from './components/Toast'
+import { useItemGains } from './useItemGains'
 import { PixelSprite } from './components/PixelSprite'
 import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
@@ -57,7 +58,8 @@ export function App() {
   // Scavenging opens first: it is the first thing a new mech can actually do, and with
   // the World tab gone there is no longer a panel whose job is to be looked at.
   const [tab, setTab] = useState<Tab>('scavenging')
-  const { toasts, show } = useToasts()
+  const { toasts, show, showGain } = useToasts()
+  useItemGains(state, showGain)
 
   if (!ready) {
     return (
