@@ -437,7 +437,35 @@ action never restarts on its own.
 would bank hours of progress against an empty bank and spend it all the instant one input
 appeared.
 
-### Yield, and why it is not a skill
+### Salvaging is derived, not written
+
+`SALVAGING.actions` is generated from `FABRICATION.actions`. Every fabricable thing is
+strippable, at the level that built it, returning `floor(50%)` of that recipe's inputs.
+
+It was hand-written and had quietly stopped keeping up: **8 of 23 fabricable items**, and
+the fifteen it missed were the entire late game - the Harpoon Launcher, The Sentence, the
+Command Frame. A skill whose job is "a sink for gear you have outgrown" did not work at
+the point you have the most outgrown gear. That is the same failure as the nine orphaned
+recipes, and deriving it makes the class unrepresentable rather than merely fixed.
+
+Rules the derivation has to keep, all tested:
+
+- **Always a net loss.** Building and stripping in a loop must never beat gathering.
+  Flooring each input guarantees it - currently 33-50% back by unit count, never more.
+- **Never empty.** Flooring can reach zero for a recipe made of single units. There is
+  none today, so the fallback (keep one of the largest input) is untested by the content
+  and guarded by a test instead.
+- **The same xp per second as Fabrication.** Duration and xp are both scaled by 0.6, so
+  Salvaging lands on the same 1-99 curve as everything else - 504h against Fabrication's
+  506h. Changing one scale without the other silently moves it off the one-month target.
+- **Flavour is a lookup, not a generated string.** Deriving gained coverage and lost
+  voice; twenty-three copies of one sentence is worse writing than eight good ones. The
+  hand-written lines are kept in `FLAVOUR`, keyed by item so they survive renames.
+
+Only fabricated things can be stripped. Raw scrap has no constituents - "salvaging" an
+ingot into half an ingot is a furnace, not a teardown.
+
+## Yield, and why it is not a skill
 
 Every gathering skill raises **its own** bonus-haul chance as it levels: +0.3% per level,
 so +29.4% at 99, stacking with the boss yield perks on the same number. It grants

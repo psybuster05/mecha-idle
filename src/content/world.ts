@@ -1,4 +1,5 @@
 import type { GatheringSkillId, NodeId, ZoneId } from '../sim/state'
+import { SALVAGING } from './skills/salvaging'
 import type { ActionId } from '../sim/state'
 
 /**
@@ -81,14 +82,7 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       { skill: 'refining', action: 'sinter_polymer' },
       { skill: 'refining', action: 'invert_collar' },
       { skill: 'refining', action: 'mix_field_alloy' },
-      { skill: 'salvaging', action: 'strip_steel_frame' },
-      { skill: 'salvaging', action: 'strip_servo_arms' },
-      { skill: 'salvaging', action: 'strip_tracked_legs' },
-      { skill: 'salvaging', action: 'strip_rivet_driver' },
-      { skill: 'salvaging', action: 'strip_cell_reactor' },
-      { skill: 'salvaging', action: 'strip_titanium_frame' },
-      { skill: 'salvaging', action: 'strip_marine_frame' },
-      { skill: 'salvaging', action: 'strip_aeroshell' },
+      ...SALVAGING.actions.map((action) => ({ skill: 'salvaging' as const, action: action.id })),
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
       { skill: 'fabrication', action: 'fab_crawler_core' },

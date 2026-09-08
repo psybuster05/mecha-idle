@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SKILLS, getItem, ENEMIES, getEnemy, ZONES } from '../index'
+import { SKILLS, getItem, getSkill, itemName, ENEMIES, getEnemy, ZONES } from '../index'
 import { ITEMS } from '../items'
 import { EQUIP_SLOTS } from '../../sim/state'
 
@@ -172,6 +172,64 @@ describe('every combat branch has a weapon ladder', () => {
       )
       const gaps = levels.filter((l) => !usable.includes(l))
       expect(gaps, `${branch} has no weapon at fabrication ${gaps.join(', ')}`).toEqual([])
+    }
+  })
+})
+
+/**
+ * Salvaging is derived from Fabrication, and these are the properties that derivation
+ * exists to guarantee.
+ *
+ * The hand-written version covered 8 of 23 fabricable items and had quietly stopped
+ * keeping up - the fifteen it missed were the whole late game. Deriving it makes that
+ * unrepresentable, and these tests are what say so out loud.
+ */
+describe('salvaging', () => {
+  const fab = getSkill('fabrication')!
+  const salv = getSkill('salvaging')!
+
+  const recipeFor = (item: string) => fab.actions.find((a) => a.outputs[0]!.item === item)
+
+  it('can strip everything that can be built', () => {
+    const strippable = new Set(salv.actions.flatMap((a) => (a.inputs ?? []).map((i) => i.item)))
+    for (const recipe of fab.actions) {
+      const made = recipe.outputs[0]!.item
+      expect(strippable.has(made), `${itemName(made)} can be built but not stripped`).toBe(true)
+    }
+  })
+
+  it('strips nothing that cannot be built, so no action is orphaned', () => {
+    for (const action of salv.actions) {
+      const target = action.inputs?.[0]?.item
+      expect(target, `${action.name} strips nothing`).toBeDefined()
+      expect(recipeFor(target!), `${action.name} strips something unbuildable`).toBeDefined()
+    }
+  })
+
+  it('always returns less than went in, so build-and-strip is never a source', () => {
+    // The rule that keeps this a sink. If a loop ever paid out, the fastest route to any
+    // material would be to fabricate and immediately undo it.
+    for (const action of salv.actions) {
+      const recipe = recipeFor(action.inputs![0]!.item)!
+      const spent = (recipe.inputs ?? []).reduce((n, i) => n + i.qty, 0)
+      const back = action.outputs.reduce((n, o) => n + o.qty, 0)
+      expect(back, `${action.name} returns ${back} of the ${spent} it cost`).toBeLessThan(spent)
+    }
+  })
+
+  it('always returns something, so no strip is a pure delete', () => {
+    // Flooring each input to half can reach zero for a recipe made of single units.
+    // There is none today; the fallback exists so adding one is not a silent trap.
+    for (const action of salv.actions) {
+      expect(action.outputs.length, `${action.name} returns nothing at all`).toBeGreaterThan(0)
+      for (const out of action.outputs) expect(out.qty).toBeGreaterThan(0)
+    }
+  })
+
+  it('unlocks at the level that built the thing', () => {
+    for (const action of salv.actions) {
+      const recipe = recipeFor(action.inputs![0]!.item)!
+      expect(action.levelRequired, `${action.name}`).toBe(recipe.levelRequired)
     }
   })
 })
