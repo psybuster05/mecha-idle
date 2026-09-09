@@ -551,6 +551,18 @@ Four things it has to keep:
 - **No signal colour appears in it.** No orange, no cyan, no player blue. Orange is hostile
   and cyan is a live readout, so a backdrop borrowing either would put something in the
   scenery that a player has been trained to look at.
+- **Three planes, and the nearest is the lightest.** Skyline, mid rubble, then foreground
+  debris drawn below the ground line - the only things in the backdrop brighter than that
+  line, each with a lit top edge and a shadow at its foot. That contrast order is what puts
+  them in *front* of the floor rather than on it. They stay desaturated all the same: a
+  saturated chunk would compete with the mech standing behind them.
+- **The foreground runs through the middle, not only along the edges.** A phone crops this
+  to its middle third, so edge-only debris would be a foreground that exists on a desktop
+  and nowhere else.
+
+A shadow is only cast onto *floor*. Painting one under every mass unconditionally put a
+dark band through anything with a second piece stacked on it - a shadow cast onto the thing
+casting it, which reads as a crack rather than as contact.
 
 **The feet are placed from the art, not from a percentage.** `SCENE_GROUND_ROW` says which
 row is the surface; `Stage` turns it into a `--ground` pixel offset and `.stage-figure`

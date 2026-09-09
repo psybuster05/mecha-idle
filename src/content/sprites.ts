@@ -949,6 +949,12 @@ const SCENE_PALETTE: Readonly<Record<string, string>> = {
   e: '#2e4c6e', // the ground line - the brightest edge in the scene, and the only one
   g: '#16243a', // ground
   G: '#1e3350', // a plate in the ground, so the floor has a surface
+  // The foreground. Nearest, so lightest: these are the only things in the backdrop
+  // brighter than the ground line, which is what puts them in *front* of the floor
+  // rather than on it. Still desaturated - a saturated chunk would compete with the mech.
+  k: '#24395a', // a mass of rubble
+  K: '#35577e', // its lit top edge
+  s: '#0f1a2b', // the shadow it casts, and the only thing darker than the ground
 }
 
 /**
@@ -967,6 +973,10 @@ const SCENE_PALETTE: Readonly<Record<string, string>> = {
  *
  * The top third is empty on purpose: the CSS sky gradient shows through, so the sky stays
  * smooth where smooth is right and the art starts where the horizon does.
+ *
+ * The foreground rubble runs through the **middle** as well as the edges, deliberately.
+ * A phone crops this to its middle third, so debris placed only at the sides would be a
+ * foreground that exists on a desktop and nowhere else.
  */
 /**
  * Which row of the backdrop is the surface. The figures' feet are placed from this
@@ -1005,14 +1015,14 @@ export const SCENE_BACKDROP: Sprite = {
     '      RRRRRRRRRRRR      RRRRRRRRRRRR    RRRRRRRR',
     'RRRRRRRRRrrrrrrRRRRRRRRRRRRrrrrrRRRRRRRRRRRRrrrr',
     'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    'gggggggggGGgggggggggggggggGGgggggggggggggggggggg',
-    'gggggggggggggggggGGgggggggggggggggggGGGGGGGGGggg',
-    'gggggGGGGGGGGgggggggggggggggggggggggggggggggGGgg',
-    'gggggggggggggggggggggggggggggggggGGggggggggggggg',
-    'ggggggggggggggggggggGGGGGGGGGGgggggggggggggggggg',
-    'ggGGgggggggggggggggggggggggggggggggggggggGGGGGGg',
-    'gggggggggggggggggggggggGGggggggggggggggggggggggg',
-    'ggggggggggggGGGGGGGggggggggggggggggggggggggggggg',
-    'gggggggggggggggggggggggggggggGGGGGGGGGGGGggggggg',
+    'gggggggggGGggggggggggkKgggGGgggggggggggggggggggg',
+    'gggggggggggkKggggGGgggggggkKggggggggGGGGGGGGGggg',
+    'ggggKKGGGGGGGgggggggKKKgggggggggggggkKggggggGGgg',
+    'ggKKKKsggkKggggggggsssssggggggggKKKgggggggggkKgg',
+    'KKKKKKKgggggggggggggGGGkKGGGGGgsssssggKKKKKKKKKK',
+    'kkkkkkkggggggggKKKggggggggggggkKggggggkkkkkkkkkk',
+    'kkkkkkkggggggKKKKKKKgggGGggKKKgggggKKKsssKKKKKss',
+    'kkkkkkkgkKggGkkkkkkkggggKKKKKKKKgggkkkgggkkkkkgg',
+    'kkkkkkkggggggkkkkkkkggggkkkkkkkkGGsssssGGkkkkkgg',
   ],
 }
