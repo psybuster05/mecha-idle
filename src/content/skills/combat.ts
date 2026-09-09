@@ -95,7 +95,6 @@ export type CombatStyleId = 'balanced' | 'accurate' | 'aggressive' | 'defensive'
 export interface CombatStyleDef {
   id: CombatStyleId
   name: string
-  description: string
   /**
    * Which skill takes the whole share, per branch. Null means split across that
    * branch's set. Two entries because the same style means different things depending
@@ -152,7 +151,6 @@ export const COMBAT_STYLES: readonly CombatStyleDef[] = [
   {
     id: 'balanced',
     name: 'Balanced',
-    description: 'Split evenly. Nothing improves quickly and nothing is neglected.',
     trains: { melee: null, ranged: null },
     // No combat bonus, on purpose. Balanced buys *breadth*: spread xp keeps all three
     // skills climbing, and combat level is their average, which is what gates zones.
@@ -164,21 +162,18 @@ export const COMBAT_STYLES: readonly CombatStyleDef[] = [
   {
     id: 'accurate',
     name: 'Accurate',
-    description: 'Take the shot you are sure of. Everything into Attack, and you land more of them.',
     trains: { melee: 'attack', ranged: 'ranged' },
     effects: { accuracy: 1.12 },
   },
   {
     id: 'aggressive',
     name: 'Aggressive',
-    description: 'Commit to every hit and let the plating take what it takes. Everything into Strength, and it hurts more.',
     trains: { melee: 'strength', ranged: 'ranged' },
     effects: { damage: 1.12 },
   },
   {
     id: 'defensive',
     name: 'Defensive',
-    description: 'Fight to still be standing afterwards. Everything into Defence, and less of it reaches you.',
     trains: { melee: 'defence', ranged: 'defence' },
     effects: { evasion: 1.12, armour: 1.12 },
   },

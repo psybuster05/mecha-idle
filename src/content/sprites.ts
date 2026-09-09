@@ -774,3 +774,147 @@ export const CATEGORY_ICONS: Readonly<Record<string, Sprite>> = {
     '                ',
   ]),
 }
+
+/**
+ * Rail icons for the things that are not skills.
+ *
+ * The Character and Saves groups were the only rows in the rail with nothing beside
+ * them, which made them read as a footer rather than as part of the same list. These
+ * follow every rule the skill icons do - 16x16, the shared palette, and told apart by
+ * silhouette rather than by colour.
+ *
+ * Each one was checked against what it sits near. `equipment` is deliberately not a
+ * torso, because `SLOT_ICONS.frame` already is one; `crawler` is low and wide where
+ * `SLOT_ICONS.legs` is a tall bent leg; and nothing here hangs three prongs downward,
+ * because that silhouette is Scavenging's.
+ */
+export const MENU_ICONS: Readonly<Record<string, Sprite>> = {
+  // You, inside brackets: a figure framed by four corner marks. The page is what is
+  // fitted to your body, so the icon is a body with a selection drawn around it.
+  //
+  // The first pass drew the figure small enough that it read as a blob between the
+  // brackets - which is what the rule about checking an icon beside its neighbours is
+  // for. It fills the frame now: head, shoulders, and a lit core.
+  equipment: icon([
+    '                ',
+    '  ...      ...  ',
+    '  .B.      .B.  ',
+    '  .B.      .B.  ',
+    '  ...      ...  ',
+    '      .WW.      ',
+    '     .bWWb.     ',
+    '   ..BBBBBB..   ',
+    '   .BBBWWBBB.   ',
+    '   .BBBWWBBB.   ',
+    '   .BBBBBBBB.   ',
+    '   ..BB..BB..   ',
+    '  ... B.  .B    ',
+    '  .B.      .B.  ',
+    '  .B.      .B.  ',
+    '  ...      ...  ',
+  ]),
+  // A workshop on tracks: low, wide, and all chassis. The second body in the world.
+  crawler: icon([
+    '                ',
+    '                ',
+    '                ',
+    '     .......    ',
+    '    .bBBBBBb.   ',
+    '   .BBWWWWWBB.  ',
+    '  .BBBBBBBBBBB. ',
+    '  .bBBBBBBBBBb. ',
+    '  ............. ',
+    ' ...............',
+    ' .bBBBBBBBBBBBb.',
+    ' .B.B.B.B.B.B.B.',
+    ' .bBBBBBBBBBBBb.',
+    ' ...............',
+    '                ',
+    '                ',
+  ]),
+  // A braced crate. Everything you are holding and not carrying.
+  bank: icon([
+    '                ',
+    '                ',
+    '  ............  ',
+    '  .bBBBBBBBBb.  ',
+    '  .BW......WB.  ',
+    '  .B.bB..Bb.B.  ',
+    '  .B..bBBb..B.  ',
+    '  .B...BB...B.  ',
+    '  .B...BB...B.  ',
+    '  .B..bBBb..B.  ',
+    '  .B.bB..Bb.B.  ',
+    '  .BW......WB.  ',
+    '  .bBBBBBBBBb.  ',
+    '  ............  ',
+    '                ',
+    '                ',
+  ]),
+  // A page with a corner turned down. What you have remembered, written out.
+  log: icon([
+    '                ',
+    '   ........     ',
+    '   .bBBBBb..    ',
+    '   .BWWWWB.b.   ',
+    '   .BBBBBB...   ',
+    '   .BWWWWWWB.   ',
+    '   .BBBBBBBB.   ',
+    '   .BWWWWWWB.   ',
+    '   .BBBBBBBB.   ',
+    '   .BWWWWWWB.   ',
+    '   .BBBBBBBB.   ',
+    '   .BWWWWB.B.   ',
+    '   .bBBBBBBb.   ',
+    '   .........    ',
+    '                ',
+    '                ',
+  ]),
+  /**
+   * One icon for all three slots, not three.
+   *
+   * A fill level would have been the obvious idea - empty, half, full - and it is a
+   * claim the icon cannot keep: "Your game" is at whatever stage the player has
+   * actually reached, which is as likely to be past Endgame's as behind Mid-game's.
+   * The names say which is which; the icon says *this row is a save*, which is the
+   * job every other icon in the rail is doing.
+   */
+  save: icon([
+    '                ',
+    '                ',
+    '   .........    ',
+    '  .bBBBBBBBb.   ',
+    '  .BB.....BB.   ',
+    '  .BB.WWW.BB.   ',
+    '  .BB.WWW.BB.   ',
+    '  .BBBBBBBBB.   ',
+    '  .BWWWWWWWB.   ',
+    '  .BW.....WB.   ',
+    '  .BW.....WB.   ',
+    '  .BWWWWWWWB.   ',
+    '  .bBBBBBBBb.   ',
+    '   .........    ',
+    '                ',
+    '                ',
+  ]),
+  // Skip back to the start. Steel rather than blue: this is an action, not a place, and
+  // the row it sits on is the only one in the rail that destroys something.
+  reset: icon([
+    '                ',
+    '                ',
+    '                ',
+    '    ..     ..   ',
+    '    .S.   .SS.  ',
+    '    .S.  .SSS.  ',
+    '    .S. .SSSS.  ',
+    '    .S..SSSSS.  ',
+    '    .S..SSSSS.  ',
+    '    .S. .SSSS.  ',
+    '    .S.  .SSS.  ',
+    '    .S.   .SS.  ',
+    '    ..     ..   ',
+    '                ',
+    '                ',
+    '                ',
+  ]),
+}

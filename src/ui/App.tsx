@@ -22,7 +22,7 @@ import { useItemGains } from './useItemGains'
 import { useUnlocks } from './useUnlocks'
 import { isUnlocked, nextStage, unlockedSkills } from '../sim/tutorial'
 import { PixelSprite } from './components/PixelSprite'
-import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
+import { FIGHT_ICON, MENU_ICONS, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
 import { CombatSkillPanel } from './components/CombatSkillPanel'
@@ -203,7 +203,10 @@ export function App() {
               className={`rail-item ${tab === 'mech' ? 'selected' : ''}`}
               onClick={() => setTab('mech')}
             >
-              <span className="rail-name">Equipment</span>
+              <span className="rail-name">
+                <PixelSprite layers={[MENU_ICONS.equipment]} scale={1} className="rail-icon" />
+                Equipment
+              </span>
             </button>
             {isUnlocked(state, 'crawler') ? (
               <button
@@ -211,6 +214,7 @@ export function App() {
                 onClick={() => setTab('crawler')}
               >
                 <span className="rail-name">
+                  <PixelSprite layers={[MENU_ICONS.crawler]} scale={1} className="rail-icon" />
                   {state.actors.crawler.activity && (
                     <span className="running-dot" aria-label="working" />
                   )}
@@ -221,7 +225,10 @@ export function App() {
             ) : (
               frontier?.unlocks === 'crawler' && (
                 <div className="rail-item locked" aria-disabled="true">
-                  <span className="rail-name">Crawler</span>
+                  <span className="rail-name">
+                    <PixelSprite layers={[MENU_ICONS.crawler]} scale={1} className="rail-icon" />
+                    Crawler
+                  </span>
                   <span className="rail-level dim">{frontier.hint}</span>
                 </div>
               )
@@ -230,7 +237,10 @@ export function App() {
               className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
               onClick={() => setTab('bank')}
             >
-              <span className="rail-name">Bank</span>
+              <span className="rail-name">
+                <PixelSprite layers={[MENU_ICONS.bank]} scale={1} className="rail-icon" />
+                Bank
+              </span>
               <span className="rail-level">{Object.keys(state.bank).length}</span>
             </button>
             <button
@@ -238,6 +248,7 @@ export function App() {
               onClick={() => setTab('log')}
             >
               <span className="rail-name">
+                <PixelSprite layers={[MENU_ICONS.log]} scale={1} className="rail-icon" />
                 Log
                 {unreadLogCount(state) > 0 && (
                   <span className="unread-dot" aria-label="unread entries" />

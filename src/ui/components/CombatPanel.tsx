@@ -170,7 +170,6 @@ export function CombatPanel({ state, dispatch }: Props) {
                   <strong>{style.name}</strong>
                   <span className="xp-tag">{trains}</span>
                 </span>
-                <span className="dim">{style.description}</span>
                 <span className="style-effect">
                   {style.effects
                     ? Object.entries(style.effects)

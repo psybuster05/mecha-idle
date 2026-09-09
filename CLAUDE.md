@@ -143,6 +143,13 @@ skills and the xp curve is exponential, so concentrated xp buys fewer total leve
 spread xp. One number climbs fast, combat level climbs slower. Hitpoints sits outside the
 choice entirely - everything hitting you trains it.
 
+The style cards show **what each one trains and what it buys, and nothing else**. They
+carried a line of flavour each and it was the wrong place for it: this is a control you
+read while deciding, and four sentences of prose between four pairs of numbers is
+something to scroll past rather than something to read. The `description` field went with
+the markup - a field nothing renders is dead data, which is exactly how `MechPortrait`
+ended up reading a stat that no longer existed.
+
 Two things measured rather than assumed there. The same *kill* pays an identical total
 under every style, asserted exactly. Over a long *fight* the totals drift under one
 percent apart, because a style that raises accuracy or damage kills marginally faster -
@@ -416,10 +423,23 @@ Rules:
   than picking fresh ones, so the weapon drawn on your portrait and the type tag beside
   it agree. They also avoid each other's metaphors: kinetic is a solid wedge and Ranged
   a bolt *with a trail*, because two projectiles would have been one icon twice.
+- **Every rail row has an icon, not just the skills.** `MENU_ICONS` covers Equipment,
+  Crawler, Bank, Log, the save slots and reset. Without them the Character and Saves
+  groups read as a footer rather than as part of the same list. Each was drawn against
+  what it sits near: `equipment` is deliberately not a torso because `SLOT_ICONS.frame`
+  already is one, `crawler` is low and wide where `SLOT_ICONS.legs` is a tall bent leg,
+  and nothing hangs three prongs downward, because that silhouette is Scavenging's.
+- **One save icon for all three slots, not three.** A fill level - empty, half, full - is
+  the obvious idea and it is a claim the icon cannot keep: "Your game" is at whatever
+  stage the player actually reached, as likely to be past Endgame's as behind Mid-game's.
+  The names say which is which; the icon says *this row is a save*.
 - **Two icons must not need colour to tell them apart.** Cartography shipped as a compass
   rose that collapsed into the same cross as Hitpoints at 16px; only the green said which
   was which, which is exactly the failure the colour rule above is meant to prevent. It is
   a survey grid now. Look at every icon next to its neighbours before believing it works.
+  That rule caught the first `equipment` icon too: the figure inside its brackets was
+  drawn small enough that it read as a blob, and only looking at it beside Crawler and
+  Bank at size showed it. It fills the frame now.
 - Enemies use **archetype sprites** (skitter / flyer / bulwark / authority), not one per
   enemy. Twenty enemies is more art than this project can carry, and at this size the
   silhouette is what reads anyway. Bosses always get `authority`.

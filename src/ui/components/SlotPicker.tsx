@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { PRESETS } from '../../content/presets'
+import { MENU_ICONS } from '../../content/sprites'
+import { PixelSprite } from './PixelSprite'
 import { SLOT_IDS, slotKey, writeActiveSlot, type SlotId } from '../../platform/SaveAdapter'
 
 /**
@@ -95,7 +97,10 @@ export function SlotPicker({
             title={started(slot) || slot === 'own' ? blurb : `${blurb} Not started yet.`}
             aria-pressed={slot === active}
           >
-            <span className="rail-name">{name}</span>
+            <span className="rail-name">
+              <PixelSprite layers={[MENU_ICONS.save]} scale={1} className="rail-icon" />
+              {name}
+            </span>
             {/* Not on the one you are standing in: its key is only written at the first
                 autosave, so the slot you just opened would otherwise call itself new. */}
             {slot !== 'own' && slot !== active && !started(slot) && (
@@ -108,7 +113,10 @@ export function SlotPicker({
       {/* Quieter than the three above it, because those are navigation and this destroys
           a save. It only takes the colour of a warning on hover. */}
       <button className="rail-item slot-reset" onClick={() => setConfirming(true)}>
-        <span className="rail-name">Reset {current.name}</span>
+        <span className="rail-name">
+          <PixelSprite layers={[MENU_ICONS.reset]} scale={1} className="rail-icon" />
+          Reset {current.name}
+        </span>
       </button>
 
       {confirming && (

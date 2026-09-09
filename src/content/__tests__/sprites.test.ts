@@ -8,6 +8,7 @@ import {
   MECH_BASE,
   MECH_LEGS_HEAVY,
   MECH_LEGS_THRUSTER,
+  MENU_ICONS,
   SKILL_ICONS,
   SLOT_ICONS,
   WEAPON_SPRITES,
@@ -30,6 +31,7 @@ const ALL: Record<string, Sprite> = {
   ...Object.fromEntries(Object.entries(CATEGORY_ICONS).map(([k, v]) => [`category:${k}`, v])),
   ...Object.fromEntries(Object.entries(SLOT_ICONS).map(([k, v]) => [`slot:${k}`, v])),
   ...Object.fromEntries(Object.entries(DAMAGE_ICONS).map(([k, v]) => [`damage:${k}`, v])),
+  ...Object.fromEntries(Object.entries(MENU_ICONS).map(([k, v]) => [`menu:${k}`, v])),
 }
 
 /**
