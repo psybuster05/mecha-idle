@@ -9,6 +9,7 @@ import { readAllStoryBeats, readStoryBeat, startCombat, startSkillAction } from 
 import { applyOffline } from '../offline'
 import { tick } from '../tick'
 import { deserialize, serialize } from '../save'
+import { opened } from './support'
 
 function tickBy(state: GameState, total: number, step: number): GameState {
   let next = state
@@ -105,7 +106,7 @@ describe('triggering', () => {
  */
 describe('triggers are monotonic', () => {
   it('records a place on arrival, and keeps it after leaving', () => {
-    let state = startSkillAction(newGame(), 'scavenging', 'roadside_wrecks')
+    let state = startSkillAction(opened(newGame(), 'refining'), 'scavenging', 'roadside_wrecks')
     state = tickBy(state, 60, 0.5)
     expect(state.visited).toContain('roadside')
 

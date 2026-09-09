@@ -10,6 +10,7 @@ import {
 import { newGame, haltActivity } from '../state'
 import { tick } from '../tick'
 import { count } from '../bank'
+import { opened } from './support'
 
 describe('intents are pure', () => {
   it('never mutate the state they are given', () => {
@@ -37,7 +38,7 @@ describe('starting activities', () => {
   })
 
   it('switching action abandons progress on the old one', () => {
-    let state = startSkillAction(newGame(), 'refining', 'smelt_steel')
+    let state = startSkillAction(opened(newGame(), 'refining', 'fabrication'), 'refining', 'smelt_steel')
     state.bank['scrap_steel'] = 100
 
     state = tick(state, 2) // two thirds through a 4s action

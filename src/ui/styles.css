@@ -110,6 +110,18 @@ body:has(.app) > #root { display: contents; }
   overflow-y: auto;
 }
 .rail-group { display: flex; flex-direction: column; gap: 4px; }
+/*
+ * The next thing to recover, named but not yet yours.
+ *
+ * Deliberately not a disabled button: a button says "press me" and then refuses, where
+ * this has nothing to press. It is a label saying what is coming and what buys it.
+ */
+.rail-item.locked {
+  cursor: default; opacity: 0.45;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rail-item.locked:hover { background: none; }
+
 .rail-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; padding: 0 6px 4px; }
 .rail-item {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;

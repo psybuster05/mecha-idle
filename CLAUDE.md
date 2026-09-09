@@ -220,6 +220,58 @@ Practical rules:
   performed halts instantly as `unreachable` - also enforced by a test, which is how nine
   stranded recipes were found.
 
+## The opening: one subroutine at a time
+
+A fresh mech used to wake with all four non-combat skills on the rail and no reason to
+touch any particular one. That is a menu, not a beginning - and it wasted the one piece of
+fiction this game has that no other idle game does, which is that skills are **recovered**
+rather than learned.
+
+Each is gated behind the skill that *feeds* it, so the dependency chain teaches itself in
+the order the bank already implies:
+
+| Stage | Opens at | Measured, playing the chain |
+|---|---|---|
+| Scavenging | you wake with it | 0 |
+| Refining | Scavenging 5 | ~30s |
+| Fabrication | Refining 5 | ~2 min |
+| Salvaging | Fabrication 5 | ~8 min |
+| Crawler schematic | Fabrication 10 | ~26 min |
+
+Those are *real* minutes at `DEMO_PACE`, from a standing start, with **no combat at all** -
+the same contract every other lock in this game keeps. The table lives in
+`content/tutorial.ts`, evaluation in `sim/tutorial.ts`, exactly as story is split.
+
+Four rules, all tested:
+
+- **Derived, never stored.** The same choice `waitingFor` makes. A stored flag is a second
+  copy of a fact that can fall out of step with the first; deriving it from levels means no
+  new save field, no migration, and nothing for an older save to be missing.
+- **Monotonic, so a level and never a bank count.** The story rule from the other side:
+  spending your last ingot must not take a skill back off you, and a single large offline
+  step must not miss a condition that many small ones caught.
+- **Nothing is ever taken away.** A skill with *any* xp in it is open whatever the
+  requirement says. Saves predate this chain and materials drop in combat too, so somebody
+  can plausibly hold Refining levels with Scavenging at 1 - and hiding a skill they trained
+  would be taking progress away, which nothing here is allowed to do. It is also what makes
+  every existing save open everything the moment it loads.
+- **The gate is a rule, not a rail.** `startSkillAction` refuses a skill that has not been
+  recovered, so hiding the button is a *consequence* of the rule rather than being the rule.
+
+The rail shows what is open plus **one** locked stage - the same frontier rule
+`visibleNodes` keeps on the map. The whole remaining chain would be a roadmap; none of it
+would leave a player who has seen one skill with no reason to believe there are others.
+
+Combat is deliberately untouched: Fight and its five skills are there from the first
+second. This gates the industry ladder, which is the half that has an order to it.
+
+One trap this set, worth knowing before writing another sim test: **four existing tests
+started Refining on a fresh game and silently got nothing.** `opened()` in
+`sim/__tests__/support.ts` is the fixture helper, and it uses the escape hatch above -
+one xp, which moves no level, no rate and no yield chance - rather than granting the
+feeder skill its requirement level, which would have quietly changed the bonus-haul odds
+those very tests were measuring.
+
 ## Defeated bosses
 
 `state.defeated` maps boss id to kill count. The count rather than a flag, because it

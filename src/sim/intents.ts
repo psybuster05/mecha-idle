@@ -11,6 +11,7 @@ import { SPEEDS, type Speed } from './fuel'
 import { removeItem } from './bank'
 import { getCombatStyle, type CombatStyleId } from '../content/skills/combat'
 import { nodesForAction, nodesForZone } from '../content/world'
+import { isSkillUnlocked } from './tutorial'
 import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { moveToAny, placeActor } from './world'
 import type {
@@ -31,6 +32,11 @@ export function startSkillAction(
   action: ActionId,
   actor: ActorId = 'mech',
 ): GameState {
+  // A skill you have not recovered yet is not a skill you can start. Enforced here
+  // rather than only in the rail, so hiding a button is a consequence of the rule instead
+  // of being the rule.
+  if (!isSkillUnlocked(state, skill)) return state
+
   // The crawler is a workshop on tracks and only ever runs industry, so it never has to
   // go anywhere to work - it carries the furnace with it.
   if (actor === 'crawler' && !canCrawlerRun(skill)) return state

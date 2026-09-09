@@ -4,7 +4,6 @@ import { SKILLS, getSkill } from '../content'
 import { getCombatSkill } from '../content/skills/combat'
 import {
   COMBAT_SKILLS,
-  GATHERING_SKILLS,
   type CombatSkillId,
   type GatheringSkillId,
   type GameState,
@@ -17,6 +16,8 @@ import { Bar } from './components/Bar'
 import { SpeedToggle } from './components/SpeedToggle'
 import { Toasts, useToasts } from './components/Toast'
 import { useItemGains } from './useItemGains'
+import { useUnlocks } from './useUnlocks'
+import { isUnlocked, nextStage, unlockedSkills } from '../sim/tutorial'
 import { PixelSprite } from './components/PixelSprite'
 import { FIGHT_ICON, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
@@ -60,6 +61,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>('scavenging')
   const { toasts, show, showGain } = useToasts()
   useItemGains(state, showGain, ready)
+  useUnlocks(state, show, ready)
 
   if (!ready) {
     return (
@@ -75,6 +77,7 @@ export function App() {
   const interrupt = interruptId ? getStoryBeat(interruptId) : undefined
   const activity = state.actors.mech.activity
   const busy = activity !== null
+  const frontier = nextStage(state)
 
   return (
     <div className="app">
@@ -152,7 +155,7 @@ export function App() {
 
           <div className="rail-group">
             <div className="rail-heading dim">Non-combat</div>
-            {GATHERING_SKILLS.map((id) => {
+            {unlockedSkills(state).map((id) => {
               const skill = SKILLS.find((s) => s.id === id)
               const xp = state.skills[id]
               const running = activity?.kind === 'skill' && activity.skill === id
@@ -172,6 +175,15 @@ export function App() {
                 </button>
               )
             })}
+            {/* One step of frontier and no further - the same rule the map keeps. The
+                whole remaining chain would be a roadmap; none of it would leave a player
+                who has seen one skill with no reason to think there are others. */}
+            {frontier && frontier.unlocks !== 'crawler' && (
+              <div className="rail-item locked" aria-disabled="true">
+                <span className="rail-name">{frontier.name}</span>
+                <span className="rail-level dim">{frontier.hint}</span>
+              </div>
+            )}
           </div>
 
           <div className="rail-group">
@@ -182,18 +194,27 @@ export function App() {
             >
               <span className="rail-name">Equipment</span>
             </button>
-            <button
-              className={`rail-item ${tab === 'crawler' ? 'selected' : ''}`}
-              onClick={() => setTab('crawler')}
-            >
-              <span className="rail-name">
-                {state.actors.crawler.activity && (
-                  <span className="running-dot" aria-label="working" />
-                )}
-                Crawler
-              </span>
-              {!state.actors.crawler.unlocked && <span className="dim">asleep</span>}
-            </button>
+            {isUnlocked(state, 'crawler') ? (
+              <button
+                className={`rail-item ${tab === 'crawler' ? 'selected' : ''}`}
+                onClick={() => setTab('crawler')}
+              >
+                <span className="rail-name">
+                  {state.actors.crawler.activity && (
+                    <span className="running-dot" aria-label="working" />
+                  )}
+                  Crawler
+                </span>
+                {!state.actors.crawler.unlocked && <span className="dim">asleep</span>}
+              </button>
+            ) : (
+              frontier?.unlocks === 'crawler' && (
+                <div className="rail-item locked" aria-disabled="true">
+                  <span className="rail-name">Crawler</span>
+                  <span className="rail-level dim">{frontier.hint}</span>
+                </div>
+              )
+            )}
             <button
               className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
               onClick={() => setTab('bank')}

@@ -243,13 +243,11 @@ describe('a complete ladder exists outside every lock', () => {
  * without the game.
  */
 describe('what a visitor sees', () => {
-  it('puts the crawler inside five minutes of working at it', () => {
-    const fabrication = SKILLS.find((s) => s.id === 'fabrication')!
-    // Fabrication 10 is the Traction Core, and the second actor is the clearest single
-    // proof that this is a game with systems rather than one button.
-    const minutes = (hoursAtLevel(fabrication, 10) * 60) / DEMO_PACE
-    expect(minutes, `crawler at ${minutes.toFixed(1)} real minutes`).toBeLessThan(5)
-  })
+  // The crawler used to be measured here, as Fabrication 10 in isolation. That was
+  // optimistic to the point of being wrong: you cannot fabricate without ingots, and you
+  // cannot smelt without scrap, so the honest number is the chained one. It is measured
+  // where the chain is - `walking the whole chain` in the tutorial suite - which reports
+  // 26 real minutes rather than 2.
 
   it('opens the second region inside half an hour', () => {
     const graveyard = ZONES.find((z) => z.id === 'ship_graveyard')!

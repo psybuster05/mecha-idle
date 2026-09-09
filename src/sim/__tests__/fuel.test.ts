@@ -9,6 +9,7 @@ import { tick } from '../tick'
 import { derivedStats } from '../stats'
 import { xpForLevel } from '../xp'
 import { deserialize, serialize } from '../save'
+import { opened } from './support'
 
 function tickBy(state: GameState, total: number, step: number): GameState {
   let next = state
@@ -99,7 +100,7 @@ describe('the speed toggle', () => {
     state.bank['crawler_core'] = 1
     state = installCrawler(state).state
     state.bank['scrap_steel'] = 10000
-    state = startSkillAction(state, 'refining', 'smelt_steel', 'crawler')
+    state = startSkillAction(opened(state, 'refining'), 'refining', 'smelt_steel', 'crawler')
     const before = availableEnergy(state)
     state = tickBy(state, 120, 1)
 
@@ -300,7 +301,7 @@ describe('bonus haul', () => {
       3600,
       1,
     )
-    const plain = roadside()
+    const plain = opened(roadside(), 'refining')
     plain.bank['scrap_steel'] = 100000
     const smeltPlain = tickBy(startSkillAction(plain, 'refining', 'smelt_steel'), 3600, 1)
 
