@@ -450,14 +450,16 @@ img.sprite { image-rendering: pixelated; }
 }
 
 /*
- * The mech gets somewhere to stand.
+ * The mech gets somewhere to stand: a dead skyline over rubble, and a floor.
  *
- * Two rectangles, no art: a darker ground inset inside a lighter sky. That is enough to
- * read as a place rather than as a sprite floating on the panel, which is what made the
- * stage look like a piece of the equipment page pasted into the corner.
+ * This was two rectangles for a while - a darker slab inside a lighter box - which was
+ * enough to stop the mech floating in the panel background but never enough to be a
+ * place. The art is `SCENE_BACKDROP`, drawn like every other sprite here: data, not a
+ * file.
  *
- * Deliberately not a drawn background. A real one is a commission; this holds the
- * composition until there is one, and replacing it means replacing two rules.
+ * The backdrop is drawn at the *mech's* scale and cropped by this box, never scaled to
+ * fit it. Fitting would mean a fractional scale, and a backdrop whose pixels are a
+ * different size from the figure standing on it does not read as one world.
  */
 .stage-scene {
   position: relative;
@@ -477,27 +479,28 @@ img.sprite { image-rendering: pixelated; }
  * and at 10% they stood flush against both ends of the slab like bookends. This gives
  * them a margin to stand within without the ground losing its inset.
  */
-.stage-ground {
-  position: absolute; left: 6%; right: 6%; bottom: 8%;
-  height: 22%;
-  background: var(--panel-2);
-  border: 1px solid var(--line-bright);
+/*
+ * Bottom-anchored and centred, so the crop takes the empty sky off the top and even
+ * slivers off the sides. The ground line is what has to stay put; nothing above it does.
+ */
+.stage-backdrop {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  image-rendering: pixelated;
 }
 /*
- * Feet on the slab, not in it and not above it.
+ * Feet on the ground line, not above it and not through it.
  *
- * The ground's top edge is at 30% of the scene height (bottom 8% + height 22%), so the
- * figure sits at 28% - two percent of overlap, enough to read as contact rather than
- * hovering.
+ * `--ground` is set by Stage from the backdrop itself - the row the surface is drawn on,
+ * times the scale - so the art decides where the feet go. It was a percentage before,
+ * and a percentage is a second copy of a number that only agreed with the art by
+ * coincidence: at 28% the mech stood three pixels off the floor.
  *
- * Positioned rather than margined on purpose: a percentage *margin* resolves against the
- * containing block's width, not its height, so matching a height-based ground line with
- * one silently lands somewhere else. It put the mech knee-deep at 14% and floating at
- * 28%. `bottom` on an absolutely positioned box is height-relative, so it means what it
- * says.
+ * Positioned rather than margined, whatever the unit: a percentage *margin* resolves
+ * against the containing block's width, not its height, which once put the mech
+ * knee-deep at 14% and floating at 28%.
  */
 .stage-figure {
-  position: absolute; bottom: 28%; left: 0; right: 0;
+  position: absolute; bottom: var(--ground, 28%); left: 0; right: 0;
   display: flex; justify-content: center;
   z-index: 1; line-height: 0;
 }
@@ -621,7 +624,7 @@ img.sprite { image-rendering: pixelated; }
    *
    * Below the content was the first attempt and it was wrong: with a full enemy list in
    * front of it, your own mech ended up a thousand pixels down and nobody would ever
-   * see it. Above, compact, it costs about 90px and is the first thing you look at.
+   * see it. Above, compact, it is the first thing you look at.
    *
    * The map is dropped rather than shrunk. At this width it is either unreadable or it
    * eats the screen, and of the three things here it is the one you need least while
@@ -633,7 +636,19 @@ img.sprite { image-rendering: pixelated; }
     flex-direction: row; align-items: center; gap: 14px; padding: 10px 14px;
   }
   .stage-body { display: contents; }
-  .stage-portrait { padding: 0; flex: none; }
+  /*
+   * Sized rather than left to its aspect ratio.
+   *
+   * This rule used to name `.stage-portrait`, a class that stopped existing when the
+   * portrait became a scene - so on a phone the scene had a 4:3 ratio, no width to apply
+   * it to, and collapsed to about two pixels. Nothing caught it because a stale selector
+   * matches nothing and reports nothing, the same silence a mistyped item id gives.
+   *
+   * 160px is what the picture actually needs: the ground line sits 60px up and the mech
+   * is 96px tall, so anything shorter crops its head. The backdrop is bottom-anchored and
+   * centred, so the narrow width simply crops the skyline either side.
+   */
+  .stage-scene { width: 150px; height: 160px; aspect-ratio: auto; flex: none; }
   .stage-now { flex: 1; min-width: 0; min-height: 0; }
   .stage-map { display: none; }
 }

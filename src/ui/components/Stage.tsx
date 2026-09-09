@@ -1,5 +1,11 @@
+import type { CSSProperties } from 'react'
 import { getEnemy, getSkill, itemName } from '../../content'
-import { ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
+import {
+  ENEMY_SPRITES,
+  SCENE_BACKDROP,
+  SCENE_GROUND_ROW,
+  enemySpriteKey,
+} from '../../content/sprites'
 import { getNode } from '../../content/world'
 import type { GameState } from '../../sim/state'
 import { effectiveSpeed } from '../../sim/fuel'
@@ -51,12 +57,21 @@ export function Stage({ state }: { state: GameState }) {
       {/* Scrolls on its own so the map below can hold the corner. Without this split
           the pinned map simply covered whatever it overlapped. */}
       <div className="stage-body">
-        {/* A place rather than an inventory readout. Two rectangles - ground inside
-            sky - is enough to stop the mech floating in the panel background, which is
-            what made this read as a slice of the equipment page. */}
-        <div className="stage-scene">
+        {/* A place, drawn. The sky stays a CSS gradient because a gradient is what a
+            sky is, and the backdrop's top third is transparent so it shows through -
+            the art starts where the horizon does. */}
+        <div
+          className="stage-scene"
+          // Read off the art, never guessed: the surface is this far up from the bottom
+          // of a backdrop that is bottom-anchored, so this is where feet go.
+          style={{ '--ground': `${(SCENE_BACKDROP.rows.length - SCENE_GROUND_ROW) * SPRITE_PIXEL}px` } as CSSProperties}
+        >
           <div className="stage-sky" />
-          <div className="stage-ground" />
+          <PixelSprite
+            layers={[SCENE_BACKDROP]}
+            scale={SPRITE_PIXEL}
+            className="stage-backdrop"
+          />
           <div ref={mechMotion} className={`stage-figure ${fighting ? 'squared-off' : ''}`}>
             {/* The stroke lands on the figure and the bob on this wrapper, because both
                 are transforms: on one element the stroke would override the bob for its

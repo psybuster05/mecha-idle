@@ -9,6 +9,7 @@ import {
   MECH_LEGS_HEAVY,
   MECH_LEGS_THRUSTER,
   MENU_ICONS,
+  SCENE_BACKDROP,
   SKILL_ICONS,
   SLOT_ICONS,
   WEAPON_SPRITES,
@@ -35,6 +36,20 @@ const ALL: Record<string, Sprite> = {
 }
 
 /**
+ * Sprites that are deliberately not 16x16.
+ *
+ * They still have to be rectangular, still have to use characters their palette defines,
+ * and still have to draw something - the failures those catch are silent whatever size
+ * the art is. Only the fixed authored size is different, and each one here has to say in
+ * its own doc comment why it is an exception.
+ */
+const OVERSIZE: Record<string, { sprite: Sprite; width: number; height: number }> = {
+  SCENE_BACKDROP: { sprite: SCENE_BACKDROP, width: 48, height: 36 },
+}
+
+for (const [name, entry] of Object.entries(OVERSIZE)) ALL[name] = entry.sprite
+
+/**
  * Sprite data integrity.
  *
  * A ragged row or an unmapped character draws nothing and fails silently - the same
@@ -54,8 +69,19 @@ describe('sprite data', () => {
   it('is authored at the size CLAUDE.md fixes', () => {
     // 16x16 for mechs and enemies. Integer scaling only works from a known base.
     for (const [name, sprite] of Object.entries(ALL)) {
+      if (name in OVERSIZE) continue
       expect(sprite.rows.length, `${name} height`).toBe(16)
       expect(sprite.rows[0]!.length, `${name} width`).toBe(16)
+    }
+  })
+
+  it('holds the oversize ones to their own declared size', () => {
+    // An exception that nothing pins is not an exception, it is a sprite of whatever
+    // size it drifted to - and the backdrop's size is what its scale and crop are
+    // calculated from.
+    for (const [name, { sprite, width, height }] of Object.entries(OVERSIZE)) {
+      expect(sprite.rows.length, `${name} height`).toBe(height)
+      expect(sprite.rows[0]!.length, `${name} width`).toBe(width)
     }
   })
 

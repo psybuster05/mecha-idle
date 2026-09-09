@@ -524,18 +524,41 @@ as far as boss sprites go without a wider stage. Which side the mech stands on i
 *activity* rather than off there being an enemy right now - keyed off the enemy it would
 slide back to centre after every kill and out again a second later, once per respawn.
 
-**The scene is two rectangles, not art** - a darker ground slab inset inside a lighter
-sky. That is enough to read as a *place* rather than a sprite floating on the panel,
-which is what made the stage look like a piece of the equipment page pasted into the
-corner. It is deliberately not a drawn background: a real one is a commission, and
-replacing this means replacing two CSS rules. The equipment page's "3 of 5 fitted"
-caption is off here for the same reason - the stage wants a figure, not a readout.
+**The scene is a drawn landscape**: a dead skyline over rubble, with a floor to stand
+on. It was two rectangles for a long while - a darker slab inside a lighter box - which
+was enough to stop the mech floating in the panel background but never enough to be a
+*place*. The art is `SCENE_BACKDROP`, data like every other sprite here. The sky stays a
+CSS gradient, because a gradient is what a sky is, and the backdrop's top third is
+transparent so it shows through: the art starts where the horizon does.
 
-One trap worth knowing if you move the mech: **a percentage `margin` resolves against
-the containing block's width, not its height.** Lining the feet up with a ground line
-defined in height percentages using one silently lands somewhere else - it put the mech
-knee-deep at 14% and floating at 28%. The figure is absolutely positioned, where
-`bottom` is height-relative and means what it says.
+Four things it has to keep:
+
+- **Authored at 48x36, the one place the 16x16 rule bends.** Sixteen pixels is a *thing* -
+  an item, a face, a silhouette read in one glance. This is a place, and a place is mostly
+  relationships between things: how far the towers sit behind the rubble, how much sky is
+  above them. At 16x16 there is no room for a relationship, only for one shape. The sprite
+  suite has an `OVERSIZE` list that still applies every other check to it and pins the
+  declared size, because an exception nothing pins is just a sprite of whatever size it
+  drifted to.
+- **Drawn at the mech's scale and cropped, never scaled to fit.** Fitting means a
+  fractional scale - the thing that turns pixel art to mush - and a backdrop whose pixels
+  are a different size from the figure standing on it does not read as one world. The
+  panel is 271px wide and the backdrop is 288: the overflow is thrown away.
+- **The towers are lighter than the sky, not darker.** Silhouetting them was the first try
+  and it vanished: the sky at the horizon is already near-black here, so a darker tower has
+  nothing to be dark against. They are drawn at two depths for the same reason - one value
+  for all of them read as a row of blocks rather than a city with distance in it.
+- **No signal colour appears in it.** No orange, no cyan, no player blue. Orange is hostile
+  and cyan is a live readout, so a backdrop borrowing either would put something in the
+  scenery that a player has been trained to look at.
+
+**The feet are placed from the art, not from a percentage.** `SCENE_GROUND_ROW` says which
+row is the surface; `Stage` turns it into a `--ground` pixel offset and `.stage-figure`
+sits on it. It was `bottom: 28%` before, which is a second copy of a number that only ever
+agreed with the art by coincidence - and did not: the mech stood three pixels off the
+floor. Whatever unit you use, keep it on `bottom` rather than a margin, because **a
+percentage `margin` resolves against the containing block's width, not its height**, which
+once put the mech knee-deep at 14% and floating at 28%.
 
 **The map zooms and pans**, and it has to. The world is drawn into a 740-unit logical
 space shown in a ~270px column, so at 1x the place names land at about four physical
@@ -565,9 +588,16 @@ looking at empty space between two of them. A ceiling of 8 rendered a blank squa
 
 The shell is a **16:9 frame**, centred and letterboxed, because this is a web page shown
 to people rather than an app that owns the screen. Everything inside scrolls; nothing
-grows. On a phone there is no side, so the stage becomes a compact strip *above* the
+grows. On a phone there is no side, so the stage becomes a strip *above* the
 content - below it was tried first and buried the mech under a full enemy list - and the
 map drops out, being the one part that is unreadable at that width.
+
+That strip needs its own size, and for a while it did not have one: the rule sizing it
+still named `.stage-portrait`, a class that stopped existing when the portrait became a
+scene. **A stale selector matches nothing and reports nothing** - the same silence a
+mistyped item id gives - so the scene had a 4:3 ratio, no width to apply it to, and
+collapsed to about two pixels on every phone. It is 150x160 now, which is what the picture
+actually needs: the ground line sits 60px up and the mech is 96px tall.
 
 The map draws only what you can reach plus its immediate frontier. Drawing all
 twenty-four places at once was unreadable overlapping labels.

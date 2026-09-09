@@ -918,3 +918,101 @@ export const MENU_ICONS: Readonly<Record<string, Sprite>> = {
     '                ',
   ]),
 }
+
+
+// ---------------------------------------------------------------------------
+// The place the mech stands in
+// ---------------------------------------------------------------------------
+
+/**
+ * Backdrop colours: every one of them recedes.
+ *
+ * **No signal colour appears here at all** - no orange, no cyan, no player blue. The
+ * colour language says orange is hostile and cyan is a live readout, and a backdrop that
+ * borrowed either would put something in the scenery a player has been trained to look
+ * at.
+ *
+ * The towers are *lighter* than the sky, not darker. Silhouetting them was the first
+ * try and it disappeared: the sky at the horizon is already near-black here, so a darker
+ * tower has nothing to be dark against. Concrete catching the last of the light does,
+ * and it also puts the brightest thing at the horizon rather than at the bottom of the
+ * frame, which is what makes the distance read as distance.
+ */
+const SCENE_PALETTE: Readonly<Record<string, string>> = {
+  h: '#101e33', // haze, barely above the sky - it softens the tower bases, nothing more
+  f: '#12213a', // a far tower, barely separated from the sky
+  F: '#17293f', // its lit face
+  d: '#1a2b45', // a near tower, lighter than the sky behind it
+  D: '#26405f', // its lit face, so a tower has a direction
+  r: '#101d30', // rubble, the darkest thing here: it is in the towers' shadow
+  R: '#1a2c46', // the top edge of a mound, catching the same light the towers do
+  e: '#2e4c6e', // the ground line - the brightest edge in the scene, and the only one
+  g: '#16243a', // ground
+  G: '#1e3350', // a plate in the ground, so the floor has a surface
+}
+
+/**
+ * Where you are: a dead skyline over rubble, and a floor to stand on.
+ *
+ * **Authored at 48x36 rather than 16x16**, which is the one place the art rules bend, so
+ * it needs a reason. Sixteen pixels is a *thing* - an item, a face, a silhouette read in
+ * one glance. This is a place, and a place is mostly relationships between things: how
+ * far the towers sit behind the rubble, how much sky is above them. At 16x16 there is no
+ * room for a relationship, only for one shape.
+ *
+ * The scale is **not** chosen to fit the panel. It is fixed at the mech's own scale and
+ * the overflow is cropped, because fitting would mean a fractional scale - the thing that
+ * turns pixel art to mush - and because a backdrop whose pixels are a different size from
+ * the figure standing on it does not read as one world.
+ *
+ * The top third is empty on purpose: the CSS sky gradient shows through, so the sky stays
+ * smooth where smooth is right and the art starts where the horizon does.
+ */
+/**
+ * Which row of the backdrop is the surface. The figures' feet are placed from this
+ * rather than from a percentage, so moving the ground line in the art moves what stands
+ * on it - a percentage would just quietly stop matching.
+ */
+export const SCENE_GROUND_ROW = 26
+
+export const SCENE_BACKDROP: Sprite = {
+  palette: SCENE_PALETTE,
+  rows: [
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                                                ',
+    '                    dD                          ',
+    '                    dD                          ',
+    '                   ddD                          ',
+    '  Dd  dd           ddD                          ',
+    '  Dddddd           ddD              fffffF      ',
+    'FfDddddd           ddD Ffffffff     fffffF      ',
+    'FfDddddd  Fffffff  ddD Ffffffff     fffffF      ',
+    'FfDdDddd  Fffffff  ddD FfffDd  dd   fffffF      ',
+    'FfDddddd  FfDdddf  ddD FfffDd  dddd ffffdddddD  ',
+    'FfDddddd  FfDdddf  ddD FfffDdddddddhffffdddddD  ',
+    'FfDdddDd hFfDdddfhhddDhFfffDdDdddddhffffdddddDhh',
+    'FfDdddddhhFfDdDdfhhddDhFfffDddddDddhffffdddDdDhh',
+    'FfDddddd  FfDdddf  ddD FfffDddddddd ffffdddddD  ',
+    '      RRRRRRRRRRRR      RRRRRRRRRRRR    RRRRRRRR',
+    'RRRRRRRRRrrrrrrRRRRRRRRRRRRrrrrrRRRRRRRRRRRRrrrr',
+    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    'gggggggggGGgggggggggggggggGGgggggggggggggggggggg',
+    'gggggggggggggggggGGgggggggggggggggggGGGGGGGGGggg',
+    'gggggGGGGGGGGgggggggggggggggggggggggggggggggGGgg',
+    'gggggggggggggggggggggggggggggggggGGggggggggggggg',
+    'ggggggggggggggggggggGGGGGGGGGGgggggggggggggggggg',
+    'ggGGgggggggggggggggggggggggggggggggggggggGGGGGGg',
+    'gggggggggggggggggggggggGGggggggggggggggggggggggg',
+    'ggggggggggggGGGGGGGggggggggggggggggggggggggggggg',
+    'gggggggggggggggggggggggggggggGGGGGGGGGGGGggggggg',
+  ],
+}
