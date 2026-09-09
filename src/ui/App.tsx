@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
-import { LocalStorageAdapter } from '../platform/SaveAdapter'
+import { LocalStorageAdapter, readActiveSlot, slotKey } from '../platform/SaveAdapter'
+import { buildPresetById } from '../sim/presets'
+import { SlotPicker } from './components/SlotPicker'
 import { SKILLS, getSkill } from '../content'
 import { getCombatSkill } from '../content/skills/combat'
 import {
+  newGame,
   COMBAT_SKILLS,
   type CombatSkillId,
   type GatheringSkillId,
@@ -53,9 +56,17 @@ function activitySummary(state: GameState): string {
 }
 
 export function App() {
+  // The slot is read once and never changes for the life of the page - switching
+  // reloads, so there is no such thing as the adapter and the state disagreeing.
+  const slot = useMemo(() => readActiveSlot(), [])
   // One adapter for the life of the app; swapping this line is the whole desktop port.
-  const adapter = useMemo(() => new LocalStorageAdapter(), [])
-  const { state, ready, offlineReport, dismissOffline, dispatch, loadError } = useGame(adapter)
+  const adapter = useMemo(() => new LocalStorageAdapter(slotKey(slot)), [slot])
+  const { state, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow } = useGame(
+    adapter,
+    // Only ever consulted for an *empty* slot. 'own' has no preset, so it falls through
+    // to a new game exactly as it always did.
+    () => buildPresetById(slot, Date.now()) ?? newGame(Date.now() >>> 0),
+  )
   // Scavenging opens first: it is the first thing a new mech can actually do, and with
   // the World tab gone there is no longer a panel whose job is to be looked at.
   const [tab, setTab] = useState<Tab>('scavenging')
@@ -96,6 +107,8 @@ export function App() {
             />
           </div>
         </div>
+
+        <SlotPicker active={slot} onSwitch={saveNow} />
 
         <SpeedToggle
           state={state}

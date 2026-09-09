@@ -694,10 +694,56 @@ Three consequences, all handled:
 
 What it does not fix: the second region is still about twenty real minutes of fighting
 away, because 3.3 hours of combat compresses to 20 minutes and no further. Pace alone
-cannot put a boss in front of a fifteen-minute visitor; only a starting save with progress
-on it would. Two tests hold the line that was bought - `what a visitor sees` in the pacing
+cannot put a boss in front of a fifteen-minute visitor - **which is what the save slots
+below are for.** Two tests hold the line that was bought - `what a visitor sees` in the pacing
 suite - so lowering the pace fails loudly rather than quietly shipping the loop without
 the game.
+
+## Save slots: one played, two to be dropped into
+
+Three saves. **Your game** is the playthrough; **Mid-game** and **Endgame** are stages a
+tester can jump straight to, because the pace note above is right that no amount of
+speeding the clock up puts the endgame in front of somebody with fifteen minutes.
+
+They are **stages, not difficulties**: a plausible snapshot of somebody's playthrough -
+levels, bosses down, gear fitted, a bank with something in it - so what gets poked at is
+the real game at that point, not a sandbox with the numbers turned up. Definitions in
+`content/presets.ts`, the builder in `sim/presets.ts`, split the way story and the
+opening are.
+
+Things that had to be got right, each of which was a way to hand somebody a broken save:
+
+- **Slot 'own' keeps the original save key.** That is the entire migration. Every save
+  that predates slots is already the played one, and not moving it cannot fail - where a
+  copy-then-delete has a window in which a playthrough lives nowhere.
+- **Presets are built, never hand-written.** Hand-written state is a second copy of the
+  state shape that nothing keeps in step: it survives renames by silently being wrong, and
+  a save that no longer parses is one a tester meets as a crash. A test round-trips each
+  through the real `serialize`/`deserialize` and asserts it comes back *unchanged*, not
+  merely parseable - a preset that needs repairing on load was built against a shape the
+  game no longer has.
+- **Everything already earned is already read.** `buildPreset` runs the story evaluator
+  and moves the lot into `seen`. Without it the first frame queues a beat for every boss
+  down and every level passed, and whoever picked Endgame meets a stack of interrupt
+  dialogs instead of the endgame.
+- **`savedAt` is stamped now**, so opening a preset for the first time credits no offline
+  progress. A `savedAt` of 0 reads as an absence since the epoch.
+- **Gear is derived from the fabrication table, not listed by id**, so a new tier lands in
+  the presets the day it lands in the game. Ties go to whichever recipe is written last,
+  which is where content tables put the capstone of a tier - that is what hands Endgame The
+  Sentence and the Command Frame rather than the first level-90 rows in the file.
+- **A preset must be able to enter the fight it stops in front of.** The two gates are
+  independent - a node unlocked by the last kill, and a combat level the *zone* asks for -
+  so passing one says nothing about the other. Endgame shipped at combat level 90 against
+  a Switch Room that wants 95: a save whose blurb promised a fight it could not walk into.
+  A test now checks both for every preset.
+
+**Switching saves the current slot and reloads the page.** Blunt and deliberate: booting a
+slot means loading, migrating, crediting time away and restarting the clock, and that path
+exists and is exercised exactly once, at boot. Re-entering it in place would mean resetting
+the state ref, the frame loop, the autosave timer and the toast baselines together, and the
+failure mode if any one of them lagged is the autosave writing one slot's game over
+another's. On a static page a reload costs nothing; a playthrough costs everything.
 
 ## Salvaging is derived, not written
 

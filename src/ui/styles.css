@@ -111,6 +111,25 @@ body:has(.app) > #root { display: contents; }
 }
 .rail-group { display: flex; flex-direction: column; gap: 4px; }
 /*
+ * The save slots, in the top bar beside the speed toggle.
+ *
+ * Named rather than numbered. "Slot 2" tells a tester nothing; "Mid-game" is the whole
+ * reason the slot exists, and this is a control aimed at somebody who was handed a link
+ * and has fifteen minutes.
+ */
+.slots { display: flex; gap: 4px; }
+.slot-button {
+  padding: 4px 9px; font-size: 11px; letter-spacing: 0.04em;
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--dim);
+  cursor: pointer;
+}
+.slot-button:hover { border-color: var(--line-bright); color: var(--text); }
+.slot-button.selected {
+  background: var(--accent); border-color: var(--accent); color: var(--bg);
+  font-weight: 700;
+}
+
+/*
  * The next thing to recover, named but not yet yours.
  *
  * Deliberately not a disabled button: a button says "press me" and then refuses, where

@@ -36,8 +36,13 @@ interface BootResult {
   error: string | null
 }
 
-export function useGame(adapter: SaveAdapter): Game {
-  const stateRef = useRef<GameState>(newGame(Date.now() >>> 0))
+/**
+ * @param initial What an *empty* slot starts as. Defaults to a new game; the preset
+ *   slots hand in a stage instead. Read once, on the first render, like any lazy ref -
+ *   so it seeds a slot and never overwrites one that already has a save in it.
+ */
+export function useGame(adapter: SaveAdapter, initial?: () => GameState): Game {
+  const stateRef = useRef<GameState>(initial ? initial() : newGame(Date.now() >>> 0))
   const [snapshot, setSnapshot] = useState<GameState>(stateRef.current)
   const [ready, setReady] = useState(false)
   const [offlineReport, setOfflineReport] = useState<OfflineReport | null>(null)
