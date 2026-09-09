@@ -108,18 +108,6 @@ export function App() {
           </div>
         </div>
 
-        <SlotPicker
-          active={slot}
-          onSwitch={saveNow}
-          onReset={async () => {
-            // Order matters and is the whole trick: silence the writers first, then
-            // clear, then reload into a boot that finds an empty slot and seeds it.
-            stopSaving()
-            await adapter.clear()
-            location.reload()
-          }}
-        />
-
         <SpeedToggle
           state={state}
           dispatch={dispatch}
@@ -258,6 +246,18 @@ export function App() {
               <span className="rail-level">{state.story.seen.length}</span>
             </button>
           </div>
+
+          <SlotPicker
+            active={slot}
+            onSwitch={saveNow}
+            onReset={async () => {
+              // Order matters and is the whole trick: silence the writers first, then
+              // clear, then reload into a boot that finds an empty slot and seeds it.
+              stopSaving()
+              await adapter.clear()
+              location.reload()
+            }}
+          />
 
           {!busy && (
             <p className="rail-hint dim">

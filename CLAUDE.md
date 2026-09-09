@@ -348,7 +348,12 @@ game. A test enforces that nothing minor interrupts.
 Vite caches transformed modules in `node_modules/.vite`, and that cache **survives a dev
 server restart**. If behaviour in the browser contradicts a passing test, run the exact
 state through the real code in a scratch test first; if Node is right and the browser is
-wrong, delete `node_modules/.vite` and restart. This has now cost time twice.
+wrong, delete `node_modules/.vite` **and** restart - neither alone is enough. This has now
+cost time three times.
+
+Its loudest form is a console error naming an export that plainly exists: *"does not
+provide an export named X"* for a symbol sitting in the file. That is always this, never
+the code.
 
 ## Boss budgets
 
@@ -704,6 +709,13 @@ the game.
 Three saves. **Your game** is the playthrough; **Mid-game** and **Endgame** are stages a
 tester can jump straight to, because the pace note above is right that no amount of
 speeding the clock up puts the endgame in front of somebody with fifteen minutes.
+
+They live at the **foot of the rail**, as the last group under Character. The top bar is
+for what is true right now - your health, and how fast the clock is running - and a save
+picker is neither; down here it is in the same list as Equipment, Bank and Log, which is
+where a player already scans for things they go and look at. Rows rather than a segmented
+control, because that is what the rail is made of and because "Your game" does not fit
+three-across in 216 pixels.
 
 They are **stages, not difficulties**: a plausible snapshot of somebody's playthrough -
 levels, bosses down, gear fitted, a bank with something in it - so what gets poked at is

@@ -5,6 +5,14 @@ import { SLOT_IDS, slotKey, writeActiveSlot, type SlotId } from '../../platform/
 /**
  * Three saves: the one being played, and two stages to be dropped into.
  *
+ * Lives at the foot of the rail rather than in the top bar. The top bar is for what is
+ * true *right now* - your health, and how fast the clock is running - and a save picker
+ * is neither. Down here it is the last group in the same list as Equipment, Bank and
+ * Log: things you go and look at, in the place a player already scans for them.
+ *
+ * Rows rather than a segmented control, because that is what the rail is made of, and
+ * because "Your game" does not fit three-across in 216 pixels.
+ *
  * **Switching saves the current slot and then reloads the page.** A reload is blunt and
  * it is deliberate: booting a slot means loading it, migrating it, crediting time away
  * and restarting the clock, and that path already exists and is tested exactly once - at
@@ -74,29 +82,33 @@ export function SlotPicker({
   const current = label(active)
 
   return (
-    <div className="slots" role="group" aria-label="Save slot">
+    <div className="rail-group">
+      <div className="rail-heading dim">Saves</div>
+
       {SLOT_IDS.map((slot) => {
         const { name, blurb } = label(slot)
         return (
           <button
             key={slot}
-            className={`slot-button ${slot === active ? 'selected' : ''}`}
+            className={`rail-item ${slot === active ? 'selected' : ''}`}
             onClick={() => choose(slot)}
             title={started(slot) || slot === 'own' ? blurb : `${blurb} Not started yet.`}
             aria-pressed={slot === active}
           >
-            {name}
+            <span className="rail-name">{name}</span>
+            {/* Not on the one you are standing in: its key is only written at the first
+                autosave, so the slot you just opened would otherwise call itself new. */}
+            {slot !== 'own' && slot !== active && !started(slot) && (
+              <span className="dim">new</span>
+            )}
           </button>
         )
       })}
 
-      {/* Set apart from the three, because the three are navigation and this is not. */}
-      <button
-        className="slot-reset"
-        onClick={() => setConfirming(true)}
-        title={`Reset ${current.name}`}
-      >
-        Reset
+      {/* Quieter than the three above it, because those are navigation and this destroys
+          a save. It only takes the colour of a warning on hover. */}
+      <button className="rail-item slot-reset" onClick={() => setConfirming(true)}>
+        <span className="rail-name">Reset {current.name}</span>
       </button>
 
       {confirming && (
