@@ -130,6 +130,22 @@ body:has(.app) > #root { display: contents; }
 }
 
 /*
+ * Set apart from the three, and quieter than them: those are navigation, this destroys a
+ * save. It turns the colour of a warning only on hover, so it reads as available rather
+ * than as something already going wrong.
+ */
+.slot-reset {
+  margin-left: 8px; padding: 4px 9px; font-size: 11px;
+  border: 1px solid transparent; background: none; color: var(--dim); cursor: pointer;
+}
+.slot-reset:hover { border-color: var(--bad); color: var(--bad); }
+
+.modal-actions { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+/* Beats the standalone .modal button.primary rule further down, which pushes a lone
+   dialog button off the top edge - in a row it just misaligns the two. */
+.modal .modal-actions button.primary { margin-top: 0; align-self: center; }
+
+/*
  * The next thing to recover, named but not yet yours.
  *
  * Deliberately not a disabled button: a button says "press me" and then refuses, where

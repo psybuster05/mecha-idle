@@ -745,6 +745,27 @@ the state ref, the frame loop, the autosave timer and the toast baselines togeth
 failure mode if any one of them lagged is the autosave writing one slot's game over
 another's. On a static page a reload costs nothing; a playthrough costs everything.
 
+**Resetting takes the same road**, and it is what makes the preset slots reusable - a
+tester who spent an endgame bank, or who wants to watch the opening again from nothing,
+gets the slot back rather than being stuck with what they did to it. `own` resets to a new
+game; the presets reset to what they ship as.
+
+The order is the whole trick, and getting it wrong is silent:
+
+    stopSaving()  ->  adapter.clear()  ->  reload
+
+**Clearing the key is not enough on its own.** The autosave interval, the
+`visibilitychange` handler, the `beforeunload` handler and the store's own unmount
+cleanup would each write the in-memory game straight back into the slot that was just
+deleted - which is the same trap that ate hand-edited saves repeatedly during browser
+testing. `stopSaving()` sets the very flag an unreadable save sets, because there is one
+meaning of "do not write over what is on disk" and it should have one place that decides
+it.
+
+Confirmed before it happens, and the confirm **names the slot and says what comes back**.
+"Are you sure?" asks about something the player has to remember clicking; the answer here
+is unrecoverable.
+
 ## Salvaging is derived, not written
 
 `SALVAGING.actions` is generated from `FABRICATION.actions` **and** `REFINING.actions`.

@@ -28,6 +28,16 @@ export interface Game {
   dispatch: (transform: (state: GameState) => GameState) => void
   loadError: string | null
   saveNow: () => void
+  /**
+   * Stop writing this slot, for good, until the page reloads.
+   *
+   * The one thing that makes wiping a slot possible. Clearing the key is not enough on
+   * its own: the autosave interval, the visibilitychange handler, the beforeunload
+   * handler and the unmount cleanup would each put the in-memory game straight back
+   * where it was just deleted - the same trap that ate hand-edited saves during testing
+   * more than once.
+   */
+  stopSaving: () => void
 }
 
 interface BootResult {
@@ -155,5 +165,20 @@ export function useGame(adapter: SaveAdapter, initial?: () => GameState): Game {
 
   const dismissOffline = useCallback(() => setOfflineReport(null), [])
 
-  return { state: snapshot, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow }
+  // Deliberately the same flag a save that would not parse sets. There is one meaning
+  // of "do not write over what is on disk", and one place that decides it.
+  const stopSaving = useCallback(() => {
+    savableRef.current = false
+  }, [])
+
+  return {
+    state: snapshot,
+    ready,
+    offlineReport,
+    dismissOffline,
+    dispatch,
+    loadError,
+    saveNow,
+    stopSaving,
+  }
 }

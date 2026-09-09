@@ -61,7 +61,7 @@ export function App() {
   const slot = useMemo(() => readActiveSlot(), [])
   // One adapter for the life of the app; swapping this line is the whole desktop port.
   const adapter = useMemo(() => new LocalStorageAdapter(slotKey(slot)), [slot])
-  const { state, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow } = useGame(
+  const { state, ready, offlineReport, dismissOffline, dispatch, loadError, saveNow, stopSaving } = useGame(
     adapter,
     // Only ever consulted for an *empty* slot. 'own' has no preset, so it falls through
     // to a new game exactly as it always did.
@@ -108,7 +108,17 @@ export function App() {
           </div>
         </div>
 
-        <SlotPicker active={slot} onSwitch={saveNow} />
+        <SlotPicker
+          active={slot}
+          onSwitch={saveNow}
+          onReset={async () => {
+            // Order matters and is the whole trick: silence the writers first, then
+            // clear, then reload into a boot that finds an empty slot and seeds it.
+            stopSaving()
+            await adapter.clear()
+            location.reload()
+          }}
+        />
 
         <SpeedToggle
           state={state}
