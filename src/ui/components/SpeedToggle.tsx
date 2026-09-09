@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { setSpeed } from '../../sim/intents'
 import { SPEEDS, availableEnergy, drainRate } from '../../sim/fuel'
 import type { GameState } from '../../sim/state'
-import { formatSeconds } from '../format'
+import { DEMO_PACE } from '../../sim/pace'
+import { formatDuration } from '../format'
 
 /**
  * The throttle: 1x, 2x, 3x, and what it is costing.
@@ -76,7 +77,10 @@ export function SpeedToggle({
         {dry
           ? 'no fuel'
           : rate > 0
-            ? `${formatSeconds(energy / rate)} of fuel`
+            ? // Energy is game seconds; the player is watching a clock on the wall. The
+              // demo runs ten of the former per one of the latter, so a tank that reads
+              // "2h" here must mean two hours of *sitting there*, not twenty.
+                `${formatDuration(energy / rate / DEMO_PACE)} of fuel`
             : `${Math.floor(energy)} fuel`}
       </span>
     </div>

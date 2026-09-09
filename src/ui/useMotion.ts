@@ -141,6 +141,7 @@ export function useMotion(
 ) {
   const ref = useRef<HTMLDivElement>(null)
   const previous = useRef(progress)
+  const playing = useRef<Animation | null>(null)
   // Held in a ref so a caller can build the motion inline without the effect re-running
   // on every render and firing on a value that never actually fell.
   const current = useRef(motion)
@@ -155,8 +156,14 @@ export function useMotion(
     // three times a second.
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
 
+    // A stroke that cannot finish before the next one arrives is not a stroke, it is a
+    // vibration. Actions run ten times faster than they read on the tin, and the fastest
+    // of them complete every few hundred milliseconds at 3x, so the ones that would
+    // overlap are dropped rather than restarted.
+    if (playing.current?.playState === 'running') return
+
     const { keyframes, duration, easing } = current.current
-    ref.current?.animate(keyframes, { duration, easing })
+    playing.current = ref.current?.animate(keyframes, { duration, easing }) ?? null
   }, [progress, active])
 
   return ref

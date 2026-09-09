@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyOffline, MAX_OFFLINE_SECONDS, type OfflineReport } from '../sim/offline'
 import { deserialize, serialize } from '../sim/save'
+import { DEMO_PACE } from '../sim/pace'
 import { newGame, type GameState } from '../sim/state'
 import { tick } from '../sim/tick'
 import type { SaveAdapter } from '../platform/SaveAdapter'
@@ -70,7 +71,7 @@ export function useGame(adapter: SaveAdapter): Game {
         return { state: stateRef.current, report: null, error: result.error }
       }
 
-      const { state, report } = applyOffline(result.state, Date.now())
+      const { state, report } = applyOffline(result.state, Date.now(), DEMO_PACE)
       return { state, report, error: null }
     })()
 
@@ -103,7 +104,9 @@ export function useGame(adapter: SaveAdapter): Game {
       // rAF stops firing in a background tab, so this delta can be very large on
       // return. tick handles that correctly by design; the cap keeps a machine that
       // slept for days on the same footing as the offline rule.
-      const dt = Math.min((nowMs - lastFrameMs) / 1000, MAX_OFFLINE_SECONDS)
+      // Capped in real seconds, then dilated - the same order as the offline rule, so
+      // a backgrounded tab and a closed one credit the same thing.
+      const dt = Math.min((nowMs - lastFrameMs) / 1000, MAX_OFFLINE_SECONDS) * DEMO_PACE
       lastFrameMs = nowMs
 
       if (dt > 0) stateRef.current = tick(stateRef.current, dt)

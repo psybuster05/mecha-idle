@@ -82,6 +82,12 @@ function firstStop(state: GameState): { actor: ActorId; reason: StopReason } | n
 export function applyOffline(
   state: GameState,
   nowMs: number,
+  /**
+   * Game seconds bought by each real second away. Defaults to 1, so this reads as
+   * ordinary offline progress unless a caller says otherwise - the demo's dilation is
+   * the driver's business, not the simulation's.
+   */
+  pace = 1,
 ): { state: GameState; report: OfflineReport | null } {
   if (!state.savedAt || !Number.isFinite(nowMs)) return { state, report: null }
 
@@ -90,8 +96,10 @@ export function applyOffline(
   // credit anything. Ignore it and carry on.
   if (!(awaySeconds >= MIN_OFFLINE_SECONDS)) return { state, report: null }
 
+  // The cap is on time *away*; what that time buys is dilated after it is capped, so
+  // the rule stays "at most a day of absence" however fast the clock runs.
   const seconds = Math.min(awaySeconds, MAX_OFFLINE_SECONDS)
-  const after = tick(state, seconds)
+  const after = tick(state, seconds * pace)
 
   const skillXp: Partial<Record<SkillId, number>> = {}
   for (const skill of ALL_SKILLS) {

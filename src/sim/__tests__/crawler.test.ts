@@ -11,6 +11,7 @@ import { tick } from '../tick'
 import { waitingFor } from '../skillEngine'
 import { deserialize, serialize } from '../save'
 import { xpForLevel } from '../xp'
+import { DEMO_PACE } from '../pace'
 
 function tickBy(state: GameState, total: number, step: number): GameState {
   let next = state
@@ -281,23 +282,26 @@ describe('producer and consumer across the two actors', () => {
     // with how much was produced, while the *error rate* does not - which is the property
     // that was always the point.
     //
-    // Measured out to the offline cap rather than stopping at eight hours, because the
-    // cap is the largest step the game can actually take.
-    for (const span of [600, 3600, 8 * 3600, 24 * 3600]) {
+    // Measured out to the offline cap *times the demo pace*, because that product - not
+    // the cap on its own - is the largest step the game can actually take now that a real
+    // second buys ten game seconds.
+    for (const span of [600, 3600, 8 * 3600, 24 * 3600 * DEMO_PACE]) {
       const { absolute, relative } = driftAt(span)
       expect(absolute <= 1 || relative < 0.01, `${span}s span: ${absolute} frames, ${(relative * 100).toFixed(2)}%`).toBe(true)
     }
-    // Simulating a day of two actors several times over is genuinely slow work, so this
-    // one gets a budget rather than the default five seconds.
-  }, 30_000)
+    // Simulating ten days of two actors several times over is genuinely slow work, and
+    // 2s steps are as coarse as this can go while still being smaller than the shortest
+    // action. So it gets a budget rather than the default five seconds - doubled when the
+    // demo pace made the largest possible step ten times longer.
+  }, 60_000)
 
   it('does not drift further the longer you are away', () => {
     // The failure that would actually matter: an error that compounds with time away.
     // Proportional drift would show up here as a rising percentage.
     const short = driftAt(3600).relative
-    const long = driftAt(24 * 3600).relative
+    const long = driftAt(24 * 3600 * DEMO_PACE).relative
     expect(long).toBeLessThan(Math.max(short, 0.002) * 3)
-  }, 30_000)
+  }, 60_000)
 
   it('agrees exactly between two different small step sizes', () => {
     // Live play is self-consistent; only the single giant step differs.

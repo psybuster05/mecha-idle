@@ -4,6 +4,11 @@ import { nodesForAction } from '../world'
 import type { SkillDef } from '../types'
 import { MAX_LEVEL, xpForLevel } from '../../sim/xp'
 import { newGame } from '../../sim/state'
+import { DEMO_PACE } from '../../sim/pace'
+import { startCombat } from '../../sim/intents'
+import { advance } from '../../sim/tick'
+import { combatLevel } from '../../sim/stats'
+import { ZONES } from '../zones'
 import { equipItem } from '../../sim/equipment'
 import { derivedStats } from '../../sim/stats'
 
@@ -222,4 +227,43 @@ describe('a complete ladder exists outside every lock', () => {
       }
     })
   }
+})
+
+/**
+ * The demo pace.
+ *
+ * Everything above measures the *design*, in game time, and none of it knows `DEMO_PACE`
+ * exists - which is the point of applying the dilation in the driver rather than in
+ * `tick`. These two measure the thing the design cannot: what someone actually sees in
+ * the fifteen minutes they will give a link from a friend.
+ *
+ * At 1x those fifteen minutes reached Scavenging 8 and combat level 4 - one region, no
+ * boss, no crawler, no second region. The bounds below are what the pace was chosen to
+ * buy, so lowering it is allowed to fail here rather than quietly shipping the loop
+ * without the game.
+ */
+describe('what a visitor sees', () => {
+  it('puts the crawler inside five minutes of working at it', () => {
+    const fabrication = SKILLS.find((s) => s.id === 'fabrication')!
+    // Fabrication 10 is the Traction Core, and the second actor is the clearest single
+    // proof that this is a game with systems rather than one button.
+    const minutes = (hoursAtLevel(fabrication, 10) * 60) / DEMO_PACE
+    expect(minutes, `crawler at ${minutes.toFixed(1)} real minutes`).toBeLessThan(5)
+  })
+
+  it('opens the second region inside half an hour', () => {
+    const graveyard = ZONES.find((z) => z.id === 'ship_graveyard')!
+    // Fighting the weakest thing in the Rustbelt with starting gear: the slowest honest
+    // route, and the one a visitor who never opens the equipment page is actually on.
+    const state = startCombat(newGame(), 'rustbelt', 'scrap_crawler')
+    let seconds = 0
+    while (seconds < 40 * HOUR && combatLevel(state) < graveyard.levelRequired) {
+      advance(state, 10)
+      seconds += 10
+      // Dying would end the run and quietly turn this into an assertion about nothing.
+      expect(state.actors.mech.activity, 'destroyed before reaching the second region').not.toBeNull()
+    }
+    const minutes = seconds / 60 / DEMO_PACE
+    expect(minutes, `second region at ${minutes.toFixed(0)} real minutes`).toBeLessThan(30)
+  })
 })

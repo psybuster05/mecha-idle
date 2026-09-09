@@ -592,6 +592,53 @@ Rules it keeps:
   tests - one winnable, one not - because a 3x that made an unbeatable fight beatable
   would have quietly re-tuned the whole game.
 
+## The demo pace
+
+**One real second buys ten game seconds.** `DEMO_PACE` in `src/sim/pace.ts`.
+
+The design pace is a month to max a skill - 503 hours, asserted by the pacing suite - and
+that is the right number for the game this is a prototype of. It is the wrong number for
+what it currently *is*, which is a link handed to someone who will give it fifteen
+minutes. Measured at 1x, those fifteen minutes reach Scavenging 8 and combat level 4: one
+region, no boss, no crawler, no second region. The loop, not the game.
+
+**It is applied where the clock is read, in the driver, and never inside `tick`.** That is
+the whole design:
+
+- No content number changes. Not a duration, not an xp value, not a boss. Every existing
+  measurement still means what it meant, and the second game inherits real numbers rather
+  than demo ones.
+- The simulation still measures game seconds, so the pacing suite still asserts 503 hours
+  and knows nothing about any of this.
+- Putting it back is one constant.
+
+It rides on the dilation the speed toggle already used, which was measured across all
+seven bosses at 2x and 3x with every outcome identical. Combat steps event by event
+rather than in fixed slices, so a larger dt is exact rather than approximate. Measured
+after: **10.4, 20.0 and 28.9 xp per real second at 1x, 2x and 3x**, against a design rate
+of 1 xp per game second.
+
+Three consequences, all handled:
+
+- **Fuel needed no adjustment.** It drops per completion and per kill, so income and drain
+  scale together and a tank is worth exactly the same amount of *work* as before.
+- **A time readout in game seconds becomes a lie.** The fuel note promises a stretch of
+  wall clock, so it divides by the pace - it read `3425520.0s` before and reads `95h 9m`
+  now. Anything else that counts down to the player has to do the same. Nominal action
+  durations in the skill panels do not: they are a spec for comparing actions, and already
+  ignore gear and the toggle.
+- **The offline cap is on time *away*, dilated after capping**, so "at most a day of
+  absence" still means a day. The largest step the game can take is therefore
+  `MAX_OFFLINE_SECONDS * DEMO_PACE` - 240 hours - and the drift guard measures there now
+  rather than at 24.
+
+What it does not fix: the second region is still about twenty real minutes of fighting
+away, because 3.3 hours of combat compresses to 20 minutes and no further. Pace alone
+cannot put a boss in front of a fifteen-minute visitor; only a starting save with progress
+on it would. Two tests hold the line that was bought - `what a visitor sees` in the pacing
+suite - so lowering the pace fails loudly rather than quietly shipping the loop without
+the game.
+
 ## Salvaging is derived, not written
 
 `SALVAGING.actions` is generated from `FABRICATION.actions` **and** `REFINING.actions`.
