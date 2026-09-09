@@ -92,9 +92,12 @@ know: **HP, Attack, Strength, Defence, Hitpoints, Damage, Accuracy, Armour, Evas
 Attack Speed, Bank, Equipment, Log**.
 
 The story archive is the **Log**, not "Recovered". "Recovered" described the *contents*
-rather than naming the place, so as a rail item it read as a stat or a status. The word
-still does its job where it is describing a fragment - the kicker above a story dialog -
-because there it is a sentence about what you are reading, not a label you navigate by.
+rather than naming the place, so as a rail item it read as a stat or a status.
+
+The kicker above a story dialog says Log as well. One word for one thing: a player who
+reads it on the fragment and then sees it in the rail knows where that fragment went, and
+the fiction that these are recovered memories is already carried by the writing itself
+rather than by a caption announcing it.
 
 The rail is grouped **Combat / Non-combat / Character**, with Combat first. Combat is the
 part of this game with the most in it - six regions, seven bosses, four skills of its own

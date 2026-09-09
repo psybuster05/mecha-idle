@@ -16,7 +16,7 @@ export function StoryDialog({ beat, onDismiss }: { beat: StoryBeat; onDismiss: (
         role="dialog"
         aria-modal="true"
       >
-        <div className="story-kicker dim">Recovered</div>
+        <div className="story-kicker dim">Log</div>
         <h2>{beat.title}</h2>
         {beat.body.map((paragraph, index) => (
           <p key={index} className="story-line">
