@@ -38,7 +38,7 @@ export function LogPanel({ state, dispatch }: Props) {
     <div className="panel">
       <header className="panel-head">
         <div>
-          <h2>Recovered</h2>
+          <h2>Log</h2>
           <p className="dim flavour">
             Fragments, in the order they came back. They do not come back in order.
           </p>

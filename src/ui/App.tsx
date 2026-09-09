@@ -227,7 +227,7 @@ export function App() {
               onClick={() => setTab('log')}
             >
               <span className="rail-name">
-                Recovered
+                Log
                 {unreadLogCount(state) > 0 && (
                   <span className="unread-dot" aria-label="unread entries" />
                 )}

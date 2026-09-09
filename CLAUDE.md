@@ -89,7 +89,12 @@ update the tag rather than leaving it stale.
 
 Anything the player reads as a *label* uses the vocabulary idle-game players already
 know: **HP, Attack, Strength, Defence, Hitpoints, Damage, Accuracy, Armour, Evasion,
-Attack Speed, Bank, Equipment**.
+Attack Speed, Bank, Equipment, Log**.
+
+The story archive is the **Log**, not "Recovered". "Recovered" described the *contents*
+rather than naming the place, so as a rail item it read as a stat or a status. The word
+still does its job where it is describing a fragment - the kicker above a story dialog -
+because there it is a sentence about what you are reading, not a label you navigate by.
 
 The rail is grouped **Combat / Non-combat / Character**, with Combat first. Combat is the
 part of this game with the most in it - six regions, seven bosses, four skills of its own
