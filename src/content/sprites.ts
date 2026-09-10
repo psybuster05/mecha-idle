@@ -939,6 +939,11 @@ export const MENU_ICONS: Readonly<Record<string, Sprite>> = {
  * frame, which is what makes the distance read as distance.
  */
 const SCENE_PALETTE: Readonly<Record<string, string>> = {
+  // Cloud, and the two furthest values in the scene. They sit only just above the sky
+  // gradient behind them: the contrast order runs nearest-lightest, and these are as far
+  // away as anything here gets. Any stronger and the weather outshouts the city.
+  c: '#0e1c2f', // cloud
+  C: '#182a41', // its underside, catching the same light the towers do
   h: '#101e33', // haze, barely above the sky - it softens the tower bases, nothing more
   f: '#12213a', // a far tower, barely separated from the sky
   F: '#17293f', // its lit face
@@ -971,8 +976,8 @@ const SCENE_PALETTE: Readonly<Record<string, string>> = {
  * turns pixel art to mush - and because a backdrop whose pixels are a different size from
  * the figure standing on it does not read as one world.
  *
- * The top third is empty on purpose: the CSS sky gradient shows through, so the sky stays
- * smooth where smooth is right and the art starts where the horizon does.
+ * The sky is left mostly to the CSS gradient underneath - a gradient is what a sky is -
+ * with only a few cloud streaks drawn into it, so it stays smooth where smooth is right.
  *
  * The foreground rubble runs through the **middle** as well as the edges, deliberately.
  * A phone crops this to its middle third, so debris placed only at the sides would be a
@@ -991,15 +996,15 @@ export const SCENE_BACKDROP: Sprite = {
     '                                                ',
     '                                                ',
     '                                                ',
+    '      ccccccc ccccc ccccc                       ',
+    '         CCCCCCCCCCCCC           CCCCCCC CCCCC  ',
+    '                            ccccccc ccccc       ',
+    '                               CCCCCCC          ',
     '                                                ',
+    '  CCCCC CCCCC                                   ',
     '                                                ',
-    '                                                ',
-    '                                                ',
-    '                                                ',
-    '                                                ',
-    '                                                ',
-    '                                                ',
-    '                    dD                          ',
+    '               ccccccc ccccccc                  ',
+    '                  C dDCCCCC                     ',
     '                    dD                          ',
     '                   ddD                          ',
     '  Dd  dd           ddD                          ',
