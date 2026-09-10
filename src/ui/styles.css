@@ -149,6 +149,56 @@ body:has(.app) > #root { display: contents; }
 .rail-level { color: var(--accent); font-weight: 700; }
 .rail-hint { padding: 0 6px; font-size: 12px; }
 
+/*
+ * How a tester says what happened, at the foot of the rail.
+ *
+ * Text and a plain button rather than a rail row: this is not somewhere you navigate to,
+ * it is a thing you do once, if at all. Quiet enough to ignore for an hour and findable
+ * the minute something goes wrong, which is the only two states it is ever in.
+ */
+.rail-report {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 12px 6px 0; border-top: 1px solid var(--line); font-size: 12px;
+}
+.report-copy { font-size: 12px; padding: 5px 10px; }
+/* Monospace and scrollable: it is 2KB of JSON, not prose. */
+.report-box {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  font-family: inherit; font-size: 11px; line-height: 1.4;
+  background: var(--bg); color: var(--dim);
+  border: 1px solid var(--line); padding: 8px;
+}
+.report-link { font-size: 11px; text-decoration: underline; }
+.report-link:hover { color: var(--accent); }
+
+/*
+ * The three things a stranger does not know, in the plainest words in the game.
+ *
+ * Accented rather than dim: it is the one piece of text here that a new player must not
+ * skim past, and it is gone the moment they start anything.
+ */
+.first-run {
+  border: 1px solid var(--accent-dim); background: var(--panel-2);
+  padding: 12px 14px; margin-bottom: 14px;
+}
+.first-run h3 { margin: 0 0 8px; }
+.first-run ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.first-run li { font-size: 13px; line-height: 1.5; }
+
+/*
+ * The crash screen. Deliberately plain - it is the one view that has to work when the
+ * rest of the app does not, so it borrows as little as it can.
+ */
+.app.crashed {
+  display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  padding: 32px; height: auto; min-height: 100vh; width: 100%; max-width: 760px;
+}
+.crash-error {
+  align-self: stretch; margin: 0; padding: 10px 12px; overflow-x: auto;
+  background: var(--panel-2); border: 1px solid var(--bad); color: var(--bad);
+  font-size: 12px; white-space: pre-wrap; word-break: break-word;
+}
+
 .running-dot {
   width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
   animation: pulse 1.4s ease-in-out infinite;

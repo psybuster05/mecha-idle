@@ -849,6 +849,56 @@ Confirmed before it happens, and the confirm **names the slot and says what come
 "Are you sure?" asks about something the player has to remember clicking; the answer here
 is unrecoverable.
 
+## Sending it out to be played
+
+Three things exist only because somebody who is not the author is going to open this.
+
+**A report a tester can send back.** At the foot of the rail: a Copy report button and a
+link to the repo's issues. The button is the important half - "it broke" is a sentence,
+and the same sentence with a save attached is something that can be loaded and looked at.
+`diagnostics.ts` builds a readable header (slot, save version, what they were doing,
+bosses down) over the serialised save, split by a marker line. A test round-trips it:
+the save half of a report must still `deserialize`, or the report only looks like
+evidence.
+
+A refused clipboard falls back to the text in a selected box rather than an apology.
+`navigator.clipboard` can be denied for reasons the player did nothing to cause, and the
+times it is denied are unevenly distributed - they land on whoever has the unusual
+browser, which is also the person most likely to have found something.
+
+**A crash screen instead of a black page.** `ErrorBoundary` is the only class component
+in the project, because `getDerivedStateFromError` has no hook equivalent. It sits
+*outside* `App` in `main.tsx` - a boundary cannot catch what the component it lives in
+throws. It says "your save is safe" first, because that is the only question a player
+actually has at that moment, and it is true: **nothing writes to a slot after a failure.**
+The report it builds reads the save back off disk rather than serialising memory, since
+memory during a crash is precisely what should not be trusted. Verified by making `Stage`
+throw on purpose: crash screen, error named, stack naming Stage, save intact on disk, and
+a 2.4KB report carrying all of it.
+
+**Three sentences of orientation.** The first thing a new player reads is *Cold Start*,
+four paragraphs of atmosphere that tell them nothing about what to do. Somebody handed a
+link does not know this is a genre where you pick one job and leave, that closing the tab
+is allowed, or that there is a speed control. None of that belongs in the fiction, so
+`FirstRun` says it in the plainest words in the game.
+
+It is **derived, not dismissed**: shown while the player has done nothing - no activity,
+no xp anywhere, empty bank - and gone the moment they start. No flag, no save field,
+nothing to migrate, and nothing left stuck if somebody resets a slot. The same choice the
+tutorial and `waitingFor` make.
+
+What none of this fixes, and what a playtest of this build cannot tell you:
+
+- **Fifteen minutes can answer** whether the opening is legible, whether the loop feels
+  good, whether combat is readable, and whether anybody wants to open it again tomorrow.
+  It cannot answer whether the 500-hour curve is right.
+- **The fuel economy will not be answered honestly.** Drops are deliberately generous and
+  idle no longer burns, both on purpose. "Am I running out too fast" is not a question
+  this version asks.
+- **No number in this game has ever been felt.** Every one is simulation-validated. That
+  is the whole reason for the playtest, and the reason not to touch any of them before it
+  - changing them now destroys the baseline the feedback would be measured against.
+
 ## Salvaging is derived, not written
 
 `SALVAGING.actions` is generated from `FABRICATION.actions` **and** `REFINING.actions`.

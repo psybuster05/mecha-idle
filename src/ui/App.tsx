@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { LocalStorageAdapter, readActiveSlot, slotKey } from '../platform/SaveAdapter'
 import { buildPresetById } from '../sim/presets'
 import { SlotPicker } from './components/SlotPicker'
+import { ReportFooter } from './components/ReportFooter'
+import { FirstRun } from './components/FirstRun'
 import { SKILLS, getSkill } from '../content'
 import { getCombatSkill } from '../content/skills/combat'
 import {
@@ -270,6 +272,8 @@ export function App() {
             }}
           />
 
+          <ReportFooter state={state} slot={slot} onCopied={show} />
+
           {!busy && (
             <p className="rail-hint dim">
               {state.actors.crawler.unlocked
@@ -280,6 +284,7 @@ export function App() {
         </nav>
 
         <main className="content">
+          <FirstRun state={state} />
           {tab === 'combat' ? (
             <CombatPanel state={state} dispatch={dispatch} />
           ) : isCombatSkill(tab) ? (
