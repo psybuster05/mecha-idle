@@ -106,8 +106,29 @@ body:has(.app) > #root { display: contents; }
 
 .rail {
   width: 240px; flex: none; padding: 16px 12px; border-right: 1px solid var(--line);
-  background: var(--panel); display: flex; flex-direction: column; gap: 22px;
-  overflow-y: auto;
+  background: var(--panel); display: flex; flex-direction: column; gap: 16px;
+  overflow: hidden;
+}
+/*
+ * The list scrolls; the foot does not.
+ *
+ * The same split the stage makes for its pinned map, for the same reason and with the
+ * same mechanism - `flex: none` against a scrolling sibling rather than `position:
+ * sticky`. On a short window the whole rail scrolled as one, which put the saves and the
+ * report below the fold, and a tester who never thinks to scroll a navigation column
+ * never learns they are there. Both are things you go looking for exactly once.
+ */
+.rail-scroll {
+  flex: 1 1 auto; min-height: 120px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.rail-foot {
+  /* Shrinkable rather than fixed, with the list holding a floor: on a very short
+     window a fixed foot would eat the whole column and leave nowhere to pick a skill.
+     Below that floor the foot scrolls instead, which is the lesser of the two failures. */
+  flex: 0 1 auto; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-top: 12px; border-top: 1px solid var(--line);
 }
 .rail-group { display: flex; flex-direction: column; gap: 4px; }
 /*
@@ -158,9 +179,9 @@ body:has(.app) > #root { display: contents; }
  */
 .rail-report {
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  padding: 12px 6px 0; border-top: 1px solid var(--line); font-size: 12px;
+  padding: 0 6px; font-size: 12px;
 }
-.report-copy { font-size: 12px; padding: 5px 10px; }
+.report-copy { font-size: 12px; padding: 5px 10px; white-space: nowrap; }
 /* Monospace and scrollable: it is 2KB of JSON, not prose. */
 .report-box {
   width: 100%; box-sizing: border-box; resize: vertical;
@@ -333,12 +354,39 @@ img.sprite { image-rendering: pixelated; }
  */
 @media (max-width: 720px) {
   .layout { flex-direction: column; }
+  /*
+   * The nav is a sideways strip; the foot is a row under it.
+   *
+   * The strip has to *clip*, which it did not: a later rule set `overflow: visible` on
+   * the rail and the whole document scrolled 1,528px sideways instead. Nothing looked
+   * broken - the page just had one and a half screens of nothing to the right of it.
+   */
   .rail {
     width: 100%; align-self: auto; border-right: none;
     border-bottom: 1px solid var(--line);
-    flex-direction: row; gap: 4px; padding: 8px;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    flex-direction: column; gap: 8px; padding: 8px;
+    overflow: hidden;
   }
+  .rail-scroll {
+    flex-direction: row; gap: 4px; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  /*
+   * Its own row rather than the far right of a 1,900px strip, where in practice it did
+   * not exist: nobody scrolls a nav sideways past sixteen buttons to find the thing they
+   * did not know was there.
+   */
+  .rail-foot { gap: 8px; padding-top: 8px; }
+  /* One sideways line rather than two wrapped ones. Everything above the fold on a
+     phone is expensive, and this is a thing you use once - it has to be *findable*,
+     not prominent. Reset ends up furthest right, which is the right order for it. */
+  .rail-foot .rail-group {
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail-foot .rail-item { flex: none; }
+  .rail-report { flex-direction: row; align-items: center; gap: 8px; padding: 0; }
+  .rail-report .dim { flex: 1; min-width: 0; }
   .rail-group { flex-direction: row; gap: 4px; }
   /* Section captions ("SKILLS", "CHARACTER") are a column idea; sideways they are
      just three words taking up the space two buttons wanted. */
@@ -668,7 +716,17 @@ img.sprite { image-rendering: pixelated; }
   /* No aspect frame on a phone - the screen is the frame. */
   .app { width: 100%; height: auto; min-height: 100vh; overflow: visible; border: none; }
   .layout { flex-direction: column; }
-  .content, .rail, .stage { overflow: visible; }
+  /* Not `.rail`: it has to clip its own sideways strip, or the document does the
+     scrolling instead. */
+  .content, .stage { overflow: visible; }
+  /*
+   * Two rows on purpose. All three parts side by side need 545px and a phone has 375,
+   * so the speed chevrons sat off the right edge - unreachable, on the one control the
+   * first-run card tells a new player to look for. Brand and speed share the top line;
+   * HP takes the second, being the part that actually wants the width.
+   */
+  .topbar { flex-wrap: wrap; gap: 8px 12px; padding: 10px 14px; }
+  .topbar-stats { order: 3; flex: 1 1 100%; min-width: 0; }
   /*
    * There is no "side" on a phone, so the stage becomes a strip above the content.
    *

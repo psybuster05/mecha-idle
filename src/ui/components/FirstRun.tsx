@@ -37,7 +37,7 @@ export function FirstRun({ state }: { state: GameState }) {
         </li>
         <li>
           <strong>The chevrons at the top run the clock faster</strong> once you have fuel
-          for them. More skills open as the ones you have get better.
+          for them. More skills open up as the ones you have improve.
         </li>
       </ul>
     </aside>

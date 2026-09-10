@@ -131,6 +131,11 @@ export function App() {
 
       <div className="layout">
         <nav className="rail">
+          {/* Scrolls on its own so the foot below can hold the bottom of the column -
+              the same split the stage makes for its map, and for the same reason: on a
+              short window the saves fell below the fold and a tester who never scrolled
+              the rail never learned they existed. */}
+          <div className="rail-scroll">
           {/* Combat leads. It is the part of this game with the most in it - zones,
               bosses, four skills of its own - and burying it at the bottom of a list of
               gathering skills said the opposite. */}
@@ -260,20 +265,6 @@ export function App() {
             </button>
           </div>
 
-          <SlotPicker
-            active={slot}
-            onSwitch={saveNow}
-            onReset={async () => {
-              // Order matters and is the whole trick: silence the writers first, then
-              // clear, then reload into a boot that finds an empty slot and seeds it.
-              stopSaving()
-              await adapter.clear()
-              location.reload()
-            }}
-          />
-
-          <ReportFooter state={state} slot={slot} onCopied={show} />
-
           {!busy && (
             <p className="rail-hint dim">
               {state.actors.crawler.unlocked
@@ -281,6 +272,23 @@ export function App() {
                 : 'Nothing is running. Pick an action - you only have attention for one.'}
             </p>
           )}
+          </div>
+
+          {/* Always in view: neither of these is something you scroll a list to find. */}
+          <div className="rail-foot">
+            <SlotPicker
+              active={slot}
+              onSwitch={saveNow}
+              onReset={async () => {
+                // Order matters and is the whole trick: silence the writers first, then
+                // clear, then reload into a boot that finds an empty slot and seeds it.
+                stopSaving()
+                await adapter.clear()
+                location.reload()
+              }}
+            />
+            <ReportFooter state={state} slot={slot} onCopied={show} />
+          </div>
         </nav>
 
         <main className="content">

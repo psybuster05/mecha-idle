@@ -623,6 +623,8 @@ actually needs: the ground line sits 60px up and the mech is 96px tall.
 The map draws only what you can reach plus its immediate frontier. Drawing all
 twenty-four places at once was unreadable overlapping labels.
 
+The rail's half of the phone layout is its own section below.
+
 ## The crawler
 
 The second actor, unlocked by wiring in a Traction Core. `maxConcurrentActivities` goes
@@ -898,6 +900,49 @@ What none of this fixes, and what a playtest of this build cannot tell you:
 - **No number in this game has ever been felt.** Every one is simulation-validated. That
   is the whole reason for the playtest, and the reason not to touch any of them before it
   - changing them now destroys the baseline the feedback would be measured against.
+
+## The rail scrolls; its foot does not
+
+`.rail-scroll` takes the skills and scrolls; `.rail-foot` holds the saves and the report
+line and stays put. The same split the stage makes for its pinned map, with the same
+mechanism - a `flex: none`-ish sibling against a scrolling one rather than `position:
+sticky`.
+
+The whole rail used to scroll as one, which put both of those below the fold on any window
+shorter than about 900px. Neither is something you scroll a navigation column to find: a
+tester who never thinks to scroll it never learns the save slots exist, and the save slots
+are the entire reason a tester can see the endgame.
+
+The foot is **shrinkable rather than fixed**, and the list holds a `min-height`. On a very
+short window a fixed foot would eat the column and leave nowhere to pick a skill; below
+that floor the foot scrolls internally instead, which is the lesser of the two failures.
+Measured at 1280x620: foot fully in view, list scrolling, 354px of list against 164px of
+foot.
+
+## On a phone
+
+The stage becomes a strip above the content, the map drops out, and the rail becomes a
+sideways-scrolling nav strip with its foot on a line beneath. Three things were broken
+there and none of them looked broken:
+
+- **The document scrolled 1,528px sideways.** The rail's `overflow-x: auto` was overridden
+  by a later `.content, .rail, .stage { overflow: visible }` in the second mobile block, so
+  the strip never clipped and the *page* did the scrolling instead. Nothing was visibly
+  wrong - the page just had one and a half screens of nothing to the right of it.
+- **The speed toggle was off the right edge.** Brand, HP and the chevrons need 545px side
+  by side and a phone has 375. The topbar wraps now: brand and speed on the first line, HP
+  on the second, being the part that actually wants width. It is worth being specific about
+  how bad this was - the first-run card tells a new player to look for a control that was
+  not on the screen.
+- **The saves and the report sat 1,821px along that strip**, which is the same as not
+  existing. They are their own row now, and the saves scroll sideways within it rather than
+  wrapping to two lines, because everything above the fold on a phone is expensive and this
+  is a thing you use once. It has to be *findable*, not prominent.
+
+The lesson that generalises: **a layout bug on a phone shows up as a number, not as a
+mess.** All three of these rendered perfectly plausibly. What found them was measuring
+`scrollWidth - clientWidth` and the bounding boxes of controls, not looking at a
+screenshot.
 
 ## Salvaging is derived, not written
 
