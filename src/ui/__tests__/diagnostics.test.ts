@@ -41,6 +41,9 @@ describe('a player report', () => {
     const report = playerReport(state, 'mid', 'the bar went backwards')
 
     expect(report).toContain('note: the bar went backwards')
+    // Which build it came from. Reports arrive over days and fixes ship in between, so
+    // without this one from before a fix and one from after are indistinguishable.
+    expect(report).toMatch(/^build: \S+/m)
     expect(report).toContain('slot: mid')
     expect(report).toContain('Scavenging / roadside_wrecks')
   })
@@ -52,6 +55,7 @@ describe('a crash report', () => {
     const report = crashReport(new Error('boom'), 'end', broken, '  at Stage\n  at App')
 
     expect(report).toContain('error: boom')
+    expect(report).toMatch(/^build: \S+/m)
     expect(report).toContain('slot: end')
     expect(report).toContain('at Stage')
     // Passed through rather than re-serialised. A save that will not parse is precisely

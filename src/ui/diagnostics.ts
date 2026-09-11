@@ -3,6 +3,7 @@ import { SAVE_VERSION, type GameState } from '../sim/state'
 import { serialize } from '../sim/save'
 import { combatLevel } from '../sim/stats'
 import type { SlotId } from '../platform/SaveAdapter'
+import { BUILD } from './build'
 
 /**
  * What a tester sends back.
@@ -39,6 +40,7 @@ function summary(state: GameState, slot: SlotId): string[] {
 
   return [
     `when: ${new Date().toISOString()}`,
+    `build: ${BUILD}`,
     `slot: ${slot}`,
     `save version: ${SAVE_VERSION}`,
     `combat level: ${combatLevel(state)}`,
@@ -79,6 +81,7 @@ export function crashReport(
   return [
     header([
       `when: ${new Date().toISOString()}`,
+      `build: ${BUILD}`,
       `slot: ${slot}`,
       `save version expected: ${SAVE_VERSION}`,
       `error: ${message}`,

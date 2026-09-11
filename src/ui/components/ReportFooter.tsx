@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { playerReport, copyToClipboard } from '../diagnostics'
 import { ReportDialog } from './ReportDialog'
+import { BUILD } from '../build'
 import type { GameState } from '../../sim/state'
 import type { SlotId } from '../../platform/SaveAdapter'
 
@@ -41,13 +42,21 @@ export function ReportFooter({
 
   return (
     <div className="rail-report">
-      <p className="dim">Found a bug, or want to say something?</p>
-      <button className="report-copy" onClick={copy}>
-        Copy report
-      </button>
-      <a className="report-link dim" href={ISSUES} target="_blank" rel="noreferrer">
-        or open an issue
-      </a>
+      {/* Short enough for one line in 216px. The longer "Found a bug, or want to say
+          something?" wrapped to two, in a foot that had no rows to spare. */}
+      <p className="dim">Bug, or something to say?</p>
+      <div className="report-actions">
+        <button className="report-copy" onClick={copy}>
+          Copy report
+        </button>
+        <a className="report-link dim" href={ISSUES} target="_blank" rel="noreferrer">
+          or open an issue
+        </a>
+      </div>
+      {/* Faint, and only here: nobody needs it until they are reporting something, and
+          then it is the first thing worth knowing. The report carries it anyway; this is
+          for "which one are you on?" asked in a chat. */}
+      <span className="build-stamp dim">build {BUILD}</span>
       {fallback && <ReportDialog text={fallback} onClose={() => setFallback(null)} />}
     </div>
   )

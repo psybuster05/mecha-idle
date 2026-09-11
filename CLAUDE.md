@@ -398,6 +398,18 @@ The other consequence, still true:
 Measure every boss before shipping it. Use **time to first kill**, never kills-per-hour -
 the latter measures death-and-recovery cycles rather than damage, and hides the design.
 
+## The test timeout is 30 seconds, on purpose
+
+Not vitest's 5s default. This suite simulates hours of game time: on an idle machine the
+two offline-drift tests take ~4.2s and ~3.9s, already at the edge, and under load a combat
+test that normally takes 1.4s timed out at 5s and passed untouched on a re-run.
+
+A random timeout is not harmless here, **because the deploy runs the suite** - it would
+block a fix from shipping at exactly the worst moment, mid-playtest with someone waiting
+on it. Verified by running three suites at once plus a build: 394 passing in each, no
+timeouts. 30s is headroom for a slow CI runner, not a performance budget; a test that is
+genuinely getting slower shows up in the suite's duration long before it reaches this.
+
 ## Art
 
 Sprites live in `src/content/sprites.ts` as **pixel data, not image files**: rows of
@@ -878,6 +890,17 @@ memory during a crash is precisely what should not be trusted. Verified by makin
 throw on purpose: crash screen, error named, stack naming Stage, save intact on disk, and
 a 2.4KB report carrying all of it.
 
+**Which build a report came from.** Reports arrive over days and fixes ship in between.
+Before this a report carried only the *save* version - 7 on every build - so one filed
+against the build before a fix and one filed after it were identical. `ui/build.ts`
+exports `BUILD`, which the deploy workflow supplies as `VITE_BUILD` (the commit it checked
+out) and `VITE_BUILT_AT`; Vite writes both into the bundle. It is in both report headers
+and faint at the foot of the rail.
+
+It comes from whatever *built* the page rather than anything the page reads, so it cannot
+be wrong about which code is running. A dev server says `dev` and an undeployed local
+build says `local`, rather than borrowing a SHA that would claim to be something it is not.
+
 **Three sentences of orientation.** The first thing a new player reads is *Cold Start*,
 four paragraphs of atmosphere that tell them nothing about what to do. Somebody handed a
 link does not know this is a genre where you pick one job and leave, that closing the tab
@@ -916,8 +939,18 @@ are the entire reason a tester can see the endgame.
 The foot is **shrinkable rather than fixed**, and the list holds a `min-height`. On a very
 short window a fixed foot would eat the column and leave nowhere to pick a skill; below
 that floor the foot scrolls internally instead, which is the lesser of the two failures.
-Measured at 1280x620: foot fully in view, list scrolling, 354px of list against 164px of
-foot.
+
+**The list gives way first, and that needs a shrink *ratio*, not just both being
+shrinkable.** Flex shrinks items in proportion to `flex-shrink x flex-basis`, so with both
+at 1 they gave way *together* - and at 1366x768, the commonest laptop screen there is, the
+foot was squeezed to 218px of its 312 while the list still had 330px to spare above its
+floor. That hid **Copy report**, the one control the playtest exists to make findable. It
+went unnoticed because the foot had grown since it was last measured: the build stamp
+added one line and pushed the button over the edge. `.rail-scroll` shrinks at 1000 now,
+so it absorbs everything until it bottoms out at 120px.
+
+Re-measure this whenever the foot gains a line. Measured after the fix: foot fully in view
+at 1366x768 (275 of 275px) and at 1280x560 (list 184px, above its floor).
 
 ## On a phone
 

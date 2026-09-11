@@ -46,8 +46,14 @@ jobs:
         run: npm test
 
       # Runs tsc --noEmit itself, so typecheck is covered here.
+      #
+      # VITE_BUILD is the commit being deployed, written into the bundle so a tester's
+      # report says which build it came from. Reports arrive over days and fixes go out
+      # in between; without this, one from before a fix and one from after are identical.
       - name: Build
-        run: npm run build
+        run: VITE_BUILT_AT=$(date -u +%Y-%m-%d) npm run build
+        env:
+          VITE_BUILD: ${{ github.sha }}
 
       - uses: actions/configure-pages@v6
 

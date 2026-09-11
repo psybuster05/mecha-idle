@@ -118,8 +118,17 @@ body:has(.app) > #root { display: contents; }
  * report below the fold, and a tester who never thinks to scroll a navigation column
  * never learns they are there. Both are things you go looking for exactly once.
  */
+/*
+ * The list gives way first, all the way down to its floor, and only then the foot.
+ *
+ * Both were shrinkable at 1, and flex shrinks items in proportion to shrink x basis - so
+ * they gave way *together*, and at 1366x768 the foot was squeezed to 218px of its 312
+ * while the list still had 330px to spare above its floor. That hid Copy report, the one
+ * control the playtest exists to make findable, on the commonest laptop screen there is.
+ * A thousand-to-one ratio makes the list absorb all of it until it bottoms out.
+ */
 .rail-scroll {
-  flex: 1 1 auto; min-height: 120px; overflow-y: auto;
+  flex: 1 1000 auto; min-height: 120px; overflow-y: auto;
   display: flex; flex-direction: column; gap: 22px;
 }
 .rail-foot {
@@ -182,6 +191,8 @@ body:has(.app) > #root { display: contents; }
   padding: 0 6px; font-size: 12px;
 }
 .report-copy { font-size: 12px; padding: 5px 10px; white-space: nowrap; }
+/* Button and link share a line: a whole line each was two of the rows the foot could not afford. */
+.report-actions { display: flex; align-items: center; gap: 10px; }
 /* Monospace and scrollable: it is 2KB of JSON, not prose. */
 .report-box {
   width: 100%; box-sizing: border-box; resize: vertical;
@@ -191,6 +202,7 @@ body:has(.app) > #root { display: contents; }
 }
 .report-link { font-size: 11px; text-decoration: underline; }
 .report-link:hover { color: var(--accent); }
+.build-stamp { font-size: 10px; letter-spacing: 0.04em; opacity: 0.7; }
 
 /*
  * The three things a stranger does not know, in the plainest words in the game.
@@ -385,8 +397,10 @@ img.sprite { image-rendering: pixelated; }
     -webkit-overflow-scrolling: touch;
   }
   .rail-foot .rail-item { flex: none; }
-  .rail-report { flex-direction: row; align-items: center; gap: 8px; padding: 0; }
-  .rail-report .dim { flex: 1; min-width: 0; }
+  /* The prompt gets a line of its own and the button, link and stamp share the next.
+     Sharing one row with them squeezed it into a 66px column four lines tall. */
+  .rail-report { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 0; }
+  .rail-report > p { flex: 1 1 100%; margin: 0; }
   .rail-group { flex-direction: row; gap: 4px; }
   /* Section captions ("SKILLS", "CHARACTER") are a column idea; sideways they are
      just three words taking up the space two buttons wanted. */
