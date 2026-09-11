@@ -12,6 +12,8 @@ import { removeItem } from './bank'
 import { getCombatStyle, type CombatStyleId } from '../content/skills/combat'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { isSkillUnlocked } from './tutorial'
+import { planKeys } from './weaponPlan'
+import { getEnemy, getItem } from '../content'
 import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { moveToAny, placeActor } from './world'
 import type {
@@ -143,6 +145,37 @@ export function readAllStoryBeats(state: GameState, ids: readonly string[]): Gam
  * Allowed mid-fight on purpose: it changes nothing about the fight in progress, only
  * where the next kill's xp lands, so there is no reason to make the player disengage.
  */
+/**
+ * Name the weapon to fight one of a boss's phases with, or null to clear it.
+ *
+ * Validated against the boss rather than trusted: only a real boss, only a key that boss
+ * actually has (its opening, or one of its phases by name), and only a weapon. Ownership
+ * is deliberately *not* checked here - a plan can name a weapon you have not built yet,
+ * and it simply does nothing until you have one. That is what lets a player plan a fight
+ * from its record before the kit exists.
+ */
+export function setWeaponPlan(
+  state: GameState,
+  boss: string,
+  key: string,
+  weapon: ItemId | null,
+): GameState {
+  const enemy = getEnemy(boss)
+  if (!enemy?.isBoss) return state
+  if (!planKeys(enemy).includes(key)) return state
+  if (weapon !== null && getItem(weapon)?.slot !== 'weapon') return state
+  if ((state.weaponPlans[boss]?.[key] ?? null) === weapon) return state
+
+  const next = cloneState(state)
+  const plan = { ...(next.weaponPlans[boss] ?? {}) }
+  if (weapon === null) delete plan[key]
+  else plan[key] = weapon
+  // An emptied plan is removed outright, so "no plan" has one representation.
+  if (Object.keys(plan).length === 0) delete next.weaponPlans[boss]
+  else next.weaponPlans[boss] = plan
+  return next
+}
+
 export function setCombatStyle(state: GameState, style: CombatStyleId): GameState {
   if (state.combat.style === style) return state
   if (!getCombatStyle(style)) return state

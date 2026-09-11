@@ -512,6 +512,15 @@ img.sprite { image-rendering: pixelated; }
 .dossier-verdict.good { color: var(--good); }
 .dossier-verdict.bad { color: var(--bad); }
 .dossier .flavour { margin: 0; }
+/* The plan: one choice per entry, under the verdict it changes. */
+.plan-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.plan-select {
+  flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); padding: 3px 6px;
+}
+.plan-select:hover, .plan-select:focus { border-color: var(--accent-dim); }
+/* Blue, because it is yours: the one line in a hostile banner about what you did. */
+.stage-switch { margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--accent); }
 /*
  * The sealed entry. Before the fight, a dashed edge and one dim line: a gap in the
  * document, visibly there and visibly shut. After, it opens into the story in the same
@@ -660,8 +669,11 @@ img.sprite { image-rendering: pixelated; }
  * fit it. Fitting would mean a fractional scale, and a backdrop whose pixels are a
  * different size from the figure standing on it does not read as one world.
  */
+/* flex: none, so the picture never gives way to the readout below it. It was shrinkable, and
+   when a boss banner and a weapon switch made the readout taller the scene was squeezed to
+   153px of its 204 - cutting the mech's head off - rather than the column scrolling. */
 .stage-scene {
-  position: relative;
+  position: relative; flex: none;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 1px solid var(--line);

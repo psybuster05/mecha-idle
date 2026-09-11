@@ -463,10 +463,69 @@ the reading matters, and after that it is reference - and the place to reread wh
 found in it. Damage types are written out in full
 here - kinetic, energy, EMP - rather than as the KIN/NRG chips used elsewhere.
 
-What it does not fix: there is still one weapon slot, so knowing Bulwark walls kinetic lets
-you *choose* EMP beforehand but not *switch* to it when Bulwark arrives. Seeing the puzzle
-was half the problem; being able to make the move is the other half, and it is a game-two
-question.
+## Weapon plans: switching between a boss's phases
+
+Every entry in a boss's record has a **Fight with** choice. Pick a weapon for a phase and the
+mech changes to it the instant that phase begins. It is the idle answer to a mid-fight
+decision: you make it in advance, as a rule, and it plays out with nobody at the keyboard.
+Choosing updates that entry's verdict immediately, so the record tells you whether the pick
+is right before the fight starts - and the stage says "Switched to Harpoon Launcher" when it
+happens, because the sprite does not change and the switch would otherwise be invisible.
+
+**Nothing moves your gear.** `sim/weaponPlan.ts`'s `fightingAs(state)` is a *view* of the
+state with the weapon slot replaced by whatever the plan names for the current phase. The
+equipped weapon never changes, the bank is never shuffled, nothing has to be put back when
+the fight ends, and the Equipment page always shows what you chose. Every weapon lookup in
+the game reads `state.equipment.weapon`, which is why one view covers damage, type, branch
+and xp routing at once.
+
+Rules it keeps, all tested in `sim/__tests__/weaponPlan.test.ts`:
+
+- **Derived, never stored.** The weapon in use is a function of the boss, its HP and the
+  plan - the same way the phase is derived from HP. Stats are recomputed *at the event that
+  changes them*: the swing that crosses a threshold, and the boss arriving. That is what
+  keeps the offline guarantee - one 600-second step and 1,200 half-second steps give the same
+  fight, asserted.
+- **A plan can only add a switch.** A phase left blank, a boss with no plan, or a planned
+  weapon you no longer own all mean "whatever is fitted". A plan can never leave the mech
+  empty-handed, and with no plans `fightingAs` returns the state itself - every boss budget
+  measured before plans existed still holds exactly, and all 407 earlier tests passed
+  untouched when this landed.
+- **Kill xp follows the weapon that landed it**, not the fitted one: a ranged finisher trains
+  Ranged even if you walked in with a lance.
+- **A plan may name a weapon you do not own yet.** It does nothing until you do. That is what
+  lets a player plan a fight from its record before the kit exists.
+- **Additive save field, no version bump**, like every other one: an older save has no plans.
+  Rebuilt entry by entry on load, so a corrupted plan can only lose switches.
+
+The pre-made saves now carry one of every other weapon they could have fabricated, or the
+plan would be a menu with one item on it. They start with no plans - writing them is the
+tester's decision.
+
+Measured, time to first kill, every weapon available:
+
+| Boss | Level | Best single weapon | Best plan | |
+|---|---|---|---|---|
+| Overseer | 1 / 99 | 101.5s / 11.5s | 90s / 10.5s | ~10% faster |
+| Quartermaster | 25 / 99 | 104.5s / 33s | 98.5s / 27s | 6-18% faster |
+| Tower Actual | 45 / 99 | 290s / 107.5s | 197s / 88s | 18-32% faster |
+| Registrar | 99 | 239s | 239s | no gain |
+| Census | 80 | no single weapon wins | wins in 351.5s | a loss becomes a win |
+| Census, Adjutant | 99 | - | - | no gain |
+| Colonel | 95 / 99 | 304s / 285s | 297.5s / 285s | 0-2% |
+
+Two things that table says. **Plans matter most in the first three regions**, and at the
+Census they change the outcome: at level 80 no single weapon wins and a plan does, which is
+the first time a boss's effective minimum level has moved. That is the design working -
+preparation rewarded - but it is a balance change, and it was measured rather than assumed.
+**And The Sentence makes switching pointless late**: at 99 it is the best weapon in every
+phase of the last four bosses, so no plan beats it. That is the "one weapon solves the
+game" failure the region design exists to prevent, and plans are what exposed it. Left as
+it is on purpose, for the playtest to weigh in on before anything is retuned.
+
+One layout trap this uncovered: the stage scene was shrinkable, so when a boss banner and a
+switch line made the readout taller, the picture was squeezed to 153px of its 204 and the
+mech lost its head. `.stage-scene` is `flex: none` now; the column scrolls instead.
 
 ## The test timeout is 30 seconds, on purpose
 

@@ -12,6 +12,7 @@ import { getEnemy, getZone } from '../content'
 import { getCombatStyle, styleShare } from '../content/skills/combat'
 import { combatBranch } from './stats'
 import { activePhase, effectiveResistances, perkTotal, type EnemyDef } from '../content/enemies'
+import { fightingAs } from './weaponPlan'
 import type { DamageType, Resistances } from './state'
 import { addItem, grantAll } from './bank'
 import { Rng } from './rng'
@@ -119,7 +120,9 @@ function onKill(state: GameState, enemy: EnemyDef, stats: DerivedStats, rng: Rng
   // since zones read combat level.
   const style = getCombatStyle(state.combat.style)
   if (style) {
-    for (const { skill, amount } of styleShare(style, combatBranch(state), xp)) {
+    // The branch of the weapon that landed the kill, which under a plan may not be the
+    // fitted one - a ranged finisher trains Ranged even if you walked in with a lance.
+    for (const { skill, amount } of styleShare(style, combatBranch(fightingAs(state)), xp)) {
       state.skills[skill] += amount
     }
   }
@@ -162,7 +165,10 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
   // the mech up mid-fight, and a large offline dt must feel those level-ups exactly
   // when live play would. Caching this for the whole step silently under-credits
   // anyone who levelled while away.
-  let stats = derivedStats(state)
+  // Seen through the weapon plan: during a boss phase the plan covers, these are the
+  // stats of the planned weapon rather than the fitted one. With no plans it is the state
+  // itself, and the fight is exactly the one every boss budget was measured against.
+  let stats = derivedStats(fightingAs(state))
   const combat = state.combat
 
   // Deploying with no integrity left starts you patched up; equipment changes that
@@ -194,9 +200,11 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
               combat.carryOver = Math.max(0, -combat.enemyHp) * stats.cleave
             }
             onKill(state, arrived, stats, rng)
-            stats = derivedStats(state)
           }
         }
+        // Whatever arrived - and whatever phase any carried overkill knocked it into - is
+        // what the plan answers now. Recomputed here, at the event, never later.
+        stats = derivedStats(fightingAs(state))
       }
       continue
     }
@@ -246,6 +254,9 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
       // Crossing a threshold buys a breather - the boss steps back to reconfigure.
       // Derived from HP like the phase itself, so nothing can fall out of step.
       if (combat.enemyHp > 0 && activePhase(enemy, combat.enemyHp) !== phase) {
+        // The weapon switch happens here, on the swing that crossed the threshold - the
+        // same instant whether this step is a frame or a day.
+        stats = derivedStats(fightingAs(state))
         combat.hp = Math.min(stats.maxHp, combat.hp + stats.maxHp * PHASE_TRANSITION_HEAL)
       }
 
@@ -257,7 +268,7 @@ export function advanceCombatActivity(state: GameState, actorId: ActorId, dt: nu
         }
 
         onKill(state, enemy, stats, rng)
-        stats = derivedStats(state)
+        stats = derivedStats(fightingAs(state))
         continue
       }
     }

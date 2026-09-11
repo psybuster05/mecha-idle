@@ -1,7 +1,7 @@
 import { getEnemy, itemName, ZONES } from '../../content'
 import { activePhase, effectiveResistances, type EnemyDef } from '../../content/enemies'
 import { hasDefeated } from '../../sim/state'
-import { setCombatStyle, startCombat, stopActivity } from '../../sim/intents'
+import { setCombatStyle, setWeaponPlan, startCombat, stopActivity } from '../../sim/intents'
 import { BRANCH_SKILLS, COMBAT_STYLES, getCombatSkill } from '../../content/skills/combat'
 import { DAMAGE_TYPES, type DamageType, type GameState } from '../../sim/state'
 import { combatBranch, combatLevel, derivedStats, RESPAWN_DELAY } from '../../sim/stats'
@@ -12,6 +12,9 @@ import { MechPortrait } from './MechPortrait'
 import { DAMAGE_ICONS, ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 import { dossier, TYPE_NAME, verdict } from '../dossier'
 import { getRecord } from '../../content/records'
+import { getItem } from '../../content'
+import { fightingAs, OPENING, ownedWeapons, ownsWeapon } from '../../sim/weaponPlan'
+import { DEFAULT_DAMAGE_TYPE } from '../../sim/state'
 import { getStoryBeat } from '../../content/story'
 
 interface Props {
@@ -71,8 +74,24 @@ function Resistances({
  * Open until the boss has fallen once, then collapsed: the first attempt is where the
  * reading matters, and afterwards it is reference - and a place to reread what you found.
  */
-function BossRecord({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
-  const mine = derivedStats(state).damageType
+/** What a weapon deals. Bare hands - no weapon - are kinetic, as everywhere else. */
+function weaponType(id: string | undefined): DamageType {
+  return (id && getItem(id)?.stats?.damageType) || DEFAULT_DAMAGE_TYPE
+}
+
+function BossRecord({
+  enemy,
+  state,
+  dispatch,
+}: {
+  enemy: EnemyDef
+  state: GameState
+  dispatch: Props['dispatch']
+}) {
+  const fitted = state.equipment.weapon
+  const mine = weaponType(fitted)
+  const plan = state.weaponPlans[enemy.id] ?? {}
+  const weapons = ownedWeapons(state)
   const steps = dossier(enemy)
   const record = getRecord(enemy.id)
   const beaten = hasDefeated(state, enemy.id)
@@ -92,7 +111,13 @@ function BossRecord({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
       </summary>
       <ol className="dossier-steps">
         {steps.map((step, index) => {
-          const call = verdict(step.resistances, mine)
+          // The plan key for this entry: the opening, or the phase by name.
+          const key = index === 0 ? OPENING : step.name
+          const planned = plan[key]
+          // The verdict follows what this entry will actually be fought with, so choosing
+          // a weapon here answers "is that right?" before the fight ever starts.
+          const using = planned && ownsWeapon(state, planned) ? planned : fitted
+          const call = verdict(step.resistances, weaponType(using))
           return (
             <li key={step.name} className="dossier-step">
               <div className="dossier-head">
@@ -106,8 +131,35 @@ function BossRecord({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
               {step.effects.length > 0 && (
                 <p className="dossier-effects">{step.effects.join(' · ')}</p>
               )}
-              <Resistances resistances={step.resistances} mine={mine} />
+              <Resistances resistances={step.resistances} mine={weaponType(using)} />
               {call && <p className={`dossier-verdict ${call.tone}`}>{call.text}</p>}
+              {/* The switch. Blank means "whatever is fitted", so a plan only ever *adds* a
+                  change and an untouched record is exactly the fight as it always was. */}
+              <label className="plan-row">
+                <span className="dim">Fight with</span>
+                <select
+                  className="plan-select"
+                  value={planned ?? ''}
+                  onChange={(e) =>
+                    dispatch((s) => setWeaponPlan(s, enemy.id, key, e.target.value || null))
+                  }
+                >
+                  <option value="">
+                    Fitted weapon{fitted ? ` (${getItem(fitted)?.name ?? fitted})` : ' (bare hands)'}
+                  </option>
+                  {weapons.map((id) => (
+                    <option key={id} value={id}>
+                      {getItem(id)?.name ?? id} &middot; {TYPE_NAME[weaponType(id)]}
+                    </option>
+                  ))}
+                  {/* A plan can name a weapon you have not built yet, or have salvaged.
+                      Shown so the choice is not silently lost, and marked so it is clear
+                      it will do nothing until you have one. */}
+                  {planned && !weapons.includes(planned) && (
+                    <option value={planned}>{getItem(planned)?.name ?? planned} (not owned)</option>
+                  )}
+                </select>
+              </label>
             </li>
           )
         })}
@@ -182,7 +234,7 @@ function EnemyRow({
         </div>
         <p className="dim flavour">{enemy.description}</p>
         <Resistances resistances={enemy.resistances ?? {}} mine={mine} />
-        {enemy.isBoss && <BossRecord enemy={enemy} state={state} />}
+        {enemy.isBoss && <BossRecord enemy={enemy} state={state} dispatch={dispatch} />}
         {enemy.perk && (
           <div className={`perk-note ${hasDefeated(state, enemy.id) ? 'earned' : ''}`}>
             <strong>{enemy.perk.name}</strong>
@@ -209,7 +261,8 @@ function EnemyRow({
 }
 
 export function CombatPanel({ state, dispatch }: Props) {
-  const stats = derivedStats(state)
+  // What the fight sees: during a planned phase, that is the planned weapon.
+  const stats = derivedStats(fightingAs(state))
   const level = combatLevel(state)
   const branch = combatBranch(state)
   const activity = state.actors.mech.activity

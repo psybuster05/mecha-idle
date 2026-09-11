@@ -62,6 +62,20 @@ export function buildPreset(def: PresetDef, now: number): GameState {
 
   state.equipment = bestLoadout(def.levels.fabrication ?? 1)
 
+  // One of every *other* weapon this save could have fabricated, in the bank. Without
+  // them a tester dropped into the middle of the game has nothing to switch to, and the
+  // weapon plans on every boss record would be a menu with one item on it. Only weapons
+  // at or below the save's Fabrication level - the same honesty rule the loadout keeps.
+  const fabrication = SKILLS.find((skill) => skill.id === 'fabrication')
+  for (const action of fabrication?.actions ?? []) {
+    if (action.levelRequired > (def.levels.fabrication ?? 1)) continue
+    for (const output of action.outputs) {
+      if (getItem(output.item)?.slot !== 'weapon') continue
+      if (output.item === state.equipment.weapon) continue
+      state.bank[output.item] = 1
+    }
+  }
+
   if (def.crawler) {
     state.actors.crawler.unlocked = true
     state.actors.crawler.at = state.actors.mech.at

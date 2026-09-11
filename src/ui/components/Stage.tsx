@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react'
 import { getEnemy, getSkill, itemName } from '../../content'
 import { activePhase } from '../../content/enemies'
+import { getItem } from '../../content'
+import { plannedWeapon } from '../../sim/weaponPlan'
 import {
   ENEMY_SPRITES,
   SCENE_BACKDROP,
@@ -142,6 +144,9 @@ function NowPlaying({ state }: { state: GameState }) {
   if (activity.kind === 'combat') {
     const enemy = state.combat.enemyId ? getEnemy(state.combat.enemyId) : null
     const phase = enemy ? activePhase(enemy, state.combat.enemyHp) : null
+    // Named on the stage because a switch is otherwise invisible: the sprite does not
+    // change, and the only evidence would be numbers moving on a tab you are not on.
+    const switched = plannedWeapon(state)
     return (
       <div className="stage-now">
         {enemy ? (
@@ -160,7 +165,13 @@ function NowPlaying({ state }: { state: GameState }) {
               <div key={phase.name} className="phase-banner stage-phase" role="status">
                 <strong>{phase.name}</strong>
                 <span className="dim"> — {phase.message}</span>
+                {switched && (
+                  <div className="stage-switch">Switched to {getItem(switched)?.name ?? switched}</div>
+                )}
               </div>
+            )}
+            {!phase && switched && (
+              <div className="stage-switch">Fighting with {getItem(switched)?.name ?? switched}</div>
             )}
             <Bar value={Math.max(0, state.combat.enemyHp) / enemy.maxHp} tone="enemy" />
           </>

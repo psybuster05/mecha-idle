@@ -236,6 +236,14 @@ export interface GameState {
    * region unlocks, perks, story and NG+ all read from it.
    */
   defeated: Partial<Record<string, number>>
+  /**
+   * Which weapon to fight each boss phase with: boss id -> phase key -> weapon.
+   *
+   * A phase left out, a boss left out, or a weapon you no longer own all mean "whatever is
+   * fitted", so an empty object is exactly the game as it was before plans existed. See
+   * `weaponPlan.ts` - the plan changes what the fight *sees*, never what is equipped.
+   */
+  weaponPlans: Partial<Record<string, Partial<Record<string, ItemId>>>>
 }
 
 /**
@@ -276,6 +284,7 @@ export function newGame(seed: number = 1): GameState {
     speed: 1,
     fuelEnergy: 0,
     defeated: {},
+    weaponPlans: {},
     combat: {
       enemyId: null,
       enemyHp: 0,

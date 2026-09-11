@@ -190,6 +190,21 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   merged.bank = { ...(raw['bank'] as object | undefined) }
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
+  // Added without a version bump, like every other additive field: a save from before
+  // plans simply has none. Rebuilt entry by entry so a corrupted plan can only ever lose
+  // a switch - never hand the fight a value that is not a weapon id.
+  merged.weaponPlans = {}
+  const rawPlans = raw['weaponPlans']
+  if (rawPlans && typeof rawPlans === 'object') {
+    for (const [boss, plan] of Object.entries(rawPlans as Record<string, unknown>)) {
+      if (!plan || typeof plan !== 'object') continue
+      const clean: Record<string, string> = {}
+      for (const [key, weapon] of Object.entries(plan as Record<string, unknown>)) {
+        if (typeof weapon === 'string') clean[key] = weapon
+      }
+      if (Object.keys(clean).length > 0) merged.weaponPlans[boss] = clean
+    }
+  }
   merged.visited = Array.isArray(raw['visited']) ? (raw['visited'] as string[]) : base.visited
   // A malformed speed or a negative tank must never leave work permanently accelerated.
   merged.speed = SPEEDS.includes(merged.speed) ? merged.speed : 1
