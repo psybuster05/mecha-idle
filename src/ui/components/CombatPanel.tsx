@@ -11,6 +11,8 @@ import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
 import { DAMAGE_ICONS, ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
 import { dossier, TYPE_NAME, verdict } from '../dossier'
+import { getRecord } from '../../content/records'
+import { getStoryBeat } from '../../content/story'
 
 interface Props {
   state: GameState
@@ -54,27 +56,49 @@ function Resistances({
 }
 
 /**
- * A boss's phases, readable before you commit to the fight.
+ * The boss's own record - the document it has been keeping for thirty-one years.
  *
- * Open by default until the boss has fallen once, then tucked away: the first attempt is
- * where the reading matters, and after that it is reference. A native `<details>` for the
- * disclosure, so it is keyboard- and screen-reader-operable for nothing.
+ * Read from outside, before the fight, it is the boss's procedure: how it will fight, one
+ * entry per phase, written in its own document's terms - the Overseer's schedule has
+ * shifts, the Quartermaster's manifest has lines. That is the practical half, and it keeps
+ * every plain number the fight turns on: when each phase arrives, what it changes, and
+ * whether your weapon lands.
+ *
+ * One entry is sealed. On defeat it opens, and what is inside is the story beat that
+ * defeat plays - the same beat object the Log holds, rendered here rather than copied - so
+ * the thing most worth reading before a boss and the story it guards are one document.
+ *
+ * Open until the boss has fallen once, then collapsed: the first attempt is where the
+ * reading matters, and afterwards it is reference - and a place to reread what you found.
  */
-function BossDossier({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
+function BossRecord({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
   const mine = derivedStats(state).damageType
   const steps = dossier(enemy)
+  const record = getRecord(enemy.id)
+  const beaten = hasDefeated(state, enemy.id)
+  const sealed = record ? getStoryBeat(record.beat) : undefined
+  // A boss without a record still gets its phases - the practical half must never depend
+  // on the story half being written. A test keeps every boss supplied anyway.
+  const entry = record?.entry ?? 'Phase'
+
   return (
-    <details className="dossier" open={!hasDefeated(state, enemy.id)}>
+    <details className="dossier record" open={!beaten}>
       <summary>
-        Dossier <span className="dim">&middot; {steps.length - 1} phases &middot; you deal {TYPE_NAME[mine]}</span>
+        {record ? record.document : 'Record'}{' '}
+        <span className="dim">
+          &middot; kept by {enemy.name} &middot; {steps.length - 1} phases &middot; you deal{' '}
+          {TYPE_NAME[mine]}
+        </span>
       </summary>
       <ol className="dossier-steps">
-        {steps.map((step) => {
+        {steps.map((step, index) => {
           const call = verdict(step.resistances, mine)
           return (
             <li key={step.name} className="dossier-step">
               <div className="dossier-head">
-                <span className="dossier-at">{step.at}</span>
+                <span className="dossier-at">
+                  {entry} {index + 1} &middot; {step.at}
+                </span>
                 <strong>{step.name}</strong>
                 <span className="dim">deals {TYPE_NAME[step.damageType]}</span>
               </div>
@@ -87,6 +111,34 @@ function BossDossier({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
             </li>
           )
         })}
+        {sealed && (
+          <li className={`record-sealed ${beaten ? 'open' : ''}`}>
+            {beaten ? (
+              <>
+                <div className="dossier-head">
+                  <span className="dossier-at">
+                    {entry} {steps.length + 1} &middot; recovered
+                  </span>
+                  <strong>{sealed.title}</strong>
+                </div>
+                {sealed.body.map((paragraph, i) => (
+                  <p key={i} className="story-line">
+                    {paragraph}
+                  </p>
+                ))}
+              </>
+            ) : (
+              // Says only that something is there. Hinting at *whose* entry it is would
+              // spoil the first one, where finding yourself on the record is the moment.
+              <p className="dim">
+                <span className="dossier-at">
+                  {entry} {steps.length + 1} &middot; sealed
+                </span>{' '}
+                One entry will not open from out here. It opens when {enemy.name} falls.
+              </p>
+            )}
+          </li>
+        )}
       </ol>
     </details>
   )
@@ -130,7 +182,7 @@ function EnemyRow({
         </div>
         <p className="dim flavour">{enemy.description}</p>
         <Resistances resistances={enemy.resistances ?? {}} mine={mine} />
-        {enemy.isBoss && <BossDossier enemy={enemy} state={state} />}
+        {enemy.isBoss && <BossRecord enemy={enemy} state={state} />}
         {enemy.perk && (
           <div className={`perk-note ${hasDefeated(state, enemy.id) ? 'earned' : ''}`}>
             <strong>{enemy.perk.name}</strong>

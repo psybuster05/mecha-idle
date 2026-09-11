@@ -512,6 +512,16 @@ img.sprite { image-rendering: pixelated; }
 .dossier-verdict.good { color: var(--good); }
 .dossier-verdict.bad { color: var(--bad); }
 .dossier .flavour { margin: 0; }
+/*
+ * The sealed entry. Before the fight, a dashed edge and one dim line: a gap in the
+ * document, visibly there and visibly shut. After, it opens into the story in the same
+ * type the story dialogs use, with the player's blue on its edge - the one entry in a
+ * hostile document that is about you.
+ */
+.record-sealed { padding: 6px 0 2px 10px; border-left: 3px dashed var(--line-bright); }
+.record-sealed p { margin: 0; font-size: 12px; }
+.record-sealed.open { border-left: 3px solid var(--accent); display: flex; flex-direction: column; gap: 6px; }
+.record-sealed .story-line { font-size: 12px; line-height: 1.55; }
 
 .phase-banner {
   padding: 6px 10px; border-left: 3px solid var(--enemy);

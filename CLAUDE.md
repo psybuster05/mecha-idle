@@ -406,7 +406,33 @@ The other consequence, still true:
 Measure every boss before shipping it. Use **time to first kill**, never kills-per-hour -
 the latter measures death-and-recovery cycles rather than damage, and hides the design.
 
-## The boss dossier
+## The boss record
+
+**Each boss's phases are shown as the record it keeps in the story** - the Overseer's Duty
+Schedule, the Quartermaster's Cargo Manifest, Tower Actual's Approach Sequence, the
+Registrar's Crossing Register, the Census's Count, the Adjutant's Postings, the Colonel's
+Standing Orders. The spine of the story is that every boss is still doing its job and each
+record holds a line about who you were; this makes the record a thing in the game rather
+than only a paragraph in the Log.
+
+Read from outside, before the fight, it is the boss's procedure: one entry per phase,
+named in the document's own terms (Shift 2, Line 3, Slot 1), carrying every plain number
+the fight turns on. **One entry is sealed.** On defeat it opens, and what is inside is
+that boss's defeat beat - rendered from the *same beat object* the Log holds, never copied -
+so the thing most worth reading before a boss and the story it guards are one document.
+The sealed line says only that something is there: hinting at *whose* entry it is would
+spoil the first boss, where finding yourself on the record is the moment. The recovered
+entry takes the player's blue edge, the one entry in a hostile document about you.
+
+`content/records.ts` holds only names - the document and what an entry is called - so
+nothing is written twice: phases come from the enemy table, sealed text from the story
+table. Its tests check the joins, because a broken one fails silently: every boss has
+exactly one record, every record seals *that* boss's own defeat beat, and no boss defeat
+beat is left outside a record. A boss with no record would still show its phases - the
+practical half never depends on the story half being written.
+
+The phase-reading logic below still lives in `ui/dossier.ts` under that name; "record" is
+what the player sees.
 
 Bosses are designed as **preparation puzzles** - the fight is decided before it starts, and
 a phase can invert which weapon is right. That only works if the player can see the puzzle,
@@ -433,7 +459,8 @@ Rules it keeps, all tested in `ui/__tests__/dossier.test.ts`:
   you and the one that opens up - read the same as the ones that barely move.
 
 Open by default until the boss has fallen once, then collapsed: the first attempt is where
-the reading matters, and after that it is reference. Damage types are written out in full
+the reading matters, and after that it is reference - and the place to reread what you
+found in it. Damage types are written out in full
 here - kinetic, energy, EMP - rather than as the KIN/NRG chips used elsewhere.
 
 What it does not fix: there is still one weapon slot, so knowing Bulwark walls kinetic lets
