@@ -36,7 +36,7 @@ export const PRESETS: readonly PresetDef[] = [
   {
     id: 'mid',
     name: 'Mid-game',
-    blurb: 'Two regions open, the crawler running, tier-three gear fitted.',
+    blurb: 'Two regions open, the crawler running, and Tower Actual next - winnable, not easily.',
     // Fabrication 60 rather than 50 on purpose: 60 is a gear tier, and at 50 the best
     // frame in the game is still the level-1 welded steel one. A "mid-game" save whose
     // chassis is the tutorial's chassis reads as a bug.
@@ -45,11 +45,17 @@ export const PRESETS: readonly PresetDef[] = [
       refining: 60,
       fabrication: 60,
       salvaging: 55,
-      attack: 50,
-      strength: 50,
-      defence: 48,
-      hitpoints: 52,
-      ranged: 40,
+      // Set against the boss this save stops in front of, and measured rather than
+      // picked. It shipped at 50 with Ranged at 40 - and the weapon the loadout fits is
+      // the Arc Repeater, a *ranged* weapon, so it fought on its weakest skill and beat
+      // Tower Actual on one seed in five. A player carrying a repeater would have trained
+      // Ranged. At 58 across the board it wins five seeds in five, with 15-45% of its HP
+      // left: a real fight, not a stomp. At 55 it is a coin flip.
+      attack: 58,
+      strength: 58,
+      defence: 58,
+      hitpoints: 58,
+      ranged: 58,
     },
     defeated: ['overseer', 'quartermaster'],
     crawler: true,

@@ -12,6 +12,8 @@ import { ZONES } from '../../content'
 import { nodesForZone } from '../../content/world'
 import { isNodeOpen } from '../world'
 import { combatLevel } from '../stats'
+import { startCombat } from '../intents'
+import { tick } from '../tick'
 
 /**
  * The pre-made stages.
@@ -130,6 +132,31 @@ describe('slots do not collide', () => {
     // The whole migration: a save written before slots existed is already slot 'own'.
     expect(slotKey('own')).toBe(SAVE_KEY)
   })
+})
+
+describe('every preset can win the fight it stops in front of', () => {
+  // Entering is not the same as winning. The Mid-game save passed "can enter" for a week
+  // while beating Tower Actual on one seed in five - it fought with a ranged weapon on its
+  // weakest skill - and a tester who tried the fight the blurb points at was destroyed.
+  // Five seeds, every one a win: a single lucky seed is how that went unnoticed.
+  for (const def of PRESETS) {
+    it(`${def.id} beats its next boss on every seed`, () => {
+      const next = ENEMIES.filter((e) => e.isBoss).find((e) => !def.defeated.includes(e.id))!
+      const zone = ZONES.find((z) => z.enemies.includes(next.id))!
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const base = buildPreset(def, NOW)
+        base.rngSeed = seed
+        let s = startCombat(base, zone.id, next.id)
+        let won = false
+        for (let i = 0; i < 1800 && !won; i++) {
+          s = tick(s, 0.5)
+          won = (s.defeated[next.id] ?? 0) > 0
+          if (s.actors.mech.activity === null) break
+        }
+        expect(won, `${def.id} loses to ${next.name} on seed ${seed}`).toBe(true)
+      }
+    })
+  }
 })
 
 describe('every preset can reach the fight it stops in front of', () => {

@@ -994,6 +994,15 @@ Things that had to be got right, each of which was a way to hand somebody a brok
   so passing one says nothing about the other. Endgame shipped at combat level 90 against
   a Switch Room that wants 95: a save whose blurb promised a fight it could not walk into.
   A test now checks both for every preset.
+- **And it must be able to *win* it** - entering is not winning. Mid-game passed the entry
+  test for a week while beating Tower Actual on one seed in five: its loadout fits the Arc
+  Repeater, a *ranged* weapon, and its Ranged was 40 against 50 everywhere else, so it fought
+  on its weakest skill. A tester who tried the fight its blurb points at was destroyed. It
+  is 58 across the board now - measured, five seeds in five, 15-45% HP left, so still a real
+  fight - and a test fights each preset's next boss on five seeds and requires every one to
+  win. **Five seeds, not one**: at level 50 a single seed happened to win, which is exactly
+  how a coin flip passes for a promise. If the loadout rule ever changes which weapon it
+  fits, check the branch matches the skills.
 
 **Switching saves the current slot and reloads the page.** Blunt and deliberate: booting a
 slot means loading, migrating, crediting time away and restarting the clock, and that path
