@@ -492,6 +492,20 @@ img.sprite { image-rendering: pixelated; }
   padding: 6px 10px; border-left: 3px solid var(--enemy);
   background: rgba(255, 138, 61, 0.1); font-size: 12px;
 }
+/*
+ * On the stage it arrives with a flash and then settles to the same tint as the Combat
+ * tab's. Orange, because the colour language says orange is hostile and this is the enemy
+ * changing what it is. One pulse, not a loop: a banner that keeps flashing for the rest of
+ * a five-minute phase is noise by the second minute.
+ */
+.stage-phase { line-height: 1.45; animation: phase-arrive 900ms ease-out; }
+@keyframes phase-arrive {
+  0% { background: rgba(255, 138, 61, 0.45); }
+  100% { background: rgba(255, 138, 61, 0.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-phase { animation: none; }
+}
 
 .zone { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
 .zone.locked { opacity: 0.5; }

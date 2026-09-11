@@ -484,6 +484,16 @@ one side and whatever it is fighting stands opposite, both on the same slab, wit
 readout below keeping the name and HP. **Bosses are drawn a third taller** than anything
 else - standing a boss the same height as a Scrap Crawler undersells the moment.
 
+**The readout shows the boss's phase**, not just its HP. A phase change is the whole point
+of the boss design - it is what inverts which weapon is right - and it used to appear only
+on the Combat tab, which a player with the game on a second screen is almost never on. The
+stage carries the same banner the Combat tab does: the phase name, its one line, and an
+orange edge because the colour language says orange is hostile. It is keyed by phase name,
+so each new phase mounts fresh and flashes **once** on arrival and then settles - the
+change is the event worth seeing, and a banner that kept pulsing through a five-minute
+phase would be noise by the second minute. It is a live region, so a screen reader
+announces the shift. No banner at all outside a phase, including on every non-boss.
+
 **The figure reacts to a timer that just reset.** In combat that is the attack clock -
 it counts up to the interval and resets, so each side lunges on its own swing. Skilling is
 the same cue: an action's progress counts up to its duration and drops by it, so every

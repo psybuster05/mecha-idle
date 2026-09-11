@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { getEnemy, getSkill, itemName } from '../../content'
+import { activePhase } from '../../content/enemies'
 import {
   ENEMY_SPRITES,
   SCENE_BACKDROP,
@@ -140,11 +141,27 @@ function NowPlaying({ state }: { state: GameState }) {
 
   if (activity.kind === 'combat') {
     const enemy = state.combat.enemyId ? getEnemy(state.combat.enemyId) : null
+    const phase = enemy ? activePhase(enemy, state.combat.enemyHp) : null
     return (
       <div className="stage-now">
         {enemy ? (
           <>
             <span className="stage-enemy-name">{enemy.name}</span>
+            {/* The phase, where an idle player is actually looking. A phase change is
+                the whole point of the boss design - it is what inverts which weapon is
+                right - and it used to be visible only on the Combat tab, which a
+                player with the game on a second screen is almost never on.
+
+                Keyed by name so each new phase mounts fresh and plays its flash once:
+                the change is the event worth seeing, not the phase sitting there. And a
+                live region, so a screen reader announces the shift rather than leaving
+                it to be discovered. */}
+            {phase && (
+              <div key={phase.name} className="phase-banner stage-phase" role="status">
+                <strong>{phase.name}</strong>
+                <span className="dim"> — {phase.message}</span>
+              </div>
+            )}
             <Bar value={Math.max(0, state.combat.enemyHp) / enemy.maxHp} tone="enemy" />
           </>
         ) : (
