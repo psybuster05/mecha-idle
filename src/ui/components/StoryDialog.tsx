@@ -1,4 +1,5 @@
 import type { StoryBeat } from '../../content/story'
+import { useFocusAtTop } from '../useFocusAtTop'
 
 /**
  * The rationed interrupt.
@@ -8,9 +9,11 @@ import type { StoryBeat } from '../../content/story'
  * screen must never demand attention it was not given.
  */
 export function StoryDialog({ beat, onDismiss }: { beat: StoryBeat; onDismiss: () => void }) {
+  const { container, button } = useFocusAtTop<HTMLButtonElement>()
   return (
     <div className="modal-backdrop" onClick={onDismiss}>
       <div
+        ref={container}
         className="modal story-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -23,7 +26,7 @@ export function StoryDialog({ beat, onDismiss }: { beat: StoryBeat; onDismiss: (
             {paragraph}
           </p>
         ))}
-        <button className="primary" onClick={onDismiss} autoFocus>
+        <button ref={button} className="primary" onClick={onDismiss}>
           Continue
         </button>
       </div>

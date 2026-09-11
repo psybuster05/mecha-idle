@@ -2,6 +2,7 @@ import { getSkill, itemName } from '../../content'
 import type { OfflineReport } from '../../sim/offline'
 import type { GatheringSkillId, SkillId } from '../../sim/state'
 import { formatDuration, formatNumber, formatSigned } from '../format'
+import { useFocusAtTop } from '../useFocusAtTop'
 
 const SKILL_LABELS: Record<SkillId, string> = {
   scavenging: 'Scavenging',
@@ -38,10 +39,19 @@ export function OfflineDialog({
     (entry): entry is [string, number] => typeof entry[1] === 'number',
   )
   const nothingHappened = skills.length === 0 && items.length === 0
+  // A long absence makes a long list, and the button sits under it - so the same fix
+  // as the story dialog: focus it without scrolling past the top of the report.
+  const { container, button } = useFocusAtTop<HTMLButtonElement>()
 
   return (
     <div className="modal-backdrop" onClick={onDismiss}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={container}
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
         <h2>While You Were Away</h2>
         <p className="dim">
           You were away for {formatDuration(report.seconds)}.
@@ -91,7 +101,7 @@ export function OfflineDialog({
           </section>
         )}
 
-        <button className="primary" onClick={onDismiss} autoFocus>
+        <button ref={button} className="primary" onClick={onDismiss}>
           Resume
         </button>
       </div>

@@ -42,12 +42,11 @@ export function ReportFooter({
 
   return (
     <div className="rail-report">
-      {/* Short enough for one line in 216px. The longer "Found a bug, or want to say
-          something?" wrapped to two, in a foot that had no rows to spare. */}
-      <p className="dim">Bug, or something to say?</p>
+      {/* The button says what it is for, so the prompt line above it could go - one of
+          the rows the foot could not afford. The toast after it says what to do next. */}
       <div className="report-actions">
-        <button className="report-copy" onClick={copy}>
-          Copy report
+        <button className="report-copy" onClick={copy} title="Copies a report with your save in it">
+          Report a bug
         </button>
         <a className="report-link dim" href={ISSUES} target="_blank" rel="noreferrer">
           or open an issue

@@ -350,6 +350,14 @@ Two rules, both load-bearing:
 Interrupts are rationed to the waking, each boss and the ending - under ten in the whole
 game. A test enforces that nothing minor interrupts.
 
+**Dialogs open at the top, with the button focused but not scrolled to.** `autoFocus`
+scrolls the focused element into view, and on a dialog taller than its box the button is
+at the bottom - so the game's *ending* opened 124px down, past its own title and first
+line, and a player who skims pressed Continue having never seen how it begins.
+`useFocusAtTop` focuses with `preventScroll` and resets the container to the top; Enter
+still dismisses, so a keyboard player loses nothing. The story and offline dialogs both use
+it. Do not put `autoFocus` on a button at the foot of anything that can overflow.
+
 ## When the browser disagrees with the tests
 
 Vite caches transformed modules in `node_modules/.vite`, and that cache **survives a dev
@@ -637,6 +645,19 @@ twenty-four places at once was unreadable overlapping labels.
 
 The rail's half of the phone layout is its own section below.
 
+## The Equipment page leads with the gear
+
+Fitted slots first, then the stats they add up to, then spare parts in the bank, then boss
+perks last. It was the other way round - a portrait, a stat grid and every perk above the
+slots - and at a laptop viewport the first fitted slot started **1,372px down**, two
+screens of scrolling to reach the one thing the page is for. Put what a page is *for* at
+its top; put what it merely *contains* underneath.
+
+The portrait went entirely rather than moving: the stage draws the same mech, larger, on
+every tab, so here it was a second copy of the picture. Its "5 of 5 fitted" caption moved
+onto the Equipped heading it was describing. The stat grid is three across, because six
+stats in an auto-fit grid left Attack Speed alone on a second row.
+
 ## The crawler
 
 The second actor, unlocked by wiring in a Traction Core. `maxConcurrentActivities` goes
@@ -772,6 +793,10 @@ Three consequences, all handled:
 
 - **Fuel needed no adjustment.** It drops per completion and per kill, so income and drain
   scale together and a tank is worth exactly the same amount of *work* as before.
+- **The top bar's fuel note is always a length of time.** At 1x it used to show the tank's
+  raw energy - `57602520 fuel` - a unit nobody playing knows and nothing they can act on.
+  It reads `800h at 3x` now: at 1x nothing drains, so it shows the fastest speed, which is
+  the number that answers "how much do I have".
 - **A time readout in game seconds becomes a lie.** The fuel note promises a stretch of
   wall clock, so it divides by the pace - it read `3425520.0s` before and reads `95h 9m`
   now. Anything else that counts down to the player has to do the same. Nominal action
@@ -795,12 +820,16 @@ Three saves. **Your game** is the playthrough; **Mid-game** and **Endgame** are 
 tester can jump straight to, because the pace note above is right that no amount of
 speeding the clock up puts the endgame in front of somebody with fifteen minutes.
 
-They live at the **foot of the rail**, as the last group under Character. The top bar is
-for what is true right now - your health, and how fast the clock is running - and a save
-picker is neither; down here it is in the same list as Equipment, Bank and Log, which is
-where a player already scans for things they go and look at. Rows rather than a segmented
-control, because that is what the rail is made of and because "Your game" does not fit
-three-across in 216 pixels.
+They live at the **foot of the rail**. The top bar is for what is true right now - your
+health, and how fast the clock is running - and a save picker is neither.
+
+**One row, a native select, not a row per slot.** It was three rows plus a reset row, all
+pinned in view, and at a laptop's real viewport that pushed half the navigation out of
+sight to make room for a control a tester touches once. Rarely used means compact: the
+rail's space belongs to what you press every minute. A native `<select>` because the job is
+exactly "pick one of three", and it brings keyboard handling, labelling and a phone-sized
+picker for nothing. Reset is an icon button beside it, named in full in its title and
+label, since an icon alone would not say which save it resets.
 
 They are **stages, not difficulties**: a plausible snapshot of somebody's playthrough -
 levels, bosses down, gear fitted, a bank with something in it - so what gets poked at is
@@ -949,8 +978,31 @@ went unnoticed because the foot had grown since it was last measured: the build 
 added one line and pushed the button over the edge. `.rail-scroll` shrinks at 1000 now,
 so it absorbs everything until it bottoms out at 120px.
 
-Re-measure this whenever the foot gains a line. Measured after the fix: foot fully in view
-at 1366x768 (275 of 275px) and at 1280x560 (list 184px, above its floor).
+Re-measure this whenever the foot gains a line.
+
+**Measure at the viewport a player actually has, not the screen size.** A 1366x768 laptop -
+still the commonest - loses about 110px to the browser's tabs and address bar, so the page
+gets roughly 1366x657. Measured at the screen size, the rail looked fine; at the real
+viewport the whole Character group (Equipment, Crawler, Bank, Log) was below the fold. The
+fix had four parts, and it took all of them:
+
+- **The saves collapsed to one row** and the report to one line: the foot went from 275px
+  to 96.
+- **The five combat skills became one strip** of icon cells, each with its level and a
+  sliver of xp, instead of five full rows. They are reference pages - what a level buys -
+  so they are the ones that can share a line; every level stays visible, every page one
+  click away, and Combat still comes first. Named in each cell's title and to screen
+  readers, since the icon alone is not a label. On a phone they become chips like every
+  other destination.
+- **The idle hint went.** "Nothing is running..." repeated the stage, which already reads
+  "Idle." on every tab - two places saying one thing, and one of them cost 76px.
+- **Rows run at about 32px**, the density of Melvor's sidebar, with 4px rail xp bars.
+
+All fourteen destinations in view at 1366x657, 1366x768 and 1536x750.
+
+One trap from doing it: the list's 120px desktop floor leaked into the phone layout, where
+it made the one-row nav strip 120px tall with every chip stretched to fill it. The phone
+rules turn it off. A floor meant for a column is wrong for a row.
 
 ## On a phone
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { setSpeed } from '../../sim/intents'
-import { SPEEDS, availableEnergy, drainRate } from '../../sim/fuel'
+import { SPEEDS, availableEnergy, drainRate, type Speed } from '../../sim/fuel'
 import type { GameState } from '../../sim/state'
 import { DEMO_PACE } from '../../sim/pace'
 import { formatDuration } from '../format'
@@ -29,7 +29,6 @@ export function SpeedToggle({
   onNoFuel: (asked: boolean) => void
 }) {
   const energy = availableEnergy(state)
-  const rate = drainRate(state.speed)
   const dry = energy <= 0
 
   // Running out is the one fuel event with no visible cause: work quietly halves in
@@ -74,24 +73,35 @@ export function SpeedToggle({
         ))}
       </div>
       <span className={`speed-note ${dry ? 'warn' : 'dim'}`}>
-        {dry
-          ? 'no fuel'
-          : rate > 0
-            ? // Energy is game seconds; the player is watching a clock on the wall. The
-              // demo runs ten of the former per one of the latter, so a tank that reads
-              // "2h" here must mean two hours of *sitting there*, not twenty.
-                `${formatDuration(energy / rate / DEMO_PACE)} of fuel`
-            : `${Math.floor(energy)} fuel`}
+        {/* Always a length of time, never the tank's internal number. At 1x it used to
+            read the raw energy - "57602520 fuel" - which is a unit nobody playing knows
+            and cannot act on. The question a player has is how long it lasts, so at 1x
+            the answer is how long it would last flat out.
+
+            Energy is game seconds and the player watches a wall clock; the demo runs ten
+            of the former per one of the latter, so the time shown is real sitting-there
+            time. And it only drains while something is working, which is why it says
+            "working" rather than implying the clock is running while you idle. */}
+        {dry ? 'no fuel' : fuelNote(energy, state.speed)}
       </span>
     </div>
   )
+}
+
+/** "3h 12m at 3x" - how long the tank lasts at the speed shown. */
+function fuelNote(energy: number, speed: Speed): string {
+  // At 1x nothing drains, so show the fastest speed: that is the number that answers
+  // "how much do I have", and it is the speed a player with fuel will reach for.
+  const shown = speed > 1 ? speed : (Math.max(...SPEEDS) as Speed)
+  const seconds = energy / drainRate(shown) / DEMO_PACE
+  return `${formatDuration(seconds)} at ${shown}x`
 }
 
 /**
  * One, two or three chevrons - the fast-forward metaphor everyone already knows.
  *
  * Drawn as SVG rather than as a pixel sprite, unlike the rest of the game's icons,
- * because this one has to inverate against the selected button: `currentColor` follows
+ * because this one has to invert against the selected button: `currentColor` follows
  * the button's text colour, and a canvas cannot. The art rules are about game content;
  * this is a transport control.
  */

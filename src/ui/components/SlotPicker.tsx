@@ -84,39 +84,47 @@ export function SlotPicker({
   const current = label(active)
 
   return (
-    <div className="rail-group">
-      <div className="rail-heading dim">Saves</div>
-
-      {SLOT_IDS.map((slot) => {
-        const { name, blurb } = label(slot)
-        return (
-          <button
-            key={slot}
-            className={`rail-item ${slot === active ? 'selected' : ''}`}
-            onClick={() => choose(slot)}
-            title={started(slot) || slot === 'own' ? blurb : `${blurb} Not started yet.`}
-            aria-pressed={slot === active}
-          >
-            <span className="rail-name">
-              <PixelSprite layers={[MENU_ICONS.save]} scale={1} className="rail-icon" />
-              {name}
-            </span>
-            {/* Not on the one you are standing in: its key is only written at the first
-                autosave, so the slot you just opened would otherwise call itself new. */}
-            {slot !== 'own' && slot !== active && !started(slot) && (
-              <span className="dim">new</span>
-            )}
-          </button>
-        )
-      })}
-
-      {/* Quieter than the three above it, because those are navigation and this destroys
-          a save. It only takes the colour of a warning on hover. */}
-      <button className="rail-item slot-reset" onClick={() => setConfirming(true)}>
-        <span className="rail-name">
-          <PixelSprite layers={[MENU_ICONS.reset]} scale={1} className="rail-icon" />
-          Reset {current.name}
-        </span>
+    // One row, not four. Every one of the old rows was pinned in view at the foot of the
+    // rail, and at 1366x768 that pushed half the navigation - Refining, Fabrication,
+    // Salvaging, Equipment, Crawler, Bank, Log - out of sight to make room for a control
+    // a tester touches once. Rarely used means compact; the rail's space belongs to the
+    // things you press every minute.
+    //
+    // A native select because it is exactly this: pick one of three. It brings keyboard
+    // handling, screen-reader labelling and a phone-sized picker for nothing.
+    <div className="slot-row">
+      <PixelSprite layers={[MENU_ICONS.save]} scale={1} className="rail-icon" />
+      <label className="slot-label-text dim" htmlFor="slot-select">
+        Save
+      </label>
+      <select
+        id="slot-select"
+        className="slot-select"
+        value={active}
+        onChange={(e) => choose(e.target.value as SlotId)}
+        title={current.blurb}
+      >
+        {SLOT_IDS.map((slot) => {
+          const { name } = label(slot)
+          // Not on the one you are standing in: its key is only written at the first
+          // autosave, so the slot you just opened would otherwise call itself new.
+          const fresh = slot !== 'own' && slot !== active && !started(slot)
+          return (
+            <option key={slot} value={slot}>
+              {fresh ? `${name} (new)` : name}
+            </option>
+          )
+        })}
+      </select>
+      {/* Quiet until hovered, because this destroys a save. Named in full in its title
+          and label, since an icon alone would not say which save it resets. */}
+      <button
+        className="slot-reset"
+        onClick={() => setConfirming(true)}
+        title={`Reset ${current.name}`}
+        aria-label={`Reset ${current.name}`}
+      >
+        <PixelSprite layers={[MENU_ICONS.reset]} scale={1} className="rail-icon" />
       </button>
 
       {confirming && (

@@ -105,8 +105,8 @@ body:has(.app) > #root { display: contents; }
 .layout { display: flex; flex: 1; align-items: stretch; min-height: 0; }
 
 .rail {
-  width: 240px; flex: none; padding: 16px 12px; border-right: 1px solid var(--line);
-  background: var(--panel); display: flex; flex-direction: column; gap: 16px;
+  width: 240px; flex: none; padding: 12px 12px 10px; border-right: 1px solid var(--line);
+  background: var(--panel); display: flex; flex-direction: column; gap: 10px;
   overflow: hidden;
 }
 /*
@@ -127,17 +127,24 @@ body:has(.app) > #root { display: contents; }
  * control the playtest exists to make findable, on the commonest laptop screen there is.
  * A thousand-to-one ratio makes the list absorb all of it until it bottoms out.
  */
+/*
+ * Fourteen rows have to fit at 1366x768 without scrolling, because the rail is the only
+ * way to reach half the game. They did not: rows padded 7px, 22px between groups and an
+ * idle hint put the list at 802px against 561 available, and Equipment, Crawler, Bank and
+ * Log - the whole Character group - sat below the fold. Melvor's sidebar runs about 32px a
+ * row for the same reason. This is that density, not a new one.
+ */
 .rail-scroll {
   flex: 1 1000 auto; min-height: 120px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 22px;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .rail-foot {
   /* Shrinkable rather than fixed, with the list holding a floor: on a very short
      window a fixed foot would eat the whole column and leave nowhere to pick a skill.
      Below that floor the foot scrolls instead, which is the lesser of the two failures. */
   flex: 0 1 auto; min-height: 0; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 12px;
-  padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 8px; border-top: 1px solid var(--line);
 }
 .rail-group { display: flex; flex-direction: column; gap: 4px; }
 /*
@@ -147,8 +154,19 @@ body:has(.app) > #root { display: contents; }
  * only takes the colour of a warning on hover, so it reads as available rather than as
  * something already going wrong.
  */
-.slot-reset { color: var(--dim); font-size: 12px; }
-.slot-reset:hover { background: none; border-color: var(--bad); color: var(--bad); }
+.slot-row { display: flex; align-items: center; gap: 8px; padding: 0 6px; }
+.slot-label-text { font-size: 12px; }
+.slot-select {
+  flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--line); padding: 4px 6px;
+}
+.slot-select:hover, .slot-select:focus { border-color: var(--accent-dim); }
+/* Quiet until hovered: the only control in the rail that destroys something. */
+.slot-reset {
+  flex: none; display: flex; padding: 4px; line-height: 0;
+  background: none; border: 1px solid transparent; opacity: 0.7;
+}
+.slot-reset:hover { border-color: var(--bad); opacity: 1; }
 
 .modal-actions { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
 /* Beats the standalone .modal button.primary rule further down, which pushes a lone
@@ -167,14 +185,28 @@ body:has(.app) > #root { display: contents; }
 }
 .rail-item.locked:hover { background: none; }
 
-.rail-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; padding: 0 6px 4px; }
+.rail-heading { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; padding: 0 6px; }
 .rail-item {
-  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;
-  background: none; border: 1px solid transparent; text-align: left; padding: 7px 8px;
+  display: grid; grid-template-columns: 1fr auto; gap: 1px 8px;
+  background: none; border: 1px solid transparent; text-align: left; padding: 4px 8px;
 }
 .rail-item:hover { background: var(--panel-2); border-color: var(--line); }
 .rail-item.selected { background: var(--panel-2); border-color: var(--accent-dim); }
 .rail-item .bar-wrap { grid-column: 1 / -1; }
+
+/* The five combat skills on one line: icon over level over a sliver of xp. Named in the
+   tooltip and to screen readers, since the icon alone is not a label. */
+.skill-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.strip-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 5px 2px 4px; background: none; border: 1px solid transparent;
+}
+.strip-cell:hover { background: var(--panel-2); border-color: var(--line); }
+.strip-cell.selected { background: var(--panel-2); border-color: var(--accent-dim); }
+.strip-level { font-size: 12px; font-weight: 700; color: var(--accent); line-height: 1; }
+.strip-cell .bar { height: 3px; }
+/* A thinner bar in the rail than in a panel: here it is a glance, not a readout. */
+.rail-item .bar { height: 4px; }
 .rail-name { display: flex; align-items: center; gap: 6px; }
 .rail-level { color: var(--accent); font-weight: 700; }
 .rail-hint { padding: 0 6px; font-size: 12px; }
@@ -311,8 +343,10 @@ body:has(.app) > #root { display: contents; }
 
 /* --- chassis ----------------------------------------------------------- */
 
+/* Three across, so six stats make two full rows. auto-fit left Attack Speed alone on a
+   second row with an empty band beside it. */
 .stat-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
   background: var(--line); border: 1px solid var(--line);
 }
 .stat { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; background: var(--panel); }
@@ -379,7 +413,10 @@ img.sprite { image-rendering: pixelated; }
     flex-direction: column; gap: 8px; padding: 8px;
     overflow: hidden;
   }
+  /* min-height off: the 120px floor is a desktop column's, and on a phone it made this
+     one-row strip 120px tall with every chip stretched to fill it. */
   .rail-scroll {
+    flex: none; min-height: 0; align-items: center;
     flex-direction: row; gap: 4px; overflow-x: auto; overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
   }
@@ -388,19 +425,11 @@ img.sprite { image-rendering: pixelated; }
    * not exist: nobody scrolls a nav sideways past sixteen buttons to find the thing they
    * did not know was there.
    */
+  /* Two short lines: the save picker, then the report. Both are one row on desktop
+     already, so the phone needs only the padding taken off. */
   .rail-foot { gap: 8px; padding-top: 8px; }
-  /* One sideways line rather than two wrapped ones. Everything above the fold on a
-     phone is expensive, and this is a thing you use once - it has to be *findable*,
-     not prominent. Reset ends up furthest right, which is the right order for it. */
-  .rail-foot .rail-group {
-    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-  .rail-foot .rail-item { flex: none; }
-  /* The prompt gets a line of its own and the button, link and stamp share the next.
-     Sharing one row with them squeezed it into a 66px column four lines tall. */
+  .slot-row { padding: 0; }
   .rail-report { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 0; }
-  .rail-report > p { flex: 1 1 100%; margin: 0; }
   .rail-group { flex-direction: row; gap: 4px; }
   /* Section captions ("SKILLS", "CHARACTER") are a column idea; sideways they are
      just three words taking up the space two buttons wanted. */
@@ -410,6 +439,15 @@ img.sprite { image-rendering: pixelated; }
     border-color: var(--line); padding: 7px 11px;
   }
   .rail-item .bar-wrap, .rail-level { display: none; }
+  /* In the sideways strip the combat cells are chips like every other destination -
+     icon and level side by side, no bar. As a five-column grid they were squeezed to
+     21px wide and broke their numbers across lines. */
+  .skill-strip { display: flex; flex: none; gap: 4px; }
+  .strip-cell {
+    flex: none; flex-direction: row; gap: 6px; white-space: nowrap;
+    padding: 7px 11px; border-color: var(--line);
+  }
+  .strip-cell .bar-wrap { display: none; }
   .engagement { flex-direction: column; }
 }
 

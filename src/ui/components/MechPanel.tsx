@@ -4,7 +4,6 @@ import { earnedPerks } from '../../content/enemies'
 import { equip, unequip } from '../../sim/intents'
 import { EQUIP_SLOTS, type EquipSlot, type GameState } from '../../sim/state'
 import { derivedStats } from '../../sim/stats'
-import { MechPortrait } from './MechPortrait'
 import { PixelSprite } from './PixelSprite'
 import { formatNumber, formatSeconds } from '../format'
 import { statLine } from '../statText'
@@ -51,48 +50,19 @@ export function MechPanel({ state, dispatch }: Props) {
         </div>
       </header>
 
-      <section className="chassis-head">
-        <MechPortrait state={state} />
-      </section>
+      {/* The gear first, because changing it is what this page is for. It used to come
+          last - below a portrait, a stat grid and every boss perk - and at 1366x768 the
+          first fitted slot started 1,372px down, two screens of scrolling to reach the one
+          thing you came here to do.
 
-      <section className="stat-grid">
-        <StatLine label="Max HP" value={formatNumber(stats.maxHp)} />
-        <StatLine label="Damage" value={formatNumber(stats.damage)} />
-        <StatLine label="Accuracy" value={formatNumber(stats.accuracy)} />
-        <StatLine label="Armour" value={formatNumber(stats.armour)} />
-        <StatLine label="Evasion" value={formatNumber(stats.evasion)} />
-        <StatLine label="Attack Speed" value={formatSeconds(stats.attackInterval)} />
-      </section>
-
-      {(() => {
-        const perks = earnedPerks(state.defeated)
-        if (perks.length === 0) return null
-        return (
-          <>
-            <h3>Permanent</h3>
-            <ul className="perks">
-              {perks.map((perk) => (
-                <li key={perk.id} className="perk">
-                  <div className="slot-item">{perk.name}</div>
-                  <div className="dim flavour">{perk.description}</div>
-                  <div className="perk-effects">
-                    {[
-                      perk.gatheringYield &&
-                        `+${Math.round(perk.gatheringYield * 100)}% bonus haul chance`,
-                      perk.damageBonus && `+${Math.round(perk.damageBonus * 100)}% damage`,
-                      perk.xpBonus && `+${Math.round(perk.xpBonus * 100)}% xp`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        )
-      })()}
-
-      <h3>Equipped</h3>
+          The portrait went entirely. The stage draws the same mech, larger, on every tab,
+          so here it was a second copy of the picture taking the top of the page. */}
+      <h3>
+        Equipped{' '}
+        <span className="dim">
+          {EQUIP_SLOTS.filter((slot) => state.equipment[slot]).length} of {EQUIP_SLOTS.length}
+        </span>
+      </h3>
       <ul className="slots">
         {EQUIP_SLOTS.map((slot) => {
           const fitted = state.equipment[slot]
@@ -116,6 +86,17 @@ export function MechPanel({ state, dispatch }: Props) {
           )
         })}
       </ul>
+
+      {/* Directly under the slots: this is what they add up to, so it belongs where you
+          can see it change as you swap parts. */}
+      <section className="stat-grid">
+        <StatLine label="Max HP" value={formatNumber(stats.maxHp)} />
+        <StatLine label="Damage" value={formatNumber(stats.damage)} />
+        <StatLine label="Accuracy" value={formatNumber(stats.accuracy)} />
+        <StatLine label="Armour" value={formatNumber(stats.armour)} />
+        <StatLine label="Evasion" value={formatNumber(stats.evasion)} />
+        <StatLine label="Attack Speed" value={formatSeconds(stats.attackInterval)} />
+      </section>
 
       <h3>In your bank</h3>
       {available.length === 0 ? (
@@ -146,6 +127,36 @@ export function MechPanel({ state, dispatch }: Props) {
           })}
         </ul>
       )}
+
+      {/* Last: permanent, earned once, and nothing on this page changes them. */}
+      {(() => {
+        const perks = earnedPerks(state.defeated)
+        if (perks.length === 0) return null
+        return (
+          <>
+            <h3>Permanent</h3>
+            <ul className="perks">
+              {perks.map((perk) => (
+                <li key={perk.id} className="perk">
+                  <div className="slot-item">{perk.name}</div>
+                  <div className="dim flavour">{perk.description}</div>
+                  <div className="perk-effects">
+                    {[
+                      perk.gatheringYield &&
+                        `+${Math.round(perk.gatheringYield * 100)}% bonus haul chance`,
+                      perk.damageBonus && `+${Math.round(perk.damageBonus * 100)}% damage`,
+                      perk.xpBonus && `+${Math.round(perk.xpBonus * 100)}% xp`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      })()}
+
     </div>
   )
 }

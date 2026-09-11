@@ -89,7 +89,6 @@ export function App() {
   const interruptId = nextInterrupt(state)
   const interrupt = interruptId ? getStoryBeat(interruptId) : undefined
   const activity = state.actors.mech.activity
-  const busy = activity !== null
   const frontier = nextStage(state)
 
   return (
@@ -152,23 +151,32 @@ export function App() {
               </span>
               <span className="rail-level">{combatLevel(state)}</span>
             </button>
-            {COMBAT_SKILLS.map((id) => {
-              const xp = state.skills[id]
-              return (
-                <button
-                  key={id}
-                  className={`rail-item ${tab === id ? 'selected' : ''}`}
-                  onClick={() => setTab(id)}
-                >
-                  <span className="rail-name">
+            {/* One strip, not five rows. The rail has to fit fourteen destinations in a
+                laptop's real viewport - about 1366x657 once the browser has taken its tabs
+                and address bar - and at a row each it did not: the whole Character group
+                fell below the fold. These five are reference pages (what a level buys), so
+                they are the ones that can share a line. Every level stays visible, every
+                page stays one click away, and Combat still comes first. */}
+            <div className="skill-strip" role="group" aria-label="Combat skills">
+              {COMBAT_SKILLS.map((id) => {
+                const xp = state.skills[id]
+                const name = getCombatSkill(id)?.name ?? id
+                const level = levelFromXp(xp)
+                return (
+                  <button
+                    key={id}
+                    className={`strip-cell ${tab === id ? 'selected' : ''}`}
+                    onClick={() => setTab(id)}
+                    title={name}
+                    aria-label={`${name}, level ${level}`}
+                  >
                     <PixelSprite layers={[SKILL_ICONS[id]]} scale={1} className="rail-icon" />
-                    {getCombatSkill(id)?.name ?? id}
-                  </span>
-                  <span className="rail-level">{levelFromXp(xp)}</span>
-                  <Bar value={levelProgress(xp)} tone="xp" />
-                </button>
-              )
-            })}
+                    <span className="strip-level">{level}</span>
+                    <Bar value={levelProgress(xp)} tone="xp" />
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="rail-group">
@@ -265,13 +273,6 @@ export function App() {
             </button>
           </div>
 
-          {!busy && (
-            <p className="rail-hint dim">
-              {state.actors.crawler.unlocked
-                ? 'You are not doing anything. The crawler works on its own.'
-                : 'Nothing is running. Pick an action - you only have attention for one.'}
-            </p>
-          )}
           </div>
 
           {/* Always in view: neither of these is something you scroll a list to find. */}
