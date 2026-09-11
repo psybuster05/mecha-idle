@@ -39,20 +39,6 @@ export const FABRICATION: SkillDef = {
       xp: 9,
     },
     {
-      id: 'fab_crawler_core',
-      name: 'Traction Core',
-      description:
-        'Not for you. For the thing in the Hollow that has been sitting on its axles for thirty-one years.',
-      levelRequired: 10,
-      duration: 7,
-      inputs: [
-        { item: 'steel_ingot', qty: 6 },
-        { item: 'wire_spool', qty: 3 },
-      ],
-      outputs: [{ item: 'crawler_core', qty: 1 }],
-      xp: 9,
-    },
-    {
       id: 'fab_legs_tracked',
       name: 'Tracked Legs',
       description: 'You trade speed for the certainty of staying upright. Mostly.',

@@ -65,7 +65,7 @@ export function OfflineDialog({
 
         {report.waiting && (
           <p className="warn">
-            {report.waiting.actor === 'crawler' ? 'The crawler is' : 'You are'} still on the
+            You are still on the
             job but out of {report.waiting.missing.map(itemName).join(' and ')}. The order
             stands - it picks up again the moment there is stock.
           </p>

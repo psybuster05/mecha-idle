@@ -8,13 +8,12 @@
 
 import { equipItem, unequipSlot, type EquipFailure } from './equipment'
 import { SPEEDS, type Speed } from './fuel'
-import { removeItem } from './bank'
 import { getCombatStyle, type CombatStyleId } from '../content/skills/combat'
 import { nodesForAction, nodesForZone } from '../content/world'
 import { isSkillUnlocked } from './tutorial'
 import { planKeys } from './weaponPlan'
 import { getEnemy, getItem } from '../content'
-import { canCrawlerRun, cloneState, haltActivity, markStorySeen, setActivity } from './state'
+import { cloneState, haltActivity, markStorySeen, setActivity } from './state'
 import { moveToAny, placeActor } from './world'
 import type {
   ActionId,
@@ -39,13 +38,9 @@ export function startSkillAction(
   // of being the rule.
   if (!isSkillUnlocked(state, skill)) return state
 
-  // The crawler is a workshop on tracks and only ever runs industry, so it never has to
-  // go anywhere to work - it carries the furnace with it.
-  if (actor === 'crawler' && !canCrawlerRun(skill)) return state
 
   const next = cloneState(state)
   if (!setActivity(next, actor, { kind: 'skill', skill, action })) return state
-  if (actor === 'crawler') return next
 
   // Actions still happen somewhere - places gate content even though getting to them is
   // instant. If every node that does this job is still shut behind a boss, say so rather
@@ -197,29 +192,6 @@ export function setSpeed(state: GameState, speed: Speed): GameState {
   const next = cloneState(state)
   next.speed = speed
   return next
-}
-
-export type CrawlerFailure = 'no-core' | 'already-running'
-
-/**
- * Wire the traction core in and wake the crawler up.
- *
- * Shaped like equipping deliberately: it consumes the part, it is explicit, and it is
- * the single moment the concurrency rule changes from one action at a time to two.
- */
-export function installCrawler(state: GameState): {
-  state: GameState
-  error: CrawlerFailure | null
-} {
-  if (state.actors.crawler.unlocked) return { state, error: 'already-running' }
-  if ((state.bank['crawler_core'] ?? 0) < 1) return { state, error: 'no-core' }
-
-  const next = cloneState(state)
-  removeItem(next, 'crawler_core', 1)
-  next.actors.crawler.unlocked = true
-  // It wakes where you are, not where it was parked in the save's defaults.
-  next.actors.crawler.at = next.actors.mech.at
-  return { state: next, error: null }
 }
 
 /**

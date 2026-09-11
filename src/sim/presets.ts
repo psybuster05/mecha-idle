@@ -76,11 +76,6 @@ export function buildPreset(def: PresetDef, now: number): GameState {
     }
   }
 
-  if (def.crawler) {
-    state.actors.crawler.unlocked = true
-    state.actors.crawler.at = state.actors.mech.at
-  }
-
   // Arriving at full health, not at the 0 a fresh game uses as "never fought".
   state.combat.hp = derivedStats(state).maxHp
 

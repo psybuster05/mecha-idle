@@ -34,7 +34,62 @@ const RENAMED_COMBAT_SKILLS_V1: Readonly<Record<string, string>> = {
   structure: 'hitpoints',
 }
 
+/** What one Traction Core was made of, for refunding it. The recipe no longer exists. */
+const TRACTION_CORE_INPUTS: Readonly<Record<string, number>> = { steel_ingot: 6, wire_spool: 3 }
+
+/**
+ * Mutates. Puts the crawler to sleep and turns every Traction Core back into what it was
+ * made of - each one in the bank, plus the one wired into a crawler that was running.
+ *
+ * **Idempotent, and run on every load, not only by the 7 -> 8 migration.** A migration
+ * runs once, keyed on the version number, and the version number can lie: a save written
+ * by new code from an old game still in memory - which a dev server's hot reload does
+ * routinely - arrives stamped 8 with a running crawler and a bank full of cores, and the
+ * migration never looks at it. It is the same trap that let Cartography's key outlive
+ * its migration. Running this on every load makes a stray crawler unrepresentable rather
+ * than merely migrated once, and once it has run there is nothing left for it to refund.
+ */
+function retireCrawler(
+  bank: Record<string, number>,
+  actors: Record<string, Record<string, unknown>>,
+): void {
+  const crawler = actors['crawler'] ?? {}
+  let cores = typeof bank['crawler_core'] === 'number' ? Math.max(0, bank['crawler_core']) : 0
+  delete bank['crawler_core']
+  if (crawler['unlocked'] === true) cores += 1
+
+  if (cores > 0) {
+    for (const [item, qty] of Object.entries(TRACTION_CORE_INPUTS)) {
+      bank[item] = (bank[item] ?? 0) + qty * cores
+    }
+  }
+  actors['crawler'] = { ...crawler, unlocked: false, activity: null, progress: 0, stoppedReason: null }
+}
+
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /**
+   * 7 -> 8: the crawler was cut.
+   *
+   * Playtest feedback: a second worker was an extra layer of management in a game whose
+   * whole appeal is not having to manage it - and it bent the one-action rule the rest of
+   * the design leans on. Nothing it made is touched; it is already in the bank.
+   *
+   * What *would* be lost is the Traction Cores, so they are refunded as what they were
+   * built from: every one still in the bank, plus the one wired into a crawler that was
+   * running. Nothing a player earned disappears; it turns back into the steel and wire
+   * that went into it.
+   *
+   * The crawler's actor slot stays in the state shape - asleep, idle, unreachable - so
+   * the two-actor model underneath survives for whatever comes after this game.
+   */
+  7: (raw) => {
+    const bank = { ...((raw['bank'] as Record<string, number> | undefined) ?? {}) }
+    const actors = { ...((raw['actors'] as Record<string, Record<string, unknown>> | undefined) ?? {}) }
+    retireCrawler(bank, actors)
+    return { ...raw, version: 8, bank, actors }
+  },
+
+
   /**
    * 6 -> 7: burning a flask became a speed toggle.
    *
@@ -188,6 +243,11 @@ function withDefaults(raw: Record<string, unknown>): GameState {
   // which is the quietest possible way to break a save. Fall back rather than trust it.
   if (!getCombatStyle(merged.combat.style)) merged.combat.style = base.combat.style
   merged.bank = { ...(raw['bank'] as object | undefined) }
+  // See retireCrawler: the migration alone cannot be trusted to have run.
+  retireCrawler(
+    merged.bank as Record<string, number>,
+    merged.actors as unknown as Record<string, Record<string, unknown>>,
+  )
   merged.equipment = { ...(raw['equipment'] as object | undefined) }
   merged.defeated = { ...(raw['defeated'] as object | undefined) }
   // Added without a version bump, like every other additive field: a save from before

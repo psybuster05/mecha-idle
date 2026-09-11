@@ -26,7 +26,7 @@ export interface WorldNodeDef {
   actions?: { skill: GatheringSkillId; action: ActionId }[]
   /** Combat zone reachable from here, if any. */
   combat?: ZoneId
-  /** Where the crawler is parked. Industry happens here. */
+  /** Home. The map draws it a size larger than anywhere else. */
   isCamp?: boolean
   /**
    * Boss that must be defeated before this place can be entered.
@@ -56,7 +56,7 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
     id: 'the_hollow',
     name: 'The Hollow',
     description:
-      'A collapsed service tunnel, dry and out of the wind. The crawler fits, barely. It is the closest thing you have to a place.',
+      'A collapsed service tunnel, dry and out of the wind. It is the closest thing you have to a place.',
     x: 300,
     y: 260,
     isCamp: true,
@@ -85,7 +85,6 @@ export const WORLD_NODES: readonly WorldNodeDef[] = [
       ...SALVAGING.actions.map((action) => ({ skill: 'salvaging' as const, action: action.id })),
       { skill: 'fabrication', action: 'fab_frame_steel' },
       { skill: 'fabrication', action: 'fab_arms_servo' },
-      { skill: 'fabrication', action: 'fab_crawler_core' },
       { skill: 'fabrication', action: 'fab_legs_tracked' },
       { skill: 'fabrication', action: 'fab_weapon_rivet' },
       { skill: 'fabrication', action: 'fab_reactor_cell' },

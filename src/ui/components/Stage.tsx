@@ -111,8 +111,6 @@ export function Stage({ state }: { state: GameState }) {
         <WorldMap state={state} />
         <p className="stage-caption dim">
           {getNode(state.actors.mech.at)?.name ?? 'Nowhere'}
-          {state.actors.crawler.unlocked &&
-            ` · crawler at ${getNode(state.actors.crawler.at)?.name ?? 'nowhere'}`}
         </p>
       </div>
     </aside>
@@ -135,7 +133,6 @@ function NowPlaying({ state }: { state: GameState }) {
       <div className="stage-now">
         <p className="dim">
           {stopped ? 'Stopped.' : 'Idle.'}
-          {state.actors.crawler.activity ? ' The crawler is working.' : ''}
         </p>
       </div>
     )

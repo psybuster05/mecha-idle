@@ -46,7 +46,6 @@ function summary(state: GameState, slot: SlotId): string[] {
     `combat level: ${combatLevel(state)}`,
     `doing: ${doing}`,
     `speed: ${state.speed}x`,
-    `crawler: ${state.actors.crawler.unlocked ? 'running' : 'asleep'}`,
     `bosses down: ${Object.keys(state.defeated).join(', ') || 'none'}`,
     `bank: ${Object.keys(state.bank).length} kinds`,
   ]

@@ -86,9 +86,10 @@ export function advanceSkillActivity(state: GameState, actorId: ActorId, dt: num
 
   // **Waiting, not halting.** Progress is capped at what the bank can actually pay for,
   // so an actor short of materials simply stops accumulating rather than banking time it
-  // could not have used. That matters now there are two actors: the crawler running out
-  // of ingots while the mech is busy refining more is an ordinary, temporary state, not
-  // a failure - and a halted action never restarts on its own.
+  // could not have used. It replaced halting when a second worker could run out of
+  // ingots while the mech refined more - an ordinary, temporary state rather than a
+  // failure - and it stayed when that worker was cut, because a halted action never
+  // restarts on its own and waiting is simply the kinder rule.
   //
   // The cap is also what keeps this honest across step sizes. Without it a large offline
   // step would accumulate hours of progress against an empty bank and then spend it the

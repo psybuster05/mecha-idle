@@ -76,8 +76,9 @@ export function effectiveSpeed(state: GameState): Speed {
 /**
  * Whether anything is actually running.
  *
- * Fuel buys work, so this is what decides whether it burns at all. Either actor counts:
- * the crawler refining on its own is work, and the speed applies to it.
+ * Fuel buys work, so this is what decides whether it burns at all. Checked across every
+ * actor rather than just the mech, so a second worker - if one ever comes back - would
+ * count without anyone remembering to add it here.
  */
 export function isWorking(state: GameState): boolean {
   return ACTOR_IDS.some((id) => state.actors[id].unlocked && state.actors[id].activity !== null)

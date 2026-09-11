@@ -22,13 +22,12 @@ import { SpeedToggle } from './components/SpeedToggle'
 import { Toasts, useToasts } from './components/Toast'
 import { useItemGains } from './useItemGains'
 import { useUnlocks } from './useUnlocks'
-import { isUnlocked, nextStage, unlockedSkills } from '../sim/tutorial'
+import { nextStage, unlockedSkills } from '../sim/tutorial'
 import { PixelSprite } from './components/PixelSprite'
 import { FIGHT_ICON, MENU_ICONS, SKILL_ICONS } from '../content/sprites'
 import { BankPanel } from './components/BankPanel'
 import { CombatPanel } from './components/CombatPanel'
 import { CombatSkillPanel } from './components/CombatSkillPanel'
-import { CrawlerPanel } from './components/CrawlerPanel'
 import { MechPanel } from './components/MechPanel'
 import { OfflineDialog } from './components/OfflineDialog'
 import { LogPanel } from './components/LogPanel'
@@ -39,7 +38,7 @@ import { getStoryBeat } from '../content/story'
 import { nextInterrupt, unreadLogCount } from '../sim/story'
 import { readStoryBeat } from '../sim/intents'
 
-type Tab = GatheringSkillId | CombatSkillId | 'combat' | 'mech' | 'bank' | 'log' | 'crawler'
+type Tab = GatheringSkillId | CombatSkillId | 'combat' | 'mech' | 'bank' | 'log'
 
 /** Combat skills are a closed set, so this is how the router tells the two apart. */
 function isCombatSkill(tab: Tab): tab is CombatSkillId {
@@ -49,12 +48,11 @@ function isCombatSkill(tab: Tab): tab is CombatSkillId {
 /** One-line summary of what the mech is doing, for the header. */
 function activitySummary(state: GameState): string {
   const activity = state.actors.mech.activity
-  if (!activity) return state.actors.crawler.activity ? 'Idle · crawler working' : 'Idle'
+  if (!activity) return 'Idle'
   if (activity.kind === 'combat') return 'Fighting'
   const skill = getSkill(activity.skill)
   const action = skill?.actions.find((a) => a.id === activity.action)
-  const own = action ? action.name : (skill?.name ?? 'Working')
-  return state.actors.crawler.activity ? `${own} · crawler working` : own
+  return action ? action.name : (skill?.name ?? 'Working')
 }
 
 export function App() {
@@ -204,7 +202,7 @@ export function App() {
             {/* One step of frontier and no further - the same rule the map keeps. The
                 whole remaining chain would be a roadmap; none of it would leave a player
                 who has seen one skill with no reason to think there are others. */}
-            {frontier && frontier.unlocks !== 'crawler' && (
+            {frontier && (
               <div className="rail-item locked" aria-disabled="true">
                 <span className="rail-name">{frontier.name}</span>
                 <span className="rail-level dim">{frontier.hint}</span>
@@ -223,31 +221,6 @@ export function App() {
                 Equipment
               </span>
             </button>
-            {isUnlocked(state, 'crawler') ? (
-              <button
-                className={`rail-item ${tab === 'crawler' ? 'selected' : ''}`}
-                onClick={() => setTab('crawler')}
-              >
-                <span className="rail-name">
-                  <PixelSprite layers={[MENU_ICONS.crawler]} scale={1} className="rail-icon" />
-                  {state.actors.crawler.activity && (
-                    <span className="running-dot" aria-label="working" />
-                  )}
-                  Crawler
-                </span>
-                {!state.actors.crawler.unlocked && <span className="dim">asleep</span>}
-              </button>
-            ) : (
-              frontier?.unlocks === 'crawler' && (
-                <div className="rail-item locked" aria-disabled="true">
-                  <span className="rail-name">
-                    <PixelSprite layers={[MENU_ICONS.crawler]} scale={1} className="rail-icon" />
-                    Crawler
-                  </span>
-                  <span className="rail-level dim">{frontier.hint}</span>
-                </div>
-              )
-            )}
             <button
               className={`rail-item ${tab === 'bank' ? 'selected' : ''}`}
               onClick={() => setTab('bank')}
@@ -302,8 +275,6 @@ export function App() {
             <MechPanel state={state} dispatch={dispatch} />
           ) : tab === 'bank' ? (
             <BankPanel state={state} />
-          ) : tab === 'crawler' ? (
-            <CrawlerPanel state={state} dispatch={dispatch} />
           ) : tab === 'log' ? (
             <LogPanel state={state} dispatch={dispatch} />
           ) : (

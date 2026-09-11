@@ -311,3 +311,72 @@ describe('cartography was removed', () => {
     expect(result.state.skills.scavenging).toBe(5000)
   })
 })
+
+/**
+ * The crawler was cut after playtest feedback. A save that had one must lose nothing:
+ * whatever it made is already in the bank, and every Traction Core - in the bank, or the
+ * one wired into a running crawler - turns back into the steel and wire it was made of.
+ */
+describe('migration 7 -> 8: the crawler was cut', () => {
+  const v7 = (crawler: object, bank: Record<string, number>) => {
+    const old = { ...newGame(), version: 7 } as Record<string, unknown>
+    const actors = old['actors'] as Record<string, object>
+    old['actors'] = { ...actors, crawler: { ...actors['crawler'], ...crawler } }
+    old['bank'] = bank
+    return deserialize(JSON.stringify(old))
+  }
+
+  it('puts a running crawler to sleep and refunds the core it was built from', () => {
+    const result = v7(
+      { unlocked: true, activity: { kind: 'skill', skill: 'refining', action: 'smelt_steel' }, progress: 2 },
+      { steel_ingot: 10, wire_spool: 1, scrap_steel: 500 },
+    )
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.migratedFrom).toBe(7)
+    expect(result.state.actors.crawler.unlocked).toBe(false)
+    expect(result.state.actors.crawler.activity).toBeNull()
+    expect(result.state.actors.crawler.progress).toBe(0)
+    expect(result.state.bank['steel_ingot']).toBe(10 + 6)
+    expect(result.state.bank['wire_spool']).toBe(1 + 3)
+    // What it made stays put.
+    expect(result.state.bank['scrap_steel']).toBe(500)
+  })
+
+  it('refunds every unbuilt core too, and leaves none behind', () => {
+    const result = v7({ unlocked: true }, { crawler_core: 2 })
+    expect(result.ok && result.state.bank['crawler_core']).toBeUndefined()
+    // Two in the bank plus the one that was wired in.
+    expect(result.ok && result.state.bank['steel_ingot']).toBe(18)
+    expect(result.ok && result.state.bank['wire_spool']).toBe(9)
+  })
+
+  it('catches a save stamped 8 that never went through the migration', () => {
+    // Seen for real: a dev server hot-reloaded the new code into a page still holding the
+    // old game, and saved it - version 8, crawler running, 2,500 cores in the bank. The
+    // migration is keyed on version and would never have looked at it.
+    const stale = { ...newGame(), version: 8 } as Record<string, unknown>
+    const actors = stale['actors'] as Record<string, object>
+    stale['actors'] = { ...actors, crawler: { ...actors['crawler'], unlocked: true } }
+    stale['bank'] = { crawler_core: 2500, steel_ingot: 2500, wire_spool: 2500 }
+
+    const result = deserialize(JSON.stringify(stale))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.migratedFrom).toBeNull()
+    expect(result.state.actors.crawler.unlocked).toBe(false)
+    expect(result.state.bank['crawler_core']).toBeUndefined()
+    expect(result.state.bank['steel_ingot']).toBe(2500 + 6 * 2501)
+    expect(result.state.bank['wire_spool']).toBe(2500 + 3 * 2501)
+
+    // And a second load changes nothing: there is nothing left to refund.
+    const again = deserialize(serialize(result.state, 1))
+    expect(again.ok && again.state.bank).toEqual(result.state.bank)
+  })
+
+  it('changes nothing for a save that never built one', () => {
+    const result = v7({}, { scrap_steel: 5 })
+    expect(result.ok && result.state.bank).toEqual({ scrap_steel: 5 })
+    expect(result.ok && result.state.actors.crawler.unlocked).toBe(false)
+  })
+})

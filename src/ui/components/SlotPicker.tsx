@@ -86,7 +86,7 @@ export function SlotPicker({
   return (
     // One row, not four. Every one of the old rows was pinned in view at the foot of the
     // rail, and at 1366x768 that pushed half the navigation - Refining, Fabrication,
-    // Salvaging, Equipment, Crawler, Bank, Log - out of sight to make room for a control
+    // Salvaging, Equipment, Bank, Log - out of sight to make room for a control
     // a tester touches once. Rarely used means compact; the rail's space belongs to the
     // things you press every minute.
     //

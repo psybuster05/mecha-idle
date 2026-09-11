@@ -784,8 +784,8 @@ export const CATEGORY_ICONS: Readonly<Record<string, Sprite>> = {
  * silhouette rather than by colour.
  *
  * Each one was checked against what it sits near. `equipment` is deliberately not a
- * torso, because `SLOT_ICONS.frame` already is one; `crawler` is low and wide where
- * `SLOT_ICONS.legs` is a tall bent leg; and nothing here hangs three prongs downward,
+ * torso, because `SLOT_ICONS.frame` already is one; and nothing here hangs three prongs
+ * downward,
  * because that silhouette is Scavenging's.
  */
 export const MENU_ICONS: Readonly<Record<string, Sprite>> = {
@@ -812,25 +812,6 @@ export const MENU_ICONS: Readonly<Record<string, Sprite>> = {
     '  .B.      .B.  ',
     '  .B.      .B.  ',
     '  ...      ...  ',
-  ]),
-  // A workshop on tracks: low, wide, and all chassis. The second body in the world.
-  crawler: icon([
-    '                ',
-    '                ',
-    '                ',
-    '     .......    ',
-    '    .bBBBBBb.   ',
-    '   .BBWWWWWBB.  ',
-    '  .BBBBBBBBBBB. ',
-    '  .bBBBBBBBBBb. ',
-    '  ............. ',
-    ' ...............',
-    ' .bBBBBBBBBBBBb.',
-    ' .B.B.B.B.B.B.B.',
-    ' .bBBBBBBBBBBBb.',
-    ' ...............',
-    '                ',
-    '                ',
   ]),
   // A braced crate. Everything you are holding and not carrying.
   bank: icon([

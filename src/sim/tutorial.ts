@@ -24,7 +24,6 @@ import { levelFromXp } from './xp'
  * is allowed to do.
  */
 function alreadyStarted(state: GameState, what: TutorialUnlock): boolean {
-  if (what === 'crawler') return state.actors.crawler.unlocked
   return state.skills[what] > 0
 }
 

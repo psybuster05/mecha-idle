@@ -5,7 +5,7 @@
  * and that is the right number for the game this is a prototype of. It is the wrong
  * number for the thing it currently is, which is a link handed to someone who will give
  * it fifteen minutes. Measured at 1x, those fifteen minutes reach Scavenging 8 and
- * combat level 4: one region, no boss, no crawler, no second region. The loop, not the
+ * combat level 4: one region, no boss, no second region. The loop, not the
  * game.
  *
  * So the demo runs the clock faster. **Nothing about the game changes** - not an action

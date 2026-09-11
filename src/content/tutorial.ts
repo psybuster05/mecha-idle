@@ -24,8 +24,13 @@ import type { GatheringSkillId } from '../sim/state'
  *   in this game keeps.
  */
 
-/** What a stage hands back: a non-combat skill, or the second actor. */
-export type TutorialUnlock = GatheringSkillId | 'crawler'
+/**
+ * What a stage hands back: a non-combat skill.
+ *
+ * It used to end with the crawler as a fifth stage. The crawler was cut - see the stage
+ * list below for what the opening is now.
+ */
+export type TutorialUnlock = GatheringSkillId
 
 export interface TutorialStage {
   unlocks: TutorialUnlock
@@ -71,16 +76,6 @@ export const TUTORIAL: readonly TutorialStage[] = [
     requires: { skill: 'fabrication', level: 5 },
     hint: 'Fabrication 5',
     recovered: 'Salvaging recovered. Everything you build comes apart again.',
-  },
-  {
-    unlocks: 'crawler',
-    name: 'Crawler',
-    // The level the Traction Core is fabricated at. The stage hands back the *schematic*;
-    // building the core and wiring it in is still yours to do, which is why installing
-    // stayed exactly where it was.
-    requires: { skill: 'fabrication', level: 10 },
-    hint: 'Fabrication 10',
-    recovered: 'Traction Core schematics recovered. Something in the Hollow is still waiting.',
   },
 ]
 

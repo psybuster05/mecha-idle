@@ -53,7 +53,6 @@ const COLOURS = {
   lockedStroke: '#1c2c46',
   lockedLabel: '#41597c',
   labelHere: '#dce8f5',
-  crawler: '#c8a24a',
 }
 
 /** Zoom multiplier and pan offset, both in logical map pixels. */
@@ -201,7 +200,6 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, view: View, ratio
   for (const node of shown) {
     const p = project(node.x, node.y)
     const here = mech.at === node.id
-    const crawlerHere = state.actors.crawler.unlocked && state.actors.crawler.at === node.id
     const size = node.isCamp ? 22 : 16
 
     const open = isNodeOpen(state, node.id)
@@ -220,13 +218,6 @@ function draw(ctx: CanvasRenderingContext2D, state: GameState, view: View, ratio
     ctx.strokeStyle = here ? COLOURS.here : open ? COLOURS.nodeStroke : COLOURS.lockedStroke
     ctx.strokeRect(p.x - size / 2, p.y - size / 2, size, size)
     ctx.setLineDash([])
-
-    // The crawler is the other body in the world, and where it is parked is the only
-    // reason the map still shows two of anything.
-    if (crawlerHere) {
-      ctx.fillStyle = COLOURS.crawler
-      ctx.fillRect(p.x + size / 2 - 5, p.y - size / 2 + 1, 4, 4)
-    }
 
     ctx.fillStyle = here ? COLOURS.labelHere : open ? COLOURS.label : COLOURS.lockedLabel
     ctx.fillText(node.name, p.x, p.y + size / 2 + 14)

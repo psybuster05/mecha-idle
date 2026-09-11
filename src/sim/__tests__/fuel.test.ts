@@ -3,7 +3,7 @@ import { getAction, YIELD_PER_LEVEL } from '../../content'
 import { ENEMIES, perkTotal } from '../../content/enemies'
 import { newGame, type GameState } from '../state'
 import { count } from '../bank'
-import { installCrawler, setSpeed, startSkillAction } from '../intents'
+import { setSpeed, startSkillAction } from '../intents'
 import { availableEnergy, effectiveSpeed, fuelEnergy, secondsOfFuel } from '../fuel'
 import { tick } from '../tick'
 import { derivedStats } from '../stats'
@@ -93,19 +93,6 @@ describe('the speed toggle', () => {
     expect(state.actors.mech.activity).toBeNull()
     expect(availableEnergy(state)).toBe(before)
     expect(state.speed).toBe(3)
-  })
-
-  it('burns for the crawler working alone, because that is still work', () => {
-    let state = setSpeed(withFuel(), 2)
-    state.bank['crawler_core'] = 1
-    state = installCrawler(state).state
-    state.bank['scrap_steel'] = 10000
-    state = startSkillAction(opened(state, 'refining'), 'refining', 'smelt_steel', 'crawler')
-    const before = availableEnergy(state)
-    state = tickBy(state, 120, 1)
-
-    expect(state.actors.mech.activity).toBeNull()
-    expect(availableEnergy(state)).toBeLessThan(before)
   })
 
   it('does not touch the toggle while there is still fuel', () => {

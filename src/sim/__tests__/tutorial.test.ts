@@ -40,7 +40,6 @@ describe('the shape of the chain', () => {
   it('opens with exactly one skill', () => {
     const state = newGame()
     expect(unlockedSkills(state)).toEqual(['scavenging'])
-    expect(isUnlocked(state, 'crawler')).toBe(false)
     expect(nextStage(state)?.unlocks).toBe('refining')
   })
 })
@@ -70,12 +69,6 @@ describe('nothing is ever taken away', () => {
     state.skills.refining = 1
     expect(levelFromXp(state.skills.scavenging)).toBe(1)
     expect(isUnlocked(state, 'refining')).toBe(true)
-  })
-
-  it('keeps the crawler once it is running', () => {
-    const state = newGame()
-    state.actors.crawler.unlocked = true
-    expect(isUnlocked(state, 'crawler')).toBe(true)
   })
 
   it('does not close again when the bank is emptied', () => {
@@ -124,8 +117,8 @@ describe('walking the whole chain', () => {
     let state = newGame()
     let seconds = 0
     const reached = new Map<string, number>()
-    // Fabrication is the deepest thing worth working: it is what the crawler's schematic
-    // hangs off, and everything else is on the way to it.
+    // Fabrication is the deepest thing worth working: Salvaging, the last stage, hangs off
+    // it, and everything else is on the way to it.
     const target = (): GatheringSkillId =>
       isUnlocked(state, 'fabrication') ? 'fabrication' : isUnlocked(state, 'refining') ? 'refining' : 'scavenging'
 
@@ -159,6 +152,5 @@ describe('walking the whole chain', () => {
     )
     // A sitting, not an evening. This is the number the whole demo pace was chosen for.
     expect(minutes('salvaging'), 'the four skills').toBeLessThan(20)
-    expect(minutes('crawler'), 'the crawler schematic').toBeLessThan(45)
   }, 30_000)
 })

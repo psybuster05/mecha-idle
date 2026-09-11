@@ -13,11 +13,12 @@ import type { CombatStyleId } from '../content/skills/combat'
 /**
  * Actors are the things that can be *doing* something.
  *
- * `crawler` is not reachable in v1, but it is modelled from the start on purpose:
- * the plan is a salvaged mobile base you dock into, which excavates and refines
- * while the mech fights. Encoding that as a second actor now - rather than a single
- * global "current action" - means unlocking it later is a data change, not a rewrite
- * of every system that touches actions.
+ * `crawler` was a second worker - a mobile base that refined and fabricated while the
+ * mech fought. It was built, playtested, and cut: it was an extra layer of management in
+ * a game whose appeal is not having to manage it, and it bent the one-action rule. The
+ * slot stays, asleep and unreachable, because the *model* was never the problem -
+ * modelling actors rather than one global "current action" is what would let a second
+ * worker come back as data rather than a rewrite. Saves still carry the slot.
  */
 export type ActorId = 'mech' | 'crawler'
 
@@ -40,19 +41,6 @@ export const COMBAT_SKILLS: readonly CombatSkillId[] = [
   'ranged',
 ]
 export const ALL_SKILLS: readonly SkillId[] = [...GATHERING_SKILLS, ...COMBAT_SKILLS]
-
-/**
- * What the crawler can run.
- *
- * Industry only. It is a workshop on tracks - it carries the furnace and the press with
- * it, so it never has to travel to reach them - and keeping it to these three means the
- * two actors are never competing for the same job. The mech goes out; the crawler works.
- */
-export const CRAWLER_SKILLS: readonly GatheringSkillId[] = ['refining', 'fabrication', 'salvaging']
-
-export function canCrawlerRun(skill: GatheringSkillId): boolean {
-  return CRAWLER_SKILLS.includes(skill)
-}
 
 export type ItemId = string
 export type NodeId = string
@@ -185,7 +173,7 @@ export interface StoryState {
  */
 export type Speed = 1 | 2 | 3
 
-export const SAVE_VERSION = 7
+export const SAVE_VERSION = 8
 
 export interface GameState {
   /** Bumped whenever the shape changes; drives migrations in save.ts. */
@@ -310,10 +298,9 @@ export function cloneState(state: GameState): GameState {
 /**
  * How many actors may be busy at once.
  *
- * v1 is Melvor-style: exactly one action at a time, so every choice carries real
- * opportunity cost. Once the crawler is salvaged this becomes 2 - the mech fights
- * while the crawler works. Expressed as a rule over `actors` rather than baked into
- * the state shape, which is the whole point of modelling actors separately.
+ * Melvor-style: exactly one action at a time, so every choice carries real opportunity
+ * cost. Nothing in the game unlocks a second actor any more; the rule is still written
+ * over `actors` rather than baked in as a constant, so one could.
  */
 export function maxConcurrentActivities(state: GameState): number {
   return state.actors.crawler.unlocked ? 2 : 1

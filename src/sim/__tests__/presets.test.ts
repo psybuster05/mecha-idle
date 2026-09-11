@@ -79,10 +79,11 @@ describe('every preset is a save the game can actually load', () => {
 
     it(`${def.id} opens the whole rail`, () => {
       const state = buildPreset(def, NOW)
-      for (const what of ['scavenging', 'refining', 'fabrication', 'salvaging', 'crawler'] as const) {
+      for (const what of ['scavenging', 'refining', 'fabrication', 'salvaging'] as const) {
         expect(isUnlocked(state, what), `${what} still locked`).toBe(true)
       }
-      expect(state.actors.crawler.unlocked).toBe(true)
+      // The crawler was cut; its actor slot stays in the state shape, asleep.
+      expect(state.actors.crawler.unlocked).toBe(false)
     })
 
     it(`${def.id} starts alive and at rest`, () => {

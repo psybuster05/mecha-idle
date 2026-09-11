@@ -27,7 +27,6 @@ export interface PresetDef {
   levels: Partial<Record<SkillId, number>>
   /** In kill order. The next boss along is the one left in front of you. */
   defeated: readonly string[]
-  crawler: boolean
   /** How much of every material to hand over, so nothing is waiting on arrival. */
   stock: number
 }
@@ -36,7 +35,7 @@ export const PRESETS: readonly PresetDef[] = [
   {
     id: 'mid',
     name: 'Mid-game',
-    blurb: 'Two regions open, the crawler running, and Tower Actual next - winnable, not easily.',
+    blurb: 'Two regions open, tier-three gear, and Tower Actual next - winnable, not easily.',
     // Fabrication 60 rather than 50 on purpose: 60 is a gear tier, and at 50 the best
     // frame in the game is still the level-1 welded steel one. A "mid-game" save whose
     // chassis is the tutorial's chassis reads as a bug.
@@ -58,7 +57,6 @@ export const PRESETS: readonly PresetDef[] = [
       ranged: 58,
     },
     defeated: ['overseer', 'quartermaster'],
-    crawler: true,
     stock: 2500,
   },
   {
@@ -83,7 +81,6 @@ export const PRESETS: readonly PresetDef[] = [
       ranged: 92,
     },
     defeated: ['overseer', 'quartermaster', 'tower_actual', 'registrar', 'census', 'adjutant'],
-    crawler: true,
     stock: 40_000,
   },
 ]

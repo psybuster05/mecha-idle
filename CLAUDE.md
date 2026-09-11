@@ -44,9 +44,11 @@ brought up to date.
 
 5. **Actors, not a global current action.** State is
    `actors: { mech: {...}, crawler: {...} }`, each with its own `currentAction`.
-   v1 enforces "one action at a time" as a *rule*, not as a hardcoded shape, so the
-   crawler (a mobile base you dock into, which works while the mech fights) can be
-   unlocked later as data rather than a rewrite.
+   "One action at a time" is enforced as a *rule*, not as a hardcoded shape. The second
+   actor was a crawler - a mobile base that worked while the mech fought - and it was cut
+   after playtesting (see *The crawler, cut*). Its slot is kept, asleep, because the model
+   was never the problem: that is why cutting it touched no system, and why a second
+   worker, if one ever returns, is data rather than a rewrite.
 
 6. **React never drives the simulation clock.** The sim ticks in a `requestAnimationFrame`
    loop; React re-renders from a snapshot on a throttled interval (~10/sec).
@@ -197,7 +199,7 @@ throttled React snapshot. It has no animation-frame loop of its own any more.
 **The World tab was deleted too.** Once travel was gone it was a map plus two lists, and
 both lists were dead weight: its action list duplicated the skill panels with less
 information, and its "go here" buttons changed nothing the simulation reads - `at` is
-read only by `moveToAny`'s already-here check and by where the crawler wakes up.
+read only by `moveToAny`'s already-here check.
 
 The one thing that could have made location matter was checked rather than assumed: nine
 story beats trigger on visiting a place, and all nine are reached by starting actions
@@ -251,7 +253,9 @@ the order the bank already implies:
 | Refining | Scavenging 5 | ~30s |
 | Fabrication | Refining 5 | ~2 min |
 | Salvaging | Fabrication 5 | ~8 min |
-| Crawler schematic | Fabrication 10 | ~26 min |
+
+The chain used to run on to a fifth stage - the crawler's schematic at Fabrication 10,
+twenty-six minutes in, the longest step of the opening by far. It went with the crawler.
 
 Those are *real* minutes at `DEMO_PACE`, from a standing start, with **no combat at all** -
 the same contract every other lock in this game keeps. The table lives in
@@ -565,11 +569,10 @@ Rules:
   it agree. They also avoid each other's metaphors: kinetic is a solid wedge and Ranged
   a bolt *with a trail*, because two projectiles would have been one icon twice.
 - **Every rail row has an icon, not just the skills.** `MENU_ICONS` covers Equipment,
-  Crawler, Bank, Log, the save slots and reset. Without them the Character and Saves
-  groups read as a footer rather than as part of the same list. Each was drawn against
-  what it sits near: `equipment` is deliberately not a torso because `SLOT_ICONS.frame`
-  already is one, `crawler` is low and wide where `SLOT_ICONS.legs` is a tall bent leg,
-  and nothing hangs three prongs downward, because that silhouette is Scavenging's.
+  Bank, Log, the save slots and reset. Without them the Character and Saves groups read
+  as a footer rather than as part of the same list. Each was drawn against what it sits
+  near: `equipment` is deliberately not a torso because `SLOT_ICONS.frame` already is
+  one, and nothing hangs three prongs downward, because that silhouette is Scavenging's.
 - **One save icon for all three slots, not three.** A fill level - empty, half, full - is
   the obvious idea and it is a claim the icon cannot keep: "Your game" is at whatever
   stage the player actually reached, as likely to be past Endgame's as behind Mid-game's.
@@ -579,8 +582,8 @@ Rules:
   was which, which is exactly the failure the colour rule above is meant to prevent. It is
   a survey grid now. Look at every icon next to its neighbours before believing it works.
   That rule caught the first `equipment` icon too: the figure inside its brackets was
-  drawn small enough that it read as a blob, and only looking at it beside Crawler and
-  Bank at size showed it. It fills the frame now.
+  drawn small enough that it read as a blob, and only looking at it beside its
+  neighbours at size showed it. It fills the frame now.
 - Enemies use **archetype sprites** (skitter / flyer / bulwark / authority), not one per
   enemy. Twenty enemies is more art than this project can carry, and at this size the
   silhouette is what reads anyway. Bosses always get `authority`.
@@ -789,18 +792,46 @@ every tab, so here it was a second copy of the picture. Its "5 of 5 fitted" capt
 onto the Equipped heading it was describing. The stat grid is three across, because six
 stats in an auto-fit grid left Attack Speed alone on a second row.
 
-## The crawler
+## The crawler, cut
 
-The second actor, unlocked by wiring in a Traction Core. `maxConcurrentActivities` goes
-from 1 to 2 at that moment - the rule has always been a function over `actors` rather
-than a hardcoded shape, which is why unlocking it needed no restructuring.
+There was a second actor: a crawler, unlocked at Fabrication 10 by wiring in a Traction
+Core, that refined, fabricated and salvaged while the mech gathered or fought. It worked,
+it was tested, and it went after the first round of playtesting. The feedback, from
+friends who played it, was that it *"adds an extra layer of action, management and
+complexity to an idle game."*
 
-Rules that keep the two actors distinct:
+That is right, and worth keeping as a rule for whatever comes next: **an idle game's
+appeal is not having to manage it.** A second worker doubles the decisions a player has
+to come back and make - two jobs to pick, two to restock, two to notice have stalled - in
+a genre people choose because it asks for one. It also bent the one-action rule that gives
+every other choice in this game its cost.
 
-- **Industry only** (`CRAWLER_SKILLS`). You gather and fight; it refines, fabricates and
-  salvages. They never compete for the same job.
-- **It works wherever it is.** It carries the workshop, so `startSkillAction` never
-  moves it. Parking it is cosmetic - it is there so the world has two bodies in it.
+Kept, and why:
+
+- **The actor slot.** `actors.crawler` stays in the state shape, asleep. The model was
+  never the problem - rule 5 is why the cut touched no system - and removing the slot
+  would be a migration that buys nothing. `maxConcurrentActivities` still reads it, so a
+  second worker is still a data change.
+- **Waiting rather than halting**, which the crawler introduced. See below.
+
+Gone: the Fabrication recipe, the Traction Core item, the rail row and its panel, the
+stage caption, the map marker, the `installCrawler` intent and the crawler's test file.
+The opening now ends at Salvaging, about eight real minutes in.
+
+**Saves are refunded, not stripped.** Migration 7 -> 8 turns every Traction Core back into
+what it was made of - 6 Steel Ingots and 3 Wire Spools - *including the one wired into a
+crawler that was running*, and puts the crawler to sleep. A tester who built one gets the
+materials back; nobody loses anything, which is the one thing nothing here is allowed to
+do.
+
+**`retireCrawler` runs on every load, not only in the migration**, and that was found the
+hard way. A dev server's hot reload swapped the new code into a page still holding the old
+game and saved it: version 8, crawler running, 2,500 cores in the bank. Migrations are
+keyed on the version number, so that save would never have been looked at. It is the
+same trap that let Cartography's key outlive its migration, and the same fix:
+`withDefaults` repairs it on every load, idempotently, which makes a stray crawler
+unrepresentable rather than merely migrated once. A test holds the exact save the hot
+reload wrote, and asserts that a second load refunds nothing.
 
 ## Toasts
 
@@ -810,8 +841,8 @@ than by having the sim announce anything, which keeps `sim/` pure and keeps this
 is: a view noticing that a number changed.
 
 Two kinds, and the difference is about volume. A **notice** is rare and one-off (no fuel
-for that). A **gain** is a stream - an item lands every few seconds, faster at 3x with
-two actors - so gains sharing a key merge into one line that counts up. A scavenging run
+for that). A **gain** is a stream - an item lands every few seconds, faster at 3x - so
+gains sharing a key merge into one line that counts up. A scavenging run
 shows a single growing "+24 Scrap Steel", not twenty-four toasts fighting for the corner.
 Five on screen at once is the cap.
 
@@ -833,10 +864,11 @@ An action short of materials **waits**. It keeps the order, stops accumulating p
 and picks up the moment stock exists. `waitingFor(state, actor)` derives what it is
 short of; there is no stored waiting flag.
 
-This replaced halting when the crawler arrived. With one actor, halting loudly was right -
-spinning on an action that could never proceed was pure waste. With two, "the crawler is
-out of ingots while the mech refines more" is an ordinary temporary state, and a halted
-action never restarts on its own.
+This replaced halting when the crawler arrived, because with two actors "the crawler is
+out of ingots while the mech refines more" was an ordinary temporary state and a halted
+action never restarts on its own. With one actor nothing but the player can restock a
+waiting job, so the difference is smaller now - it was kept rather than reverted, because
+putting halting back would be churn in a system that works.
 
 **Progress is capped at `affordable * duration`.** Without that cap a long offline step
 would bank hours of progress against an empty bank and spend it all the instant one input
@@ -865,7 +897,8 @@ you cannot press it and never what would let you; the toast names where fuel com
 
 **Nothing burns while nothing is running.** Fuel buys work, so an idle mech at 3x spends
 nothing - otherwise leaving the tab open on the equipment screen would quietly empty a
-tank you had been saving. Either actor counts: the crawler refining alone is work.
+tank you had been saving. It is checked across every actor, not only the mech, so a
+second worker - if one ever returns - would count without anyone remembering to add it.
 
 **Fuel is energy, not time.** Each item's `{ multiplier, seconds }` is read as
 `seconds * (multiplier - 1)` units, and running at speed M spends `M - 1` per second.
@@ -902,7 +935,7 @@ The design pace is a month to max a skill - 503 hours, asserted by the pacing su
 that is the right number for the game this is a prototype of. It is the wrong number for
 what it currently *is*, which is a link handed to someone who will give it fifteen
 minutes. Measured at 1x, those fifteen minutes reach Scavenging 8 and combat level 4: one
-region, no boss, no crawler, no second region. The loop, not the game.
+region, no boss, no second region. The loop, not the game.
 
 **It is applied where the clock is read, in the driver, and never inside `tick`.** That is
 the whole design:
@@ -1123,7 +1156,7 @@ Re-measure this whenever the foot gains a line.
 **Measure at the viewport a player actually has, not the screen size.** A 1366x768 laptop -
 still the commonest - loses about 110px to the browser's tabs and address bar, so the page
 gets roughly 1366x657. Measured at the screen size, the rail looked fine; at the real
-viewport the whole Character group (Equipment, Crawler, Bank, Log) was below the fold. The
+viewport the whole Character group (Equipment, Bank, Log) was below the fold. The
 fix had four parts, and it took all of them:
 
 - **The saves collapsed to one row** and the report to one line: the foot went from 275px
@@ -1227,18 +1260,18 @@ written a save at the new version number, so the migration never ran on it and t
 key survived every subsequent save. Skills are now copied key by key from `ALL_SKILLS`,
 which makes a stray one unrepresentable rather than merely migrated once.
 
-## The one known step-size dependency
+## The step-size dependency the crawler brought, and took away
 
-`advance` runs each actor for the whole step in turn, so a single large offline step
-refines everything *before* the consumer eats any of it, where live play interleaves them.
-Measured with a producer/consumer pair, this is a **constant off-by-one** - one extra
-completion whether the span is ten minutes or eight hours - and it favours the player.
-Two small step sizes agree with each other exactly; only the giant step differs.
+`advance` runs each actor for the whole step in turn, so with two actors a single large
+offline step refined everything *before* the consumer ate any of it, where live play
+interleaved them. Measured, it was a constant off-by-one in the player's favour, and a test
+guarded that it stayed a rounding difference rather than drift proportional to time away,
+out to the 24-hour offline cap.
 
-Accepted rather than engineered away, and guarded - but the guard had to change when
-yield became level-dependent. Producers now *accelerate* across a span, so the absolute
-gap scales with how much was made while the **error rate** does not. The test therefore
-asserts the drift is within one completion *or* under one percent, and that it does not
-grow with the span, measured out to the 24-hour offline cap. Drift proportional to time
-away is still the thing that would actually matter; it is just no longer visible as a
+With one actor it cannot happen - there is nothing to interleave - and the guard went with
+the crawler's test file. The single-actor guarantee, one big step against many small ones,
+is held by `offline.test.ts`. **If a second actor ever comes back, so does this problem**:
+bring back a producer/consumer drift test, measured out to the offline cap, before shipping
+it. Yield rises with level, so producers accelerate across a span - assert the error *rate*
+stays under a percent and does not grow with the span, not that the absolute gap is
 constant.
