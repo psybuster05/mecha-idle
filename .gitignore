@@ -10,3 +10,7 @@ release
 # verbatim and is where decisions get argued out before they are true in code.
 # Purged from history when the repo was made public - do not commit it back.
 docs/GDD.md
+
+# The note sent to playtesters with the link. Kept beside the design doc rather than
+# in the repo: it is a message in its author's voice, drafted to be edited, not docs.
+docs/playtest-note.md
