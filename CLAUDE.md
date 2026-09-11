@@ -406,6 +406,41 @@ The other consequence, still true:
 Measure every boss before shipping it. Use **time to first kill**, never kills-per-hour -
 the latter measures death-and-recovery cycles rather than damage, and hides the design.
 
+## The boss dossier
+
+Bosses are designed as **preparation puzzles** - the fight is decided before it starts, and
+a phase can invert which weapon is right. That only works if the player can see the puzzle,
+and they could not: the row before a fight showed base resistances and nothing about the
+phases, so every first attempt was blind. Each boss row now carries its dossier - the
+opening, then every phase in the order it arrives, each with its HP threshold, what it
+changes in plain words ("attacks 67% faster", "evasion ×2.4 - hard to land hits"), its
+resistances with your own type picked out, and a verdict when your weapon is clearly wrong
+or clearly right for that part.
+
+Rules it keeps, all tested in `ui/__tests__/dossier.test.ts`:
+
+- **Derived, never written.** `ui/dossier.ts` turns phase data into words; there is no
+  second copy of a number to drift from the fight it describes.
+- **Sorted by threshold**, not trusted to the order the content table happens to use -
+  the order is a promise about the fight.
+- **Every phase must change something a player could see coming**, asserted across all
+  seven bosses. A phase that changed nothing visible would be a name with nothing to
+  prepare for.
+- **Attack speed is reported as a rate, not an interval.** An interval multiplier of 0.6
+  is "67% faster", which is what the player feels; "×0.6" reads as slower.
+- **The verdict only speaks at the extremes** (×0.6 and below, ×1.25 and above). Every
+  phase carrying one would make the two that are actually the point - the one that walls
+  you and the one that opens up - read the same as the ones that barely move.
+
+Open by default until the boss has fallen once, then collapsed: the first attempt is where
+the reading matters, and after that it is reference. Damage types are written out in full
+here - kinetic, energy, EMP - rather than as the KIN/NRG chips used elsewhere.
+
+What it does not fix: there is still one weapon slot, so knowing Bulwark walls kinetic lets
+you *choose* EMP beforehand but not *switch* to it when Bulwark arrives. Seeing the puzzle
+was half the problem; being able to make the move is the other half, and it is a game-two
+question.
+
 ## The test timeout is 30 seconds, on purpose
 
 Not vitest's 5s default. This suite simulates hours of game time: on an idle machine the

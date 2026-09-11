@@ -10,6 +10,7 @@ import { Bar } from './Bar'
 import { PixelSprite } from './PixelSprite'
 import { MechPortrait } from './MechPortrait'
 import { DAMAGE_ICONS, ENEMY_SPRITES, enemySpriteKey } from '../../content/sprites'
+import { dossier, TYPE_NAME, verdict } from '../dossier'
 
 interface Props {
   state: GameState
@@ -52,6 +53,45 @@ function Resistances({
   )
 }
 
+/**
+ * A boss's phases, readable before you commit to the fight.
+ *
+ * Open by default until the boss has fallen once, then tucked away: the first attempt is
+ * where the reading matters, and after that it is reference. A native `<details>` for the
+ * disclosure, so it is keyboard- and screen-reader-operable for nothing.
+ */
+function BossDossier({ enemy, state }: { enemy: EnemyDef; state: GameState }) {
+  const mine = derivedStats(state).damageType
+  const steps = dossier(enemy)
+  return (
+    <details className="dossier" open={!hasDefeated(state, enemy.id)}>
+      <summary>
+        Dossier <span className="dim">&middot; {steps.length - 1} phases &middot; you deal {TYPE_NAME[mine]}</span>
+      </summary>
+      <ol className="dossier-steps">
+        {steps.map((step) => {
+          const call = verdict(step.resistances, mine)
+          return (
+            <li key={step.name} className="dossier-step">
+              <div className="dossier-head">
+                <span className="dossier-at">{step.at}</span>
+                <strong>{step.name}</strong>
+                <span className="dim">deals {TYPE_NAME[step.damageType]}</span>
+              </div>
+              {step.message && <p className="dim flavour">{step.message}</p>}
+              {step.effects.length > 0 && (
+                <p className="dossier-effects">{step.effects.join(' · ')}</p>
+              )}
+              <Resistances resistances={step.resistances} mine={mine} />
+              {call && <p className={`dossier-verdict ${call.tone}`}>{call.text}</p>}
+            </li>
+          )
+        })}
+      </ol>
+    </details>
+  )
+}
+
 function EnemyRow({
   enemy,
   state,
@@ -90,6 +130,7 @@ function EnemyRow({
         </div>
         <p className="dim flavour">{enemy.description}</p>
         <Resistances resistances={enemy.resistances ?? {}} mine={mine} />
+        {enemy.isBoss && <BossDossier enemy={enemy} state={state} />}
         {enemy.perk && (
           <div className={`perk-note ${hasDefeated(state, enemy.id) ? 'earned' : ''}`}>
             <strong>{enemy.perk.name}</strong>

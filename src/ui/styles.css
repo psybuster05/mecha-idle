@@ -488,6 +488,31 @@ img.sprite { image-rendering: pixelated; }
 .resist.mine { border-color: var(--accent); }
 .resist.mine .resist-type { color: var(--accent); }
 
+/*
+ * The boss dossier: the fight's phases, in order, before you take it.
+ *
+ * Each step borders in the hostile orange, the same edge the live phase banner uses, so
+ * what you read here and what arrives mid-fight are visibly the same thing. The verdict is
+ * the only line with colour of its own - green where your weapon is right, red where it is
+ * walled - because it is the line the whole dossier exists to deliver.
+ */
+.dossier { margin-top: 8px; border: 1px solid var(--line); background: var(--panel-2); }
+.dossier > summary {
+  cursor: pointer; padding: 6px 10px; font-size: 12px; font-weight: 700;
+  list-style-position: inside;
+}
+.dossier > summary:hover { color: var(--accent); }
+.dossier-steps { margin: 0; padding: 4px 10px 10px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.dossier-step { padding-left: 10px; border-left: 3px solid var(--line-bright); display: flex; flex-direction: column; gap: 4px; }
+.dossier-step + .dossier-step { border-left-color: var(--enemy); }
+.dossier-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.dossier-at { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); }
+.dossier-effects { margin: 0; font-size: 12px; }
+.dossier-verdict { margin: 0; font-size: 12px; font-weight: 700; }
+.dossier-verdict.good { color: var(--good); }
+.dossier-verdict.bad { color: var(--bad); }
+.dossier .flavour { margin: 0; }
+
 .phase-banner {
   padding: 6px 10px; border-left: 3px solid var(--enemy);
   background: rgba(255, 138, 61, 0.1); font-size: 12px;
